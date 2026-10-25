@@ -1,48 +1,36 @@
 {% load humanize %}
 <!-- ========================================================================= -->
-<!-- DELIVERY CHALLAN - NEXT-LEVEL EXECUTIVE VEHICLE DISPATCH MEMO             -->
-<!-- Modern Agency Corporate Aesthetic (Deep Navy & Vibrant Coral)            -->
-<!-- Rounded Background Sections, Spacious Post-Table Layout & 1-Page Fit     -->
+<!-- DELIVERY CHALLAN - LUXURY EXECUTIVE AUTOMOTIVE DISPATCH MEMO              -->
+<!-- Clean, Balanced, Unified Palette (Executive Slate Navy #0f172a & Coral)   -->
+<!-- 100% Reliable xhtml2pdf Rendering, Direct Image Paths, Strict 1-Page A4   -->
 <!-- ========================================================================= -->
-<div class="delivery-challan-container" style="width: 100%; max-width: 100%; box-sizing: border-box; background-color: #ffffff; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 4px 6px; margin: 0 auto;">
+<div style="width: 100%; box-sizing: border-box; background-color: #ffffff; color: #0f172a; font-family: Helvetica, Arial, sans-serif; padding: 0; margin: 0 auto;">
 
-    <!-- 1. TOP HEADER & BRANDING (Dealership Card on Left + Delivery Challan Title on Right) -->
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+    <!-- 1. TOP HEADER & BRANDING BAR -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
         <tr>
-            <!-- Left: Dealership Branding in Deep Navy Rounded Card -->
-            <td style="width: 58%; vertical-align: top; padding-right: 12px;">
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #0f172a; border-radius: 12px; overflow: hidden;">
+            <!-- Left: Dealership Identity & Address -->
+            <td style="width: 60%; vertical-align: top;">
+                <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="padding: 10px 14px; vertical-align: middle;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    {% if company.brand_logo or company.company_logo %}
-                                    <td style="width: 48px; vertical-align: middle; padding-right: 10px;">
-                                        <div style="background-color: #ffffff; padding: 3px 5px; border-radius: 6px; display: inline-block;">
-                                            {% if company.brand_logo %}
-                                            <img src="{{ company.brand_logo.url }}" alt="Logo" height="32" style="height: 32px; max-height: 32px; max-width: 44px; object-fit: contain; display: block;">
-                                            {% else %}
-                                            <img src="{{ company.company_logo.url }}" alt="Logo" height="32" style="height: 32px; max-height: 32px; max-width: 44px; object-fit: contain; display: block;">
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                    {% endif %}
-                                    <td style="vertical-align: middle;">
-                                        <div style="font-size: 13.5pt; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.15;">
-                                            {{ company.company_name|default:"SAIGANGA ENTERPRISES" }}
-                                        </div>
-                                        <div style="font-size: 7.5pt; font-weight: 700; color: #fb923c; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 1px;">
-                                            {{ company.tagline|default:"Authorized Dealership & Service Center" }}{% if company.city %} &bull; {{ company.city }}{% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                            <div style="font-size: 7pt; color: #cbd5e1; margin-top: 4px; line-height: 1.25;">
-                                {{ company.full_address|default:"Subhadra Complex, Ladgaon Road, Vaijapur, Dist. Aurangabad" }}
+                        {% if company.display_logo_path %}
+                        <td style="width: 58px; vertical-align: top; padding-right: 8px;">
+                            <img src="{{ company.display_logo_path }}" width="52" height="42" style="vertical-align: middle;">
+                        </td>
+                        {% endif %}
+                        <td style="vertical-align: top;">
+                            <div style="font-size: 15pt; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1;">
+                                {{ company.company_name|default:"SAIGANGA ENTERPRISES" }}
                             </div>
-                            <div style="font-size: 7pt; font-weight: 700; color: #ffffff; margin-top: 2px;">
+                            <div style="font-size: 7.5pt; font-weight: bold; color: #ea580c; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 2px;">
+                                {{ company.tagline|default:"Authorized Dealership & Service Center" }}{% if company.city %} &bull; {{ company.city }}{% endif %}
+                            </div>
+                            <div style="font-size: 7pt; color: #475569; margin-top: 3px; line-height: 1.3;">
+                                {{ company.full_address|default:"Showroom Premises, Main Road" }}
+                            </div>
+                            <div style="font-size: 7pt; font-weight: bold; color: #0f172a; margin-top: 2px;">
                                 {% if company.mobile_numbers %}
-                                <span>Mob: {{ company.mobile_numbers }}</span>
+                                <span>Phone: {{ company.mobile_numbers }}</span>
                                 {% endif %}
                                 {% if company.gstin_number %}
                                 &nbsp;&bull;&nbsp;<span>GSTIN: {{ company.gstin_number }}</span>
@@ -53,192 +41,194 @@
                 </table>
             </td>
 
-            <!-- Right: DELIVERY CHALLAN Title & Metadata -->
-            <td style="width: 42%; vertical-align: top; text-align: right;">
-                <div style="font-size: 21pt; font-weight: 900; color: #ea580c; letter-spacing: 1.5px; line-height: 1; text-transform: uppercase;">
+            <!-- Right: Document Title & Metadata Box -->
+            <td style="width: 40%; vertical-align: top; text-align: right;">
+                <div style="font-size: 19pt; font-weight: 900; color: #0f172a; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1;">
                     DELIVERY CHALLAN
                 </div>
-                <div style="font-size: 7.5pt; font-weight: 700; color: #64748b; letter-spacing: 0.8px; text-transform: uppercase; margin-top: 2px;">
-                    Official Vehicle Dispatch Memo
+                <div style="font-size: 7pt; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px;">
+                    Official Vehicle & Machinery Dispatch Memo
                 </div>
                 <div style="margin-top: 4px;">
-                    <span id="copy-badge" style="display: inline-block; padding: 2px 9px; background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 7pt; font-weight: 700; color: #475569; letter-spacing: 0.5px;">
-                        [ ORIGINAL DISPATCH COPY ]
+                    <span style="display: inline-block; padding: 2px 8px; background-color: #f1f5f9; border: 1px solid #cbd5e1; font-size: 6.5pt; font-weight: bold; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
+                        [ VEHICLE DISPATCH COPY ]
                     </span>
                 </div>
 
-                <!-- Challan Meta Info Card (Clean Rounded Box) -->
-                <table style="width: 88%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 5px; margin-left: auto; font-size: 7.5pt; overflow: hidden;">
-                    <tr>
-                        <td style="padding: 4px 8px;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="text-align: right; color: #64748b; font-weight: 700; text-transform: uppercase; padding: 1px 6px 1px 0;">Challan # :</td>
-                                    <td style="text-align: right; font-weight: 900; color: #0f172a; font-family: Courier, monospace; font-size: 9pt; padding: 1px 0; width: 75px;">{{ bill.bill_number }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align: right; color: #64748b; font-weight: 700; text-transform: uppercase; padding: 1px 6px 1px 0;">Dated :</td>
-                                    <td style="text-align: right; font-weight: 800; color: #0f172a; padding: 1px 0;">{{ bill.bill_date|date:"d / m / Y" }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align: right; color: #64748b; font-weight: 700; text-transform: uppercase; padding: 1px 6px 1px 0;">Dispatch Mode :</td>
-                                    <td style="text-align: right; font-weight: 800; color: #0f172a; padding: 1px 0;">Showroom Direct</td>
-                                </tr>
-                            </table>
-                        </td>
+                <!-- Metadata Box -->
+                <table style="width: 100%; border: 1px solid #cbd5e1; border-collapse: collapse; margin-top: 5px; font-size: 7.5pt;">
+                    <tr style="background-color: #f8fafc;">
+                        <td style="padding: 2.5px 6px; color: #64748b; font-weight: bold; text-align: left; width: 45%; border-bottom: 1px solid #e2e8f0;">Challan No:</td>
+                        <td style="padding: 2.5px 6px; font-weight: 900; color: #0f172a; font-family: Courier, monospace; text-align: right; width: 55%; border-bottom: 1px solid #e2e8f0;">{{ bill.bill_number }}</td>
+                    </tr>
+                    <tr style="background-color: #ffffff;">
+                        <td style="padding: 2.5px 6px; color: #64748b; font-weight: bold; text-align: left; border-bottom: 1px solid #e2e8f0;">Dated:</td>
+                        <td style="padding: 2.5px 6px; font-weight: bold; color: #0f172a; text-align: right; border-bottom: 1px solid #e2e8f0;">{{ bill.bill_date|date:"d / m / Y" }}</td>
+                    </tr>
+                    <tr style="background-color: #f8fafc;">
+                        <td style="padding: 2.5px 6px; color: #64748b; font-weight: bold; text-align: left;">Dispatch Mode:</td>
+                        <td style="padding: 2.5px 6px; font-weight: bold; color: #0f172a; text-align: right;">Showroom Direct</td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
 
-    <!-- 2. CONSIGNEE & DISPATCH PARTICULARS SECTION (Dual Rounded Cards) -->
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+    <!-- Dual Accent Dividing Strip (Solid, No Radius) -->
+    <table style="width: 100%; border-collapse: collapse; height: 3px; margin-bottom: 8px;">
+        <tr>
+            <td style="width: 70%; background-color: #0f172a; height: 3px; font-size: 1px; line-height: 1px;">&nbsp;</td>
+            <td style="width: 30%; background-color: #ea580c; height: 3px; font-size: 1px; line-height: 1px;">&nbsp;</td>
+        </tr>
+    </table>
+
+    <!-- 2. TWIN EXECUTIVE CARDS: CONSIGNEE & DISPATCH PARTICULARS -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 9px;">
         <tr>
             <!-- Left Card: Dispatched To / Customer Details -->
-            <td style="width: 54%; vertical-align: top; padding-right: 8px;">
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 3px solid #ea580c; border-radius: 10px; overflow: hidden;">
-                    <tr>
-                        <td style="padding: 8px 12px;">
-                            <div style="font-size: 7.5pt; font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px;">
-                                Dispatched To (Consignee) :
-                            </div>
-                            <div style="font-size: 11.5pt; font-weight: 900; color: #0f172a; line-height: 1.2;">
-                                {{ bill.customer.full_name }}
-                            </div>
-                            <div style="font-size: 7.5pt; color: #475569; margin-top: 3px; line-height: 1.3;">
-                                <span style="color: #64748b; font-weight: 600;">Village:</span> <strong>{{ bill.customer.village|default:"--" }}</strong> &bull;
-                                <span style="color: #64748b; font-weight: 600;">Taluka:</span> <strong>{{ bill.customer.taluka|default:"--" }}</strong>
-                            </div>
-                            <div style="font-size: 7.5pt; color: #475569; margin-top: 1px;">
-                                <span style="color: #64748b; font-weight: 600;">District:</span> <strong>{{ bill.customer.district|default:"--" }}</strong> &bull;
-                                <span style="color: #64748b; font-weight: 600;">State:</span> <strong>{{ bill.customer.state|default:"Maharashtra" }}</strong>
-                            </div>
-                            <div style="font-size: 7.5pt; color: #0f172a; font-weight: 700; margin-top: 2px;">
-                                <span style="color: #64748b;">Contact:</span> <span style="font-family: Courier, monospace;">{{ bill.customer.mobile_primary|default:"--" }}</span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+            <td style="width: 50%; vertical-align: top; padding-right: 5px;">
+                <div style="background-color: #0f172a; color: #ffffff; font-size: 7pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; padding: 4px 8px;">
+                    Dispatched To (Consignee Details)
+                </div>
+                <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-top: none; padding: 6px 8px; font-size: 7.5pt;">
+                    <div style="font-size: 10.5pt; font-weight: 900; color: #0f172a; text-transform: uppercase;">
+                        {{ bill.customer.full_name }}
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 3px; font-size: 7.5pt; color: #334155;">
+                        <tr>
+                            <td style="width: 55px; color: #64748b; font-weight: bold; padding: 1px 0;">Village:</td>
+                            <td style="padding: 1px 0;"><strong>{{ bill.customer.village|default:"--" }}</strong> &bull; Tal: <strong>{{ bill.customer.taluka|default:"--" }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="color: #64748b; font-weight: bold; padding: 1px 0;">District:</td>
+                            <td style="padding: 1px 0;"><strong>{{ bill.customer.district|default:"--" }}</strong> &bull; State: <strong>{{ bill.customer.state|default:"Maharashtra" }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="color: #64748b; font-weight: bold; padding: 1px 0;">Contact:</td>
+                            <td style="padding: 1px 0;"><strong>{{ bill.customer.mobile_primary|default:"--" }}</strong></td>
+                        </tr>
+                    </table>
+                </div>
             </td>
 
-            <!-- Right Card: Delivered From & Financer Details -->
-            <td style="width: 46%; vertical-align: top; padding-left: 2px;">
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 3px solid #0f172a; border-radius: 10px; overflow: hidden;">
-                    <tr>
-                        <td style="padding: 8px 12px;">
-                            <div style="font-size: 7.5pt; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px;">
-                                Dispatch & Financier Particulars :
-                            </div>
-                            <div style="font-size: 7.5pt; color: #475569; margin-top: 2px;">
-                                <span style="color: #64748b; font-weight: 600;">Delivered From :</span>
-                                <strong style="color: #0f172a;">{{ bill.challan_detail.delivered_from|default:company.company_name|default:"SAIGANGA ENTERPRISES" }}</strong>
-                            </div>
-                            <div style="font-size: 7.5pt; color: #475569; margin-top: 2px;">
-                                <span style="color: #64748b; font-weight: 600;">Financier / Hypothecation :</span>
-                                <strong style="color: #1e293b;">{{ bill.challan_detail.financer|default:"Indusind Bank Ltd." }}</strong>
-                            </div>
-                            <div style="font-size: 6.5pt; color: #64748b; margin-top: 3px; font-style: italic; line-height: 1.25;">
-                                Official delivery challan acknowledging physical dispatch of goods
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+            <!-- Right Card: Dispatch & Financier Particulars -->
+            <td style="width: 50%; vertical-align: top; padding-left: 5px;">
+                <div style="background-color: #0f172a; color: #ffffff; font-size: 7pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; padding: 4px 8px;">
+                    Dispatch & Financier Particulars
+                </div>
+                <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-top: none; padding: 6px 8px; font-size: 7.5pt;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; color: #334155;">
+                        <tr>
+                            <td style="width: 90px; color: #64748b; font-weight: bold; padding: 1px 0;">Delivered From:</td>
+                            <td style="padding: 1px 0;"><strong style="color: #0f172a;">{{ bill.challan_detail.delivered_from|default:company.company_name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="color: #64748b; font-weight: bold; padding: 1px 0;">Hypothecation:</td>
+                            <td style="padding: 1px 0;"><strong style="color: #1e293b;">{{ bill.challan_detail.financer|default:bill.bank_name|default:"Direct / None" }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="color: #64748b; font-weight: bold; padding: 1px 0;">Driver / Trans:</td>
+                            <td style="padding: 1px 0;"><strong>Self Driven / Delivery Representative</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="color: #64748b; font-weight: bold; padding: 1px 0;">Gate Pass Status:</td>
+                            <td style="padding: 1px 0;"><strong style="color: #059669;">Cleared For Physical Handover</strong></td>
+                        </tr>
+                    </table>
+                    <div style="font-size: 6.5pt; color: #64748b; margin-top: 3px; font-style: italic; line-height: 1.25;">
+                        Official delivery challan acknowledging physical dispatch of equipment
+                    </div>
+                </div>
             </td>
         </tr>
     </table>
 
-    <!-- 3. ITEMS SPECIFICATION TABLE (Card Container with Rounded Borders) -->
-    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background-color: #ffffff;">
+    <!-- 3. ITEMS SPECIFICATION TABLE (Unified Executive Header) -->
+    <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; margin-bottom: 10px;">
         <thead>
-            <tr>
-                <th style="background-color: #ea580c; color: #ffffff; padding: 6px 5px; font-size: 7.5pt; font-weight: 800; text-align: center; width: 5%; text-transform: uppercase;">
-                    No.
+            <tr style="background-color: #0f172a;">
+                <th style="width: 5%; text-align: center; color: #ffffff; font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 4px; border-bottom: 2px solid #ea580c;">
+                    Sr.
                 </th>
-                <th style="background-color: #ea580c; color: #ffffff; padding: 6px 8px; font-size: 7.5pt; font-weight: 800; text-align: left; width: 37%; text-transform: uppercase; letter-spacing: 0.5px;">
-                    Item Description
+                <th style="width: 37%; text-align: left; color: #ffffff; font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 8px; border-bottom: 2px solid #ea580c;">
+                    Item Description & Specifications
                 </th>
-                <th style="background-color: #0f172a; color: #ffffff; padding: 6px 6px; font-size: 7.5pt; font-weight: 800; text-align: center; width: 19%; text-transform: uppercase;">
+                <th style="width: 20%; text-align: center; color: #ffffff; font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 4px; border-bottom: 2px solid #ea580c;">
                     Chassis No
                 </th>
-                <th style="background-color: #0f172a; color: #ffffff; padding: 6px 6px; font-size: 7.5pt; font-weight: 800; text-align: center; width: 19%; text-transform: uppercase;">
+                <th style="width: 20%; text-align: center; color: #ffffff; font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 4px; border-bottom: 2px solid #ea580c;">
                     Engine No
                 </th>
-                <th style="background-color: #0f172a; color: #ffffff; padding: 6px 4px; font-size: 7.5pt; font-weight: 800; text-align: center; width: 6%; text-transform: uppercase;">
+                <th style="width: 5%; text-align: center; color: #ffffff; font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 4px; border-bottom: 2px solid #ea580c;">
                     Qty
                 </th>
-                <th style="background-color: #0f172a; color: #ffffff; padding: 6px 8px; font-size: 7.5pt; font-weight: 800; text-align: right; width: 14%; text-transform: uppercase;">
+                <th style="width: 13%; text-align: right; color: #ffffff; font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 8px; border-bottom: 2px solid #ea580c;">
                     Amount (Rs.)
                 </th>
             </tr>
         </thead>
         <tbody>
             {% for item in items %}
-            <tr style="border-bottom: 1px solid #e2e8f0; {% if forloop.counter|divisibleby:2 %}background-color: #fafbfc;{% else %}background-color: #ffffff;{% endif %}">
-                <td style="padding: 7px 5px; text-align: center; font-size: 7.5pt; font-weight: 700; color: #64748b; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
+            <tr style="{% if forloop.counter|divisibleby:2 %}background-color: #f8fafc;{% else %}background-color: #ffffff;{% endif %}">
+                <td style="padding: 6px 4px; text-align: center; font-weight: bold; color: #64748b; vertical-align: top; border-bottom: 1px solid #e2e8f0; font-size: 8pt;">
                     {{ forloop.counter|stringformat:"02d" }}
                 </td>
-                <td style="padding: 7px 8px; font-size: 8.5pt; font-weight: 800; color: #0f172a; vertical-align: top; line-height: 1.3; border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 6px 8px; font-weight: bold; color: #0f172a; vertical-align: top; border-bottom: 1px solid #e2e8f0; font-size: 8pt; line-height: 1.3;">
                     {{ item.item_description }}
                 </td>
-                <td style="padding: 7px 6px; text-align: center; font-size: 8pt; font-family: Courier, monospace; font-weight: 700; color: #1e293b; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 6px 4px; text-align: center; font-size: 8pt; font-family: Courier, monospace; font-weight: bold; color: #1e293b; vertical-align: top; border-bottom: 1px solid #e2e8f0;">
                     {{ item.chassis_number|default:bill.challan_detail.chassis_number|default:"--" }}
                 </td>
-                <td style="padding: 7px 6px; text-align: center; font-size: 8pt; font-family: Courier, monospace; font-weight: 700; color: #1e293b; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 6px 4px; text-align: center; font-size: 8pt; font-family: Courier, monospace; font-weight: bold; color: #1e293b; vertical-align: top; border-bottom: 1px solid #e2e8f0;">
                     {{ item.engine_number|default:bill.challan_detail.engine_number|default:"--" }}
                 </td>
-                <td style="padding: 7px 4px; text-align: center; font-size: 8pt; font-weight: 800; color: #1e293b; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 6px 4px; text-align: center; font-weight: bold; color: #1e293b; vertical-align: top; border-bottom: 1px solid #e2e8f0; font-size: 8pt;">
                     {{ item.quantity }}
                 </td>
-                <td style="padding: 7px 8px; text-align: right; font-size: 8.5pt; font-weight: 900; font-family: Courier, monospace; color: #0f172a; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
-                    {{ item.amount|floatformat:2 }}
+                <td style="padding: 6px 8px; text-align: right; font-weight: bold; color: #0f172a; vertical-align: top; border-bottom: 1px solid #e2e8f0; font-size: 8pt; font-family: Courier, monospace;">
+                    {{ item.amount|floatformat:2|intcomma }}
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <!-- PROPER GENEROUS GAP AFTER TABLE (Addressing User Crowding Feedback!) -->
-    <div style="height: 20px;"></div>
-
-    <!-- 4. FINANCIAL SUMMARY & BOTTOM ACCENT CARDS (All with Smooth Rounded Borders!) -->
-    <table style="width: 100%; border-collapse: collapse;">
+    <!-- 4. SETTLEMENT & SUMMARY SECTION -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
         <tr>
-            <!-- Left Side: Received Acknowledgment, Amount in Words Card, Customer Sign -->
-            <td style="width: 58%; vertical-align: top; padding-right: 14px;">
-                <div style="font-size: 10pt; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
-                    Goods Received in Good Condition
-                </div>
-
-                <!-- Amount in Words Card (With Smooth Rounded Borders) -->
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 8px;">
-                    <tr>
-                        <td style="padding: 6px 10px;">
-                            <span style="font-size: 7.5pt; font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.5px;">Amount in Words :</span>
-                            <span style="font-size: 7.5pt; font-weight: 800; color: #0f172a; margin-left: 4px; text-transform: capitalize;">
-                                {{ bill.amount_in_words|default:"Rupees Zero Only" }}
-                            </span>
+            <!-- Left Side: Amount in Words, Receipt Acknowledgment & Customer Signature -->
+            <td style="width: 58%; vertical-align: top; padding-right: 10px;">
+                <!-- Amount in Words Card -->
+                <table style="width: 100%; border: 1px solid #cbd5e1; border-collapse: collapse; margin-bottom: 6px;">
+                    <tr style="background-color: #0f172a;">
+                        <td style="padding: 2.5px 6px; font-size: 6.5pt; font-weight: bold; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Amount in Words
+                        </td>
+                    </tr>
+                    <tr style="background-color: #f8fafc;">
+                        <td style="padding: 5px 8px; font-size: 7.5pt; font-weight: bold; color: #0f172a;">
+                            {{ bill.amount_in_words|default:"Rupees Zero Only" }}
                         </td>
                     </tr>
                 </table>
 
                 <!-- Consignee Acknowledgment Note -->
-                <div style="margin-bottom: 8px;">
-                    <div style="font-size: 6.5pt; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px;">
-                        Delivery Receipt & Acknowledgment :
+                <div style="font-size: 6.5pt; color: #475569; line-height: 1.3; margin-bottom: 6px;">
+                    <div style="font-weight: bold; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px;">
+                        Delivery Receipt & Acknowledgment:
                     </div>
-                    <div style="font-size: 5.5pt; color: #64748b; line-height: 1.3; text-align: justify;">
-                        “I/We hereby acknowledge receipt of the vehicle / machinery described above in good condition along with standard equipment, accessories, and warranty documents to our full satisfaction.”
-                    </div>
+                    <div>“I/We hereby acknowledge receipt of the vehicle / machinery described above in good condition along with standard equipment, tool kit, and warranty documents to our full satisfaction.”</div>
                 </div>
 
-                <!-- Customer Signature Box (Smooth Rounded Borders) -->
-                <table style="width: 75%; border-collapse: separate; border-spacing: 0; border: 1px dashed #cbd5e1; border-radius: 8px; background-color: #fafbfc; overflow: hidden;">
+                <!-- Customer Signature Box -->
+                <table style="width: 75%; border: 1px dashed #cbd5e1; background-color: #f8fafc; border-collapse: collapse;">
                     <tr>
                         <td style="padding: 6px 8px; text-align: center;">
                             <div style="height: 22px;"></div>
                             <div style="border-top: 1px solid #94a3b8; width: 85%; margin: 0 auto; padding-top: 2px;">
-                                <span style="font-size: 6.5pt; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Customer / Consignee Signature</span>
+                                <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    Customer / Consignee Signature
+                                </span>
                             </div>
                         </td>
                     </tr>
@@ -247,44 +237,36 @@
 
             <!-- Right Side: Total Amount & Authorised Dispatcher Signature -->
             <td style="width: 42%; vertical-align: top;">
-                <!-- Subtotal Row -->
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 7.5pt;">
+                <!-- Total Amount Box -->
+                <table style="width: 100%; border-collapse: collapse; background-color: #0f172a; margin-bottom: 8px;">
                     <tr>
-                        <td style="padding: 2px 0; color: #64748b; font-weight: 700;">Subtotal :</td>
-                        <td style="padding: 2px 0; text-align: right; font-weight: 800; color: #0f172a; font-family: Courier, monospace; white-space: nowrap;">
-                            Rs. {{ bill.grand_total|floatformat:2 }}
+                        <td style="padding: 8px 10px; font-size: 8pt; font-weight: bold; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; width: 42%; border-left: 4px solid #ea580c;">
+                            Total Valuation:
+                        </td>
+                        <td style="padding: 8px 10px; font-size: 11pt; font-weight: 900; color: #ffffff; text-align: right; width: 58%; font-family: Courier, monospace;">
+                            Rs. {{ bill.grand_total|floatformat:2|intcomma }}
                         </td>
                     </tr>
                 </table>
 
-                <!-- Solid Coral Total Box (With Smooth Rounded Corners) -->
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #ea580c; border-radius: 10px; overflow: hidden; margin-bottom: 8px;">
+                <!-- Authorised Dispatcher Card -->
+                <table style="width: 100%; border: 1px dashed #cbd5e1; background-color: #f8fafc; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 30%; padding: 7px 10px; font-size: 8.5pt; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Total :
-                        </td>
-                        <td style="width: 70%; padding: 7px 10px; text-align: right; font-size: 11pt; font-weight: 900; color: #ffffff; font-family: Courier, monospace; white-space: nowrap;">
-                            Rs. {{ bill.grand_total|floatformat:2 }}
-                        </td>
-                    </tr>
-                </table>
-
-                <!-- Authorised Signatory Card (Rounded Borders) -->
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1.5px dashed #cbd5e1; border-radius: 10px; background-color: #fafbfc; overflow: hidden;">
-                    <tr>
-                        <td style="padding: 6px 10px; text-align: center;">
-                            <div style="font-size: 7pt; font-weight: 800; color: #0f172a; text-transform: uppercase;">
-                                For {{ company.company_name|default:"Saiganga Enterprises" }}
+                        <td style="padding: 6px 8px; text-align: center;">
+                            <div style="font-size: 7pt; font-weight: bold; color: #0f172a; text-transform: uppercase;">
+                                For {{ company.company_name|default:"Showroom" }}
                             </div>
-                            {% if company.signature_image %}
-                            <div style="height: 26px; display: flex; align-items: center; justify-content: center; margin: 2px 0;">
-                                <img src="{{ company.signature_image.url }}" alt="Signature" height="24" style="max-height: 24px; max-width: 100px; object-fit: contain;">
+                            {% if company.signature_image_path %}
+                            <div style="margin: 2px 0;">
+                                <img src="{{ company.signature_image_path }}" height="26" style="vertical-align: middle;">
                             </div>
                             {% else %}
-                            <div style="height: 26px;"></div>
+                            <div style="height: 28px;"></div>
                             {% endif %}
-                            <div style="border-top: 1px solid #94a3b8; width: 80%; margin: 0 auto; padding-top: 2px;">
-                                <span style="font-size: 7pt; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">Authorised Dispatcher</span>
+                            <div style="border-top: 1px solid #94a3b8; width: 85%; margin: 0 auto; padding-top: 2px;">
+                                <span style="font-size: 7pt; font-weight: bold; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    Authorised Dispatcher
+                                </span>
                             </div>
                         </td>
                     </tr>
@@ -293,16 +275,13 @@
         </tr>
     </table>
 
-    <!-- 5. BOTTOM GEOMETRIC ACCENT BAR -->
-    <div style="height: 10px;"></div>
-    <table style="width: 100%; border-collapse: collapse;">
+    <!-- 5. BOTTOM SYSTEM FOOTER -->
+    <table style="width: 100%; border-top: 1px solid #cbd5e1; border-collapse: collapse; margin-top: 6px; padding-top: 3px;">
         <tr>
-            <td style="width: 65%;"></td>
-            <td style="width: 35%; height: 5px; background-color: #0f172a; border-radius: 4px;"></td>
+            <td style="text-align: center; font-size: 6.5pt; color: #64748b; letter-spacing: 0.3px;">
+                This is a Computer Generated Delivery Challan &bull; Official Dispatch Memo &bull; Subject to {{ company.city|default:"Local" }} Jurisdiction
+            </td>
         </tr>
     </table>
-    <div style="text-align: center; font-size: 6pt; color: #94a3b8; margin-top: 2px; letter-spacing: 0.3px;">
-        This is a Computer Generated Delivery Challan &bull; Official Dispatch Memo
-    </div>
 
 </div>

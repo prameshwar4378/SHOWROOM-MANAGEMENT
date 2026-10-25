@@ -218,6 +218,47 @@ class CompanyProfile(models.Model):
         return [m.strip() for m in self.mobile_numbers.split(',') if m.strip()]
 
     @property
+    def brand_logo_path(self):
+        """Return absolute filesystem path to brand logo if it exists on disk, else None."""
+        try:
+            if self.brand_logo and self.brand_logo.name:
+                import os
+                if os.path.isfile(self.brand_logo.path):
+                    return self.brand_logo.path
+        except Exception:
+            pass
+        return None
+
+    @property
+    def company_logo_path(self):
+        """Return absolute filesystem path to company logo if it exists on disk, else None."""
+        try:
+            if self.company_logo and self.company_logo.name:
+                import os
+                if os.path.isfile(self.company_logo.path):
+                    return self.company_logo.path
+        except Exception:
+            pass
+        return None
+
+    @property
+    def display_logo_path(self):
+        """Return primary logo filesystem path (brand logo preferred, then company logo)."""
+        return self.brand_logo_path or self.company_logo_path
+
+    @property
+    def signature_image_path(self):
+        """Return absolute filesystem path to signature image if it exists on disk, else None."""
+        try:
+            if self.signature_image and self.signature_image.name:
+                import os
+                if os.path.isfile(self.signature_image.path):
+                    return self.signature_image.path
+        except Exception:
+            pass
+        return None
+
+    @property
     def primary_bank(self):
         """Return the primary active bank account or first active account."""
         return self.bank_details.filter(is_active=True).order_by('-is_primary', 'id').first()

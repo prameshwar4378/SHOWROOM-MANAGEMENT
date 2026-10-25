@@ -107,17 +107,33 @@ def link_callback(uri, rel):
     from django.conf import settings
     from django.contrib.staticfiles import finders
 
-    if uri.startswith(settings.MEDIA_URL):
-        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, "", 1))
-    elif uri.startswith(settings.STATIC_URL):
-        rel_path = uri.replace(settings.STATIC_URL, "", 1)
-        path = os.path.join(settings.STATIC_ROOT, rel_path) if settings.STATIC_ROOT else None
-        if not path or not os.path.exists(path):
-            path = finders.find(rel_path)
-    else:
-        return uri
+    if not uri:
+        return ""
 
-    if not path or not os.path.isfile(path):
-        return uri
-    return path
+    # If already an existing absolute filesystem path
+    try:
+        if os.path.isfile(uri):
+            return uri
+    except Exception:
+        pass
+
+    # Media files (e.g., /media/logos/image.png)
+    if settings.MEDIA_URL and uri.startswith(settings.MEDIA_URL):
+        rel_path = uri.replace(settings.MEDIA_URL, "", 1).lstrip('/\\')
+        path = os.path.normpath(os.path.join(settings.MEDIA_ROOT, rel_path))
+        if os.path.isfile(path):
+            return path
+
+    # Static files (e.g., /static/img/logo.png)
+    if settings.STATIC_URL and uri.startswith(settings.STATIC_URL):
+        rel_path = uri.replace(settings.STATIC_URL, "", 1).lstrip('/\\')
+        path = os.path.normpath(os.path.join(settings.STATIC_ROOT, rel_path)) if settings.STATIC_ROOT else None
+        if not path or not os.path.isfile(path):
+            found = finders.find(rel_path)
+            if found:
+                path = found
+        if path and os.path.isfile(path):
+            return path
+
+    return uri
 
