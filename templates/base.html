@@ -114,6 +114,9 @@
     </style>
     <!-- Universal Searchable Selects & UI Design Tokens -->
     <link rel="stylesheet" href="{% static 'css/searchable-select.css' %}">
+    <!-- Top Progress Loader Line (YouTube / GitHub style) -->
+    <link rel="stylesheet" href="{% static 'css/top-loader.css' %}">
+    <script src="{% static 'js/top-loader.js' %}"></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="h-full bg-gray-50" x-data="{
@@ -134,6 +137,13 @@
         this.hint.show = false;
     }
 }">
+    <!-- Global Top Progress Loader Line (Instant visual feedback on clicks, form submit & page load) -->
+    <div id="top-loader" class="top-loader-container" role="progressbar" aria-hidden="true">
+        <div class="top-loader-bar" id="top-loader-bar">
+            <div class="top-loader-peg"></div>
+        </div>
+    </div>
+
     <div class="flex h-full">
         <!-- Sidebar -->
         <aside class="no-print fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar text-white transition-all duration-300 shadow-xl"

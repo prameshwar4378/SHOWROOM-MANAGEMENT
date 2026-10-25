@@ -1,0 +1,50 @@
+/**
+ * Modern High-Fidelity Top Progress Loader Line
+ * Showroom Management ERP
+ */
+
+.top-loader-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 2147483647; /* Maximum possible z-index to float above all modals, tables, headers */
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease-out;
+}
+
+.top-loader-container.is-active {
+    opacity: 1;
+}
+
+.top-loader-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #06b6d4 100%);
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.8), 0 0 5px rgba(6, 182, 212, 0.6);
+    transition: width 0.22s cubic-bezier(0.1, 0.7, 0.1, 1);
+    position: relative;
+    border-radius: 0 2px 2px 0;
+}
+
+/* Glowing energy pulse at the right leading edge of the progress bar */
+.top-loader-peg {
+    position: absolute;
+    right: 0;
+    top: -2px;
+    width: 100px;
+    height: 7px;
+    box-shadow: 0 0 12px #3b82f6, 0 0 6px #06b6d4;
+    border-radius: 50%;
+    opacity: 0.9;
+    transform: rotate(3deg) translateY(-2px);
+    pointer-events: none;
+}
+
+@media print {
+    .top-loader-container {
+        display: none !important;
+    }
+}
