@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if form.instance.pk %}खर्च संपादन #{{ form.instance.expense_number }}{% else %}नवीन खर्च नोंदवा{% endif %} — Showroom Expenses{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit Expense #{{ form.instance.expense_number }}{% else %}Record Showroom Expense{% endif %} — Showroom Expenses{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
@@ -12,21 +12,25 @@
                     <i class="fas fa-receipt"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-bold text-slate-800 tracking-tight">
-                        {% if form.instance.pk %}खर्च पावती संपादित करा (Edit Expense){% else %}नवीन खर्च नोंदवा (Record Expense){% endif %}
-                    </h3>
-                    <p class="text-xs text-slate-400">शो-रूम दैनिक खर्च, डिझेल, बिल, पगार किंवा इतर खर्च व्हाउचर नोंदवा</p>
+                    <div class="flex items-center">
+                        <h3 class="text-base font-bold text-slate-800 tracking-tight">
+                            {% if form.instance.pk %}Edit Expense Voucher #{{ form.instance.expense_number }}{% else %}Record Showroom Expense{% endif %}
+                        </h3>
+                        <!-- Info (i) Popover Button -->
+                        {% include 'includes/settings_help_popover.html' with topic='expense_recording' %}
+                    </div>
+                    <p class="text-xs text-slate-400">Record showroom operational costs, diesel, utilities, salaries, or vendor vouchers.</p>
                 </div>
             </div>
             <a href="{% url 'expenses:expense_list' %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
-                <i class="fas fa-arrow-left text-[10px]"></i> सर्व खर्च
+                <i class="fas fa-arrow-left text-[10px]"></i> All Expenses
             </a>
         </div>
 
         {% if form.errors %}
         <div class="mb-5 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
             <div class="font-bold flex items-center gap-2 mb-1">
-                <i class="fas fa-circle-exclamation"></i> कृपया खालील त्रुटी तपासा:
+                <i class="fas fa-circle-exclamation"></i> Please review and correct the errors below:
             </div>
             <ul class="list-disc list-inside space-y-0.5 text-rose-700">
                 {% for field, errors in form.errors.items %}
@@ -46,10 +50,10 @@
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                            खर्च प्रकार (Category) <span class="text-red-500">*</span>
+                            Expense Category <span class="text-red-500">*</span>
                         </label>
                         <a href="{% url 'expenses:category_create' %}" target="_blank" class="text-[11px] text-blue-600 font-semibold hover:underline flex items-center gap-1">
-                            <i class="fas fa-plus text-[9px]"></i> नवीन प्रकार
+                            <i class="fas fa-plus text-[9px]"></i> New Category
                         </a>
                     </div>
                     {{ form.category }}
@@ -60,7 +64,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        खर्च तारीख (Expense Date) <span class="text-red-500">*</span>
+                        Expense Date <span class="text-red-500">*</span>
                     </label>
                     {{ form.expense_date }}
                     {% if form.expense_date.errors %}
@@ -72,7 +76,7 @@
             <!-- Row 2: Amount (Large Highlighted Box) -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    खर्च रक्कम (Amount in ₹) <span class="text-red-500">*</span>
+                    Expense Amount (₹) <span class="text-red-500">*</span>
                 </label>
                 <div class="relative rounded-xl shadow-2xs">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-rose-600 font-black text-lg">
@@ -96,10 +100,10 @@
             <!-- Row 3: Title / Description -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    खर्च शीर्षक / तपशील (Description / Title) <span class="text-red-500">*</span>
+                    Description / Title <span class="text-red-500">*</span>
                 </label>
                 {{ form.title }}
-                <p class="text-[11px] text-slate-400 mt-1">उदा. शो-रूम वीज बिल (ऑक्टोबर), ट्रॅक्टर डेमो डिझेल २० लिटर, चहा-नाश्ता</p>
+                <p class="text-[11px] text-slate-400 mt-1">e.g. Showroom Electricity Bill (Oct), Tractor Demo Diesel 20L, Hospitality & Tea</p>
                 {% if form.title.errors %}
                 <p class="text-xs text-red-500 mt-1">{{ form.title.errors.0 }}</p>
                 {% endif %}
@@ -109,7 +113,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        कोणाला दिले? (Paid To / Vendor / Staff)
+                        Paid To / Payee / Vendor
                     </label>
                     {{ form.payee_name }}
                     {% if form.payee_name.errors %}
@@ -119,7 +123,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        पेमेंट पद्धत (Payment Mode) <span class="text-red-500">*</span>
+                        Payment Mode <span class="text-red-500">*</span>
                     </label>
                     {{ form.payment_mode }}
                     {% if form.payment_mode.errors %}
@@ -131,10 +135,10 @@
             <!-- Row 5: Reference / Cheque No / UTR -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    रेफरन्स / UTR / चेक क्रमांक (Payment Reference)
+                    Payment Reference / UTR / Cheque No.
                 </label>
                 {{ form.payment_reference }}
-                <p class="text-[11px] text-slate-400 mt-1">बँक ट्रान्सफर UTR, UPI transaction ID, किंवा चेक नंबर (पर्यायी)</p>
+                <p class="text-[11px] text-slate-400 mt-1">Bank transfer UTR, UPI transaction ID, or cheque number (optional)</p>
                 {% if form.payment_reference.errors %}
                 <p class="text-xs text-red-500 mt-1">{{ form.payment_reference.errors.0 }}</p>
                 {% endif %}
@@ -143,12 +147,12 @@
             <!-- Row 6: Receipt / Bill Upload -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    बिल / पावती फोटो किंवा PDF (Attach Receipt / Bill Voucher)
+                    Attach Scanned Bill / Receipt Photo (Optional)
                 </label>
                 {{ form.receipt_voucher }}
                 {% if form.instance.receipt_voucher %}
                 <p class="text-xs text-blue-600 mt-1">
-                    सध्याची फाइल: <a href="{{ form.instance.receipt_voucher.url }}" target="_blank" class="underline font-semibold">पहा (View Existing File)</a>
+                    Current file: <a href="{{ form.instance.receipt_voucher.url }}" target="_blank" class="underline font-semibold">View Existing Attachment</a>
                 </p>
                 {% endif %}
                 {% if form.receipt_voucher.errors %}
@@ -159,7 +163,7 @@
             <!-- Row 7: Internal Remarks / Notes -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    अंतर्गत शेरा (Internal Notes / Remarks)
+                    Internal Notes / Remarks
                 </label>
                 {{ form.notes }}
                 {% if form.notes.errors %}
@@ -171,12 +175,12 @@
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <a href="{% url 'expenses:expense_list' %}"
                    class="px-5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
-                    रद्द करा (Cancel)
+                    Cancel
                 </a>
                 <button type="submit"
                         class="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition cursor-pointer flex items-center gap-2">
                     <i class="fas fa-check text-xs"></i>
-                    <span>{% if form.instance.pk %}अपडेट करा (Update Expense){% else %}खर्च सेव्ह करा (Save Expense){% endif %}</span>
+                    <span>{% if form.instance.pk %}Update Expense{% else %}Save Expense{% endif %}</span>
                 </button>
             </div>
         </form>

@@ -158,7 +158,7 @@ class ExpenseCreateView(LoginRequiredMixin, CreateView):
         response = super().form_valid(form)
         messages.success(
             self.request,
-            f"खर्च पावती यशस्वीरित्या नोंदवली: {self.object.expense_number} - ₹{self.object.amount}"
+            f"Expense voucher recorded successfully: {self.object.expense_number} - ₹{self.object.amount}"
         )
         return response
 
@@ -176,7 +176,7 @@ class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
         response = super().form_valid(form)
         messages.success(
             self.request,
-            f"खर्च पावती {self.object.expense_number} अपडेट केली."
+            f"Expense voucher {self.object.expense_number} updated successfully."
         )
         return response
 
@@ -203,7 +203,7 @@ class ExpenseDeleteView(LoginRequiredMixin, DeleteView):
         exp_no = self.object.expense_number
         amt = self.object.amount
         response = super().delete(request, *args, **kwargs)
-        messages.warning(request, f"खर्च पावती {exp_no} (₹{amt}) यशस्वीरित्या काढून टाकली.")
+        messages.warning(request, f"Expense voucher {exp_no} (₹{amt}) removed successfully.")
         return response
 
 
@@ -250,7 +250,7 @@ class ExpenseCategoryCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        messages.success(self.request, f"खर्च प्रकार '{self.object.name}' यशस्वीरित्या जोडला.")
+        messages.success(self.request, f"Expense category '{self.object.name}' created successfully.")
         return response
 
 
@@ -265,7 +265,7 @@ class ExpenseCategoryUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        messages.success(self.request, f"खर्च प्रकार '{self.object.name}' अपडेट केला.")
+        messages.success(self.request, f"Expense category '{self.object.name}' updated successfully.")
         return response
 
 
@@ -282,10 +282,10 @@ class ExpenseCategoryDeleteView(LoginRequiredMixin, DeleteView):
         if self.object.expenses.exists():
             messages.error(
                 request,
-                f"'{self.object.name}' या प्रकारात खर्च नोंदी असल्याने हा प्रकार डिलीट करता येणार नाही."
+                f"Cannot delete category '{self.object.name}' because it has existing expense vouchers."
             )
             return redirect('expenses:category_list')
-        messages.warning(request, f"खर्च प्रकार '{self.object.name}' काढून टाकला.")
+        messages.warning(request, f"Expense category '{self.object.name}' deleted successfully.")
         return super().post(request, *args, **kwargs)
 
 

@@ -356,6 +356,81 @@ Optional parameters:
                 </div>
             </div>
 
+            {% elif topic == 'expenses_register' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Showroom Expenses Register</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Track and record all daily operational expenditures of the tractor showroom (rent, electricity, tractor demo fuel/diesel, staff salaries & advances, hospitality, workshop consumables, and maintenance).
+                </p>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Features:</span> KPI cards (Filtered Total, Today's Outflow, Current Month Outflow, Cash vs Bank/UPI split), date/category filters, printable debit vouchers, and 1-click CA Excel export.
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">शो-रूम दैनिक खर्च रजिस्टर</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    ट्रॅक्टर शो-रूममधील सर्व दैनिक कामकाजाचा खर्च (उदा. भाडे, वीज बिल, ट्रॅक्टर डेमो व डिलिव्हरी डिझेल, कर्मचाऱ्यांचे पगार व ॲडव्हान्स, चहापान, वर्कशॉप साहित्य व दुरुस्ती) येथे नोंदवून व्यवस्थापित करा.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">वैशिष्ट्ये:</span> आजचा एकूण खर्च, चालू महिन्याचा खर्च, कॅश विरुद्ध बँक विभागणी, प्रिंट करण्यायोग्य खर्च पावती आणि सीए (CA) साठी थेट एक्सेल रिपोर्ट.
+                </div>
+            </div>
+
+            {% elif topic == 'expense_recording' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Recording Showroom Expenses</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Create a formal payment/debit voucher for every rupee paid out. Generates unique voucher reference numbers (e.g. EXP-202610-0001) with payee details, payment mode (Cash, UPI, Cheque, Bank Transfer), and allows uploading scanned receipt photos or invoices.
+                </p>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">नवीन खर्च नोंदणी</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    शो-रूममधून झालेल्या प्रत्येक खर्चाचे अधिकृत व्हाउचर तयार करा. ऑटोमॅटिक व्हाउचर क्रमांक (उदा. EXP-202610-0001), कोणाला दिले त्याचे नाव, पेमेंट पद्धत आणि बिलाचा फोटो किंवा पावती जोडण्याची सुविधा.
+                </p>
+            </div>
+
+            {% elif topic == 'expense_categories' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Expense Categories Master</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Classify showroom expenditure into standard accounting heads (Rent, Fuel, Electricity, Staff Salaries, Hospitality, Marketing, Workshop Consumables). Helps monitor budget leaks and analyze spending breakdowns.
+                </p>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">खर्च प्रकार व्यवस्थापन</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    शो-रूमचा खर्च वेगवेगळ्या खात्यांनुसार (उदा. भाडे, डिझेल, वीज बिल, पगार, चहापान, जाहिरात) वर्गीकृत करा, ज्यामुळे कोणत्या खात्यावर किती खर्च होतो याचे अचूक विश्लेषण मिळते.
+                </p>
+            </div>
+
             {% elif custom_title_en %}
             <!-- Custom English Section -->
             <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">

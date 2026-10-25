@@ -7,24 +7,24 @@
     <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mb-4 text-xl shadow-2xs">
         <i class="fas fa-trash-alt"></i>
     </div>
-    <h3 class="text-lg font-black text-slate-900 tracking-tight">खर्च नोंद डिलीट करावी का? (Delete Expense)</h3>
+    <h3 class="text-lg font-black text-slate-900 tracking-tight">Delete Expense Voucher?</h3>
     <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-        तुम्ही नक्की खर्च व्हाउचर <strong class="text-slate-800 font-mono">{{ object.expense_number }}</strong>
-        (<strong class="text-rose-700">₹{{ object.amount }}</strong> - {{ object.title }}) काढून टाकू इच्छिता का?
+        Are you sure you want to permanently delete expense voucher <strong class="text-slate-800 font-mono">{{ object.expense_number }}</strong>
+        (<strong class="text-rose-700">₹{{ object.amount }}</strong> - {{ object.title }})?
     </p>
 
     <div class="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
         <i class="fas fa-triangle-exclamation text-amber-600"></i>
-        <span>ही कृती परत करता येणार नाही. कॅश रजिस्टरमधून ही नोंद कायमची नष्ट होईल.</span>
+        <span>This action cannot be undone. The entry will be permanently removed from cash flow registers.</span>
     </div>
 
     <form method="post" class="mt-6 flex items-center gap-3">
         {% csrf_token %}
         <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer">
-            होय, डिलीट करा (Yes, Delete)
+            Yes, Delete Voucher
         </button>
         <a href="{% url 'expenses:expense_detail' object.pk %}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
-            रद्द करा (Cancel)
+            Cancel
         </a>
     </form>
 </div>
