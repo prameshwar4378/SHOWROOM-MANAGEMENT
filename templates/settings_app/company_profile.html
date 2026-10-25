@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Company Profile & Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Manage showroom information, headers, bank accounts, and bill configurations{% endblock %}
+
+{% block content %}
+<!-- Settings Tab Bar -->
+<div class="flex items-center gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
+    <a href="{% url 'settings_app:company_profile' %}" class="px-4 py-2.5 text-xs font-bold border-b-2 border-blue-600 text-blue-600 whitespace-nowrap">
+        <i class="fas fa-building mr-1.5"></i> Company Profile & Headers
+    </a>
+    <a href="{% url 'settings_app:bank_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-landmark mr-1.5"></i> Bank Accounts
+    </a>
+    <a href="{% url 'settings_app:gst_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-percent mr-1.5"></i> GST Configurations
+    </a>
+    <a href="{% url 'settings_app:sequence_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-list-ol mr-1.5"></i> Bill Number Sequences
+    </a>
+    <a href="{% url 'settings_app:notification_settings' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fab fa-whatsapp mr-1.5"></i> WhatsApp & SMS Notifications
+    </a>
+    <a href="{% url 'settings_app:notification_logs' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-clock-rotate-left mr-1.5"></i> Notification Logs
+    </a>
+</div>
+
+<!-- Company Profile Form -->
+<div class="bg-white rounded-2xl border border-slate-200/90 p-6 md:p-8 shadow-sm hover:shadow-md/5 transition-all">
+    <form method="post" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+
+        <!-- Basic Business Info -->
+        <div>
+            <div class="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
+                <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center text-xs shadow-2xs">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-1.5">
+                        <h3 class="text-sm font-bold text-slate-800 tracking-tight">1. Showroom Identity & Branding</h3>
+                        {% include 'includes/settings_help_popover.html' with topic='company_identity' %}
+                    </div>
+                    <p class="text-xs text-slate-400">Dealership name, slogan, and logos displayed on bills</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Company / Showroom Name <span class="text-red-500">*</span></label>
+                    {{ form.company_name }}
+                    <p class="text-[11px] text-slate-400 mt-1">e.g. Dealership or Showroom Name</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Tagline / Brand Association</label>
+                    {{ form.tagline }}
+                    <p class="text-[11px] text-slate-400 mt-1">e.g. Authorized Sales & Service Dealer</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Brand Manufacturer Logo (Left on Bill)</label>
+                    {{ form.brand_logo }}
+                    <p class="text-[11px] text-slate-400 mt-1">Upload tractor/brand logo</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Showroom / Company Logo (Right on Bill)</label>
+                    {{ form.company_logo }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Address & Contact -->
+        <div>
+            <div class="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
+                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100/80 flex items-center justify-center text-xs shadow-2xs">
+                    <i class="fas fa-map-location-dot"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-1.5">
+                        <h3 class="text-sm font-bold text-slate-800 tracking-tight">2. Showroom Location & Contacts</h3>
+                        {% include 'includes/settings_help_popover.html' with topic='company_location' %}
+                    </div>
+                    <p class="text-xs text-slate-400">Geographical particulars and phone numbers printed on all invoices</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Address Line 1 <span class="text-red-500">*</span></label>
+                    {{ form.address_line1 }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Address Line 2</label>
+                    {{ form.address_line2 }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">City / Town <span class="text-red-500">*</span></label>
+                    {{ form.city }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Taluka</label>
+                    {{ form.taluka }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">District <span class="text-red-500">*</span></label>
+                    {{ form.district }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">State</label>
+                    {{ form.state }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">PIN Code</label>
+                    {{ form.pin_code }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Mobile Numbers <span class="text-red-500">*</span></label>
+                    {{ form.mobile_numbers }}
+                    <p class="text-[11px] text-slate-400 mt-1">Comma-separated: e.g. 9158593660, 9822000000</p>
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Address</label>
+                    {{ form.email }}
+                </div>
+            </div>
+        </div>
+
+        <!-- GST & PAN Registration -->
+        <div>
+            <div class="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
+                <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 border border-purple-100/80 flex items-center justify-center text-xs shadow-2xs">
+                    <i class="fas fa-file-shield"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-1.5">
+                        <h3 class="text-sm font-bold text-slate-800 tracking-tight">3. Tax Registrations & Legal Declarations</h3>
+                        {% include 'includes/settings_help_popover.html' with topic='company_tax' %}
+                    </div>
+                    <p class="text-xs text-slate-400">Statutory tax numbers and terms rendered on invoices and delivery challans</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">GSTIN Number <span class="text-red-500">*</span></label>
+                    {{ form.gstin_number }}
+                    <p class="text-[11px] text-slate-400 mt-1">e.g. 27AAAAA0000A1Z5</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">PAN Number</label>
+                    {{ form.pan_number }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Legal Declaration Text (Printed on Invoices)</label>
+                    {{ form.declaration_text }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Digital Authorized Signature / Stamp</label>
+                    {{ form.signature_image }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Footer Notice</label>
+                    {{ form.footer_text }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="pt-5 border-t border-slate-100 flex justify-end">
+            <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all focus:ring-4 focus:ring-blue-100 cursor-pointer">
+                <i class="fas fa-save text-xs"></i>
+                <span>Save Showroom Profile Settings</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Developer & Technical Support Card (No Print) -->
+<div class="no-print mt-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-6 text-white shadow-lg border border-slate-700/80">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/20">
+                <i class="fas fa-code text-blue-400"></i>
+                <span>Official Developer & Technical Support</span>
+            </div>
+            <h3 class="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                <span>Developed by</span>
+                <a href="https://ultoxy-tech.github.io/ultoxy/" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline underline-offset-4 inline-flex items-center gap-1.5 transition-colors">
+                    Ultoxy Technologies
+                    <i class="fas fa-external-link-alt text-xs"></i>
+                </a>
+            </h3>
+            <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                For software enhancements, customizations, new billing formats, database backups, or technical assistance, contact the Ultoxy Technologies engineering support desk directly.
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="tel:7776824564" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-900/30 transition-all hover:scale-[1.02]">
+                <i class="fas fa-phone-alt"></i>
+                <span>Call: 7776824564</span>
+            </a>
+            <a href="https://wa.me/917776824564" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all">
+                <i class="fab fa-whatsapp text-sm"></i>
+                <span>WhatsApp Support</span>
+            </a>
+            <a href="https://ultoxy-tech.github.io/ultoxy/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10 text-xs font-bold transition-all">
+                <i class="fas fa-globe"></i>
+                <span>Visit Website</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

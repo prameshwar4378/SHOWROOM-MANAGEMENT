@@ -1,0 +1,548 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Showroom Inventory Management - Showroom ERP{% endblock %}
+{% block page_title %}Showroom Inventory Management{% endblock %}
+{% block page_subtitle %}Live stock tracking, inward purchase bills, serialized tractor units, and instant customer billing{% endblock %}
+
+{% block header_actions %}
+<div class="flex flex-wrap items-center gap-2">
+    <!-- Export Excel -->
+    <a href="{% url 'billing:inventory_export' %}"
+       class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+       title="Export current inventory to Excel">
+        <i class="fas fa-file-excel text-emerald-600"></i> Export Excel
+    </a>
+    <!-- Import Excel -->
+    <a href="{% url 'billing:inventory_import' %}"
+       class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+       title="Import or bulk update stock from Excel">
+        <i class="fas fa-file-arrow-up text-blue-600"></i> Import Stock
+    </a>
+    <!-- Inward Stock via Purchase Bill -->
+    <a href="{% url 'billing:purchase_add' %}"
+       class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+       title="Record inward stock from manufacturer or supplier invoice">
+        <i class="fas fa-file-invoice"></i> + Inward Purchase Bill
+    </a>
+    <!-- Add Serialized Tractor -->
+    <a href="{% url 'billing:stock_unit_add' %}"
+       class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+       title="Add serialized chassis/engine number vehicle">
+        <i class="fas fa-tractor"></i> + Serialized Tractor
+    </a>
+    <!-- Add Product / Spare -->
+    <a href="{% url 'billing:product_add' %}"
+       class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors">
+        <i class="fas fa-plus"></i> + Add Product/Spare
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- KPI Metric Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <!-- 1. Total Stock Count -->
+        <div class="bg-white rounded-xl border border-gray-200 p-3.5 shadow-sm">
+            <div class="flex items-center justify-between text-gray-400 mb-1">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500">Total Stock Qty</span>
+                <i class="fas fa-boxes-stacked text-blue-500 text-sm"></i>
+            </div>
+            <p class="text-xl font-bold text-gray-900">{{ total_stock_qty }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">Physical items available</p>
+        </div>
+
+        <!-- 2. Total Stock Valuation -->
+        <div class="bg-white rounded-xl border border-gray-200 p-3.5 shadow-sm">
+            <div class="flex items-center justify-between text-gray-400 mb-1">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500">Stock Valuation</span>
+                <i class="fas fa-indian-rupee-sign text-emerald-500 text-sm"></i>
+            </div>
+            <p class="text-xl font-bold text-emerald-700">₹{{ total_stock_valuation|intcomma }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">At purchase cost value</p>
+        </div>
+
+        <!-- 3. In-Stock Items -->
+        <div class="bg-white rounded-xl border border-gray-200 p-3.5 shadow-sm">
+            <div class="flex items-center justify-between text-gray-400 mb-1">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500">In-Stock Models</span>
+                <i class="fas fa-check-circle text-emerald-500 text-sm"></i>
+            </div>
+            <p class="text-xl font-bold text-emerald-600">{{ in_stock_count }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">Ready for immediate sale</p>
+        </div>
+
+        <!-- 4. Serialized Tractors in Stock -->
+        <div class="bg-white rounded-xl border border-gray-200 p-3.5 shadow-sm">
+            <div class="flex items-center justify-between text-gray-400 mb-1">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500">Tractors In Stock</span>
+                <i class="fas fa-tractor text-purple-500 text-sm"></i>
+            </div>
+            <p class="text-xl font-bold text-purple-700">{{ tractors_in_stock }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">Available serialized units</p>
+        </div>
+
+        <!-- 5. Low Stock Items -->
+        <div class="bg-white rounded-xl border border-gray-200 p-3.5 shadow-sm {% if low_stock_count > 0 %}border-amber-300 bg-amber-50/30{% endif %}">
+            <div class="flex items-center justify-between text-gray-400 mb-1">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700">Low Stock Alert</span>
+                <i class="fas fa-triangle-exclamation text-amber-500 text-sm"></i>
+            </div>
+            <p class="text-xl font-bold text-amber-600">{{ low_stock_count }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">&le; min stock threshold</p>
+        </div>
+
+        <!-- 6. Out of Stock Items -->
+        <div class="bg-white rounded-xl border border-gray-200 p-3.5 shadow-sm {% if out_of_stock_count > 0 %}border-red-300 bg-red-50/30{% endif %}">
+            <div class="flex items-center justify-between text-gray-400 mb-1">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-red-700">Out of Stock</span>
+                <i class="fas fa-circle-xmark text-red-500 text-sm"></i>
+            </div>
+            <p class="text-xl font-bold text-red-600">{{ out_of_stock_count }}</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">Cannot generate sales bills</p>
+        </div>
+    </div>
+
+    <!-- Search & Filters Bar (Uniform Standard ERP Design) -->
+    <div class="bg-white rounded-xl border border-slate-200/90 p-3 mb-4 shadow-xs">
+        <form method="get" class="flex flex-wrap items-center gap-2.5">
+            <!-- Search Input -->
+            <div class="relative flex-1 min-w-[240px]">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <input type="text" name="q" value="{{ search_query }}"
+                       placeholder="Search products, spare parts, SKU/part no, HSN..."
+                       class="w-full h-9 pl-8 pr-3 text-xs font-medium bg-white text-slate-800 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-xs">
+            </div>
+
+            <!-- Category Filter -->
+            <div class="w-52 min-w-[170px]">
+                <select name="category" data-icon="fas fa-layer-group" class="w-full">
+                    <option value="">All Categories</option>
+                    {% for code, label in categories %}
+                    <option value="{{ code }}" {% if current_category == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Stock Status Tabs / Selector -->
+            <div class="w-48 min-w-[160px]">
+                <select name="status" data-icon="fas fa-boxes-stacked" class="w-full">
+                    <option value="">All Stock Statuses</option>
+                    <option value="IN_STOCK" {% if current_status == 'IN_STOCK' %}selected{% endif %}>In Stock</option>
+                    <option value="LOW_STOCK" {% if current_status == 'LOW_STOCK' %}selected{% endif %}>Low Stock (&le; Min)</option>
+                    <option value="OUT_OF_STOCK" {% if current_status == 'OUT_OF_STOCK' %}selected{% endif %}>Out of Stock (0)</option>
+                </select>
+            </div>
+
+            <!-- Submit & Reset -->
+            <button type="submit" class="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-xs transition-colors cursor-pointer shrink-0">
+                <i class="fas fa-filter text-[11px]"></i>
+                <span>Apply Filters</span>
+            </button>
+
+            <a href="{% url 'billing:inventory_dashboard' %}" class="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition-colors shrink-0">
+                <i class="fas fa-rotate-left text-[11px]"></i>
+                <span>Reset All Filters</span>
+            </a>
+        </form>
+
+        <!-- Quick Filter Badges / Pills -->
+        <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 text-xs">
+            <span class="text-gray-400 text-[11px] font-semibold">Quick View:</span>
+            <a href="{% url 'billing:inventory_dashboard' %}"
+               class="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors {% if not current_status %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                All ({{ total_stock_qty }} units)
+            </a>
+            <a href="{% url 'billing:inventory_dashboard' %}?status=IN_STOCK{% if current_category %}&category={{ current_category }}{% endif %}"
+               class="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors {% if current_status == 'IN_STOCK' %}bg-emerald-600 text-white{% else %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% endif %}">
+                <i class="fas fa-check-circle text-[10px] mr-1"></i> In Stock ({{ in_stock_count }})
+            </a>
+            <a href="{% url 'billing:inventory_dashboard' %}?status=LOW_STOCK{% if current_category %}&category={{ current_category }}{% endif %}"
+               class="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors {% if current_status == 'LOW_STOCK' %}bg-amber-600 text-white{% else %}bg-amber-50 text-amber-700 hover:bg-amber-100{% endif %}">
+                <i class="fas fa-triangle-exclamation text-[10px] mr-1"></i> Low Stock ({{ low_stock_count }})
+            </a>
+            <a href="{% url 'billing:inventory_dashboard' %}?status=OUT_OF_STOCK{% if current_category %}&category={{ current_category }}{% endif %}"
+               class="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors {% if current_status == 'OUT_OF_STOCK' %}bg-red-600 text-white{% else %}bg-red-50 text-red-700 hover:bg-red-100{% endif %}">
+                <i class="fas fa-circle-xmark text-[10px] mr-1"></i> Out of Stock ({{ out_of_stock_count }})
+            </a>
+        </div>
+    </div>
+
+    <!-- Products & Inventory Table (Zoho Books Style Advanced Table) -->
+    <div data-advanced-table
+         data-table-id="inventory-catalog-table"
+         data-table-title="Showroom_Inventory_Catalog"
+         class="advanced-table-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-visible">
+
+        <!-- Table Toolbar -->
+        <div class="p-4 bg-slate-50/70 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <h3 class="text-xs font-bold text-slate-900 tracking-tight uppercase">Showroom Catalog & Spares Inventory</h3>
+                <span data-table-count class="px-2.5 py-0.5 bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-full border border-slate-200">
+                    Showing {{ products|length }} entries
+                </span>
+                <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">&bull; Real-time Stock Valuation</span>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Page Size Selector -->
+                <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                    <span class="text-[11px] text-slate-400 font-medium">Page Size:</span>
+                    <select id="pageSizeSelect"
+                            onchange="const u = new URL(window.location.href); u.searchParams.set('page_size', this.value); u.searchParams.set('page', '1'); window.location.href = u.toString();"
+                            class="no-search text-xs py-1.5 px-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs">
+                        <option value="15" {% if current_page_size == 15 %}selected{% endif %}>15 per page</option>
+                        <option value="25" {% if current_page_size == 25 %}selected{% endif %}>25 per page</option>
+                        <option value="50" {% if current_page_size == 50 %}selected{% endif %}>50 per page</option>
+                        <option value="100" {% if current_page_size == 100 %}selected{% endif %}>100 per page</option>
+                    </select>
+                </div>
+
+                <!-- Show / Hide Columns Dropdown Toggle -->
+                <div x-data="{ openCols: false }" class="relative">
+                    <button type="button"
+                            @click="openCols = !openCols"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                            title="Customize Visible Columns">
+                        <i class="fas fa-table-columns text-slate-500 text-xs"></i>
+                        <span>Columns</span>
+                        <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
+                    </button>
+                    <!-- Dropdown populated dynamically by advanced-table.js -->
+                    <div x-show="openCols"
+                         @click.away="openCols = false"
+                         x-cloak
+                         data-columns-dropdown-menu
+                         class="absolute right-0 mt-1.5 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden divide-y divide-slate-100">
+                    </div>
+                </div>
+
+                <!-- Export to Excel Button -->
+                <a href="{% url 'billing:inventory_export' %}"
+                   data-export-excel
+                   data-server-url="{% url 'billing:inventory_export' %}"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                   title="Export Current Inventory to Excel">
+                    <i class="fas fa-file-excel text-emerald-600"></i>
+                    <span>Export Excel</span>
+                </a>
+
+                <!-- Export to PDF Button -->
+                <button type="button"
+                        data-export-pdf
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Print or Save Inventory as PDF">
+                    <i class="fas fa-file-pdf text-rose-600"></i>
+                    <span>Export PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-900 text-slate-100 uppercase tracking-wider text-[11px] font-bold border-b border-slate-800 select-none">
+                    <tr>
+                        <th data-col-name="Product / Spare" class="py-3 px-4">Product / Spare Description</th>
+                        <th data-col-name="Category" class="py-3 px-3">Category</th>
+                        <th data-col-name="SKU / Part No" class="py-3 px-3">SKU / Part No</th>
+                        <th data-col-name="HSN" class="py-3 px-3">HSN / SAC</th>
+                        <th data-col-name="Available Stock" class="py-3 px-3 text-center">Available Stock</th>
+                        <th data-col-name="Cost Price" class="py-3 px-3 text-right">Cost Price (₹)</th>
+                        <th data-col-name="Selling Price" class="py-3 px-3 text-right">Selling Price (₹)</th>
+                        <th data-col-name="Stock Valuation" class="py-3 px-3 text-right">Stock Valuation</th>
+                        <th data-col-name="Status" class="py-3 px-3 text-center">Status</th>
+                        <th data-no-sort data-no-toggle data-col-name="Actions" class="py-3 px-4 text-right">Instant Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-gray-700">
+                    {% for prod in products %}
+                    <tr class="hover:bg-blue-50/30 transition-colors {% if prod.stock_quantity == 0 %}bg-red-50/20{% elif prod.is_low_stock %}bg-amber-50/20{% endif %}">
+                        <!-- Name & Category Icon -->
+                        <td class="px-4 py-3 font-semibold text-gray-900">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0
+                                    {% if prod.category == 'TRACTOR' %}bg-purple-100 text-purple-700
+                                    {% elif prod.category == 'IMPLEMENT' %}bg-blue-100 text-blue-700
+                                    {% elif prod.category == 'SPARE_PART' %}bg-amber-100 text-amber-700
+                                    {% elif prod.category == 'LUBRICANT' %}bg-emerald-100 text-emerald-700
+                                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                    {% if prod.category == 'TRACTOR' %}<i class="fas fa-tractor"></i>
+                                    {% elif prod.category == 'IMPLEMENT' %}<i class="fas fa-tools"></i>
+                                    {% elif prod.category == 'TROLLEY' %}<i class="fas fa-trailer"></i>
+                                    {% elif prod.category == 'SPARE_PART' %}<i class="fas fa-cog"></i>
+                                    {% elif prod.category == 'LUBRICANT' %}<i class="fas fa-oil-can"></i>
+                                    {% else %}<i class="fas fa-box"></i>{% endif %}
+                                </span>
+                                <div class="min-w-0">
+                                    <a href="{% url 'billing:product_edit' prod.pk %}" class="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors truncate block">
+                                        {{ prod.name }}
+                                    </a>
+                                    <p class="text-[10px] text-gray-400">Min Stock Alert: {{ prod.min_stock_level }} units</p>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Category -->
+                        <td class="px-3 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700">
+                                {{ prod.get_category_display }}
+                            </span>
+                        </td>
+
+                        <!-- SKU / Part No -->
+                        <td class="px-3 py-3 font-mono text-gray-600 whitespace-nowrap">
+                            {{ prod.part_number|default:"-" }}
+                        </td>
+
+                        <!-- HSN -->
+                        <td class="px-3 py-3 font-mono text-gray-600 whitespace-nowrap">
+                            {{ prod.hsn_code|default:"-" }}
+                        </td>
+
+                        <!-- Stock Qty -->
+                        <td class="px-3 py-3 text-center whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold
+                                {% if prod.stock_quantity == 0 %}bg-red-100 text-red-800 border border-red-200
+                                {% elif prod.is_low_stock %}bg-amber-100 text-amber-800 border border-amber-200
+                                {% else %}bg-emerald-100 text-emerald-800 border border-emerald-200{% endif %}">
+                                {{ prod.stock_quantity }}
+                            </span>
+                        </td>
+
+                        <!-- Purchase Cost -->
+                        <td class="px-3 py-3 text-right font-mono text-gray-700 whitespace-nowrap">
+                            {% if prod.purchase_price %}
+                            ₹{{ prod.purchase_price|intcomma }}
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Selling Price -->
+                        <td class="px-3 py-3 text-right font-mono font-bold text-gray-900 whitespace-nowrap">
+                            ₹{{ prod.default_price|intcomma }}
+                        </td>
+
+                        <!-- Valuation -->
+                        <td class="px-3 py-3 text-right font-mono font-semibold text-emerald-700 whitespace-nowrap">
+                            ₹{{ prod.total_stock_value|intcomma }}
+                        </td>
+
+                        <!-- Status Badge -->
+                        <td class="px-3 py-3 text-center whitespace-nowrap">
+                            {% if prod.stock_quantity == 0 %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Out of Stock
+                            </span>
+                            {% elif prod.is_low_stock %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Low Stock
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Instant Actions -->
+                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                {% if prod.stock_quantity > 0 %}
+                                <a href="{% url 'billing:bill_create' %}?type=TAX_INVOICE&product_id={{ prod.id }}"
+                                   class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-[11px] font-bold shadow-xs transition-colors"
+                                   title="Create Tax Invoice for this item right away">
+                                    <i class="fas fa-bolt text-[10px]"></i> Bill Now
+                                </a>
+                                {% else %}
+                                <button type="button" disabled
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-200 text-gray-400 rounded-md text-[11px] font-bold cursor-not-allowed"
+                                        title="Cannot bill: item is out of stock. Add stock via Inward Purchase Bill first.">
+                                    <i class="fas fa-ban text-[10px]"></i> Out of Stock
+                                </button>
+                                {% endif %}
+
+                                <a href="{% url 'billing:product_edit' prod.pk %}"
+                                   class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                                   title="Edit Product Details">
+                                    <i class="fas fa-pencil-alt text-xs"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="px-4 py-12 text-center text-gray-400">
+                            <i class="fas fa-boxes-stacked text-4xl mb-3 text-gray-300"></i>
+                            <p class="text-sm font-semibold text-gray-600">No inventory products matched your filter</p>
+                            <p class="text-xs text-gray-400 mt-1">Try resetting the search filters or add a new product / purchase bill.</p>
+                            <div class="mt-4 flex items-center justify-center gap-2">
+                                <a href="{% url 'billing:purchase_add' %}" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold">
+                                    <i class="fas fa-plus mr-1"></i> Inward Purchase Bill
+                                </a>
+                                <a href="{% url 'billing:product_add' %}" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold">
+                                    <i class="fas fa-plus mr-1"></i> Add Product
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Universal Pagination -->
+        {% include 'includes/pagination.html' %}
+    </div>
+
+    <!-- Bottom Two-Column Section: Serialized Tractors & Recent Purchases -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Left: Serialized Tractors -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-3.5 bg-gray-50/70 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center gap-2 font-bold text-gray-800 text-sm">
+                    <i class="fas fa-tractor text-purple-600"></i>
+                    <span>Serialized Tractors in Showroom</span>
+                    <span class="text-xs font-normal text-purple-600">({{ tractors_in_stock }} in stock)</span>
+                </div>
+                <a href="{% url 'billing:stock_unit_add' %}" class="text-xs font-semibold text-blue-600 hover:underline">
+                    + Add Tractor
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-900 text-slate-100 uppercase tracking-wider text-[11px] font-bold border-b border-slate-800 select-none">
+                        <tr>
+                            <th class="px-3 py-2.5">Chassis / Frame</th>
+                            <th class="px-3 py-2.5">Model</th>
+                            <th class="px-3 py-2.5">Status</th>
+                            <th class="px-3 py-2.5 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-700">
+                        {% for unit in serialized_units %}
+                        <tr class="hover:bg-purple-50/30 transition-colors">
+                            <td class="px-3 py-2 font-mono font-bold text-gray-900">
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-800 border border-gray-200">
+                                    {{ unit.chassis_number }}
+                                </span>
+                                <div class="text-[10px] text-gray-400 font-mono">Eng: {{ unit.engine_number }}</div>
+                            </td>
+                            <td class="px-3 py-2">
+                                <div class="font-bold text-gray-800">{{ unit.product.name }}</div>
+                                <div class="text-[10px] text-gray-400">{{ unit.color|default:"Standard" }}</div>
+                            </td>
+                            <td class="px-3 py-2">
+                                {% if unit.status == 'IN_STOCK' %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock
+                                </span>
+                                {% elif unit.status == 'BOOKED' %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Booked
+                                </span>
+                                {% elif unit.status == 'DELIVERED' %}
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Delivered
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-3 py-2 text-right">
+                                {% if unit.status == 'IN_STOCK' %}
+                                <a href="{% url 'billing:bill_create' %}?type=TAX_INVOICE&unit_id={{ unit.id }}"
+                                   class="inline-flex items-center gap-1 px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-[10px] font-bold transition-colors">
+                                    <i class="fas fa-bolt text-[9px]"></i> Bill Now
+                                </a>
+                                {% elif unit.allocated_bill %}
+                                <a href="{% url 'billing:bill_detail' unit.allocated_bill.pk %}" class="text-blue-600 hover:underline text-[11px] font-semibold">
+                                    {{ unit.allocated_bill.bill_number }}
+                                </a>
+                                {% else %}
+                                <span class="text-gray-400 text-[10px]">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-4 py-8 text-center text-gray-400">
+                                <i class="fas fa-tractor text-2xl text-gray-300 mb-1"></i>
+                                <p class="text-xs">No serialized tractor units in inventory</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right: Recent Inward Purchases -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-5 py-3.5 bg-gray-50/70 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center gap-2 font-bold text-gray-800 text-sm">
+                    <i class="fas fa-file-invoice text-emerald-600"></i>
+                    <span>Recent Inward Stock Bills (Purchases)</span>
+                </div>
+                <a href="{% url 'billing:purchase_list' %}" class="text-xs font-semibold text-blue-600 hover:underline">
+                    View All Bills &rarr;
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-900 text-slate-100 uppercase tracking-wider text-[11px] font-bold border-b border-slate-800 select-none">
+                        <tr>
+                            <th class="px-3 py-2.5">Invoice No</th>
+                            <th class="px-3 py-2.5">Supplier / Company</th>
+                            <th class="px-3 py-2.5">Date</th>
+                            <th class="px-3 py-2.5 text-right">Total Amount</th>
+                            <th class="px-3 py-2.5 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-700">
+                        {% for pbill in recent_purchases %}
+                        <tr class="hover:bg-emerald-50/30 transition-colors">
+                            <td class="px-3 py-2 font-mono font-bold text-gray-900">
+                                <a href="{% url 'billing:purchase_detail' pbill.pk %}" class="text-blue-600 hover:underline">
+                                    {{ pbill.invoice_number }}
+                                </a>
+                            </td>
+                            <td class="px-3 py-2">
+                                <div class="font-bold text-gray-800">{{ pbill.supplier_name }}</div>
+                                <div class="text-[10px] text-gray-400">{{ pbill.get_purchase_type_display }}</div>
+                            </td>
+                            <td class="px-3 py-2 text-gray-600 whitespace-nowrap">
+                                {{ pbill.invoice_date|date:"d M Y" }}
+                            </td>
+                            <td class="px-3 py-2 text-right font-mono font-bold text-emerald-700 whitespace-nowrap">
+                                ₹{{ pbill.total_amount|intcomma }}
+                            </td>
+                            <td class="px-3 py-2 text-right">
+                                <a href="{% url 'billing:purchase_detail' pbill.pk %}" class="p-1 text-gray-500 hover:text-blue-600 transition-colors" title="View Purchase Bill">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-gray-400">
+                                <i class="fas fa-file-invoice text-2xl text-gray-300 mb-1"></i>
+                                <p class="text-xs">No inward purchase bills recorded yet</p>
+                                <a href="{% url 'billing:purchase_add' %}" class="mt-2 inline-block text-xs text-blue-600 font-semibold hover:underline">
+                                    + Record First Inward Purchase Bill
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

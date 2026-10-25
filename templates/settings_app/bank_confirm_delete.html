@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Bank Account{% endblock %}
+{% block page_title %}Delete Bank Account{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+    <h3 class="text-base font-bold text-gray-800">Delete Bank Account?</h3>
+    <p class="text-xs text-gray-500 mt-2">
+        Are you sure you want to delete <strong class="text-gray-800">{{ object.bank_name }} ({{ object.account_number }})</strong>?
+    </p>
+    <form method="post" class="mt-4 flex gap-3">
+        {% csrf_token %}
+        <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold">Yes, Delete</button>
+        <a href="{% url 'settings_app:bank_list' %}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold">Cancel</a>
+    </form>
+</div>
+{% endblock %}

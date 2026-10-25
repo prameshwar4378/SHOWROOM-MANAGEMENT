@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}GST Configurations | Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Manage showroom information, headers, bank accounts, and bill configurations{% endblock %}
+
+{% block header_actions %}
+<div class="flex items-center gap-2">
+    <a href="{% url 'settings_app:gst_add' %}" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5">
+        <i class="fas fa-plus text-xs"></i> Add GST Slab
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Settings Tab Bar -->
+<div class="flex items-center gap-2 mb-4 border-b border-gray-200 overflow-x-auto">
+    <a href="{% url 'settings_app:company_profile' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors whitespace-nowrap">
+        <i class="fas fa-building mr-1.5"></i> Company Profile & Headers
+    </a>
+    <a href="{% url 'settings_app:bank_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors whitespace-nowrap">
+        <i class="fas fa-landmark mr-1.5"></i> Bank Accounts
+    </a>
+    <a href="{% url 'settings_app:gst_list' %}" class="px-4 py-2.5 text-xs font-bold border-b-2 border-blue-600 text-blue-600 whitespace-nowrap">
+        <i class="fas fa-percent mr-1.5"></i> GST Configurations
+    </a>
+    <a href="{% url 'settings_app:sequence_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors whitespace-nowrap">
+        <i class="fas fa-list-ol mr-1.5"></i> Bill Number Sequences
+    </a>
+    <a href="{% url 'settings_app:notification_settings' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors whitespace-nowrap">
+        <i class="fab fa-whatsapp mr-1.5"></i> WhatsApp & SMS Notifications
+    </a>
+    <a href="{% url 'settings_app:notification_logs' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors whitespace-nowrap">
+        <i class="fas fa-clock-rotate-left mr-1.5"></i> Notification Logs
+    </a>
+</div>
+
+<!-- 1. Top Header Banner -->
+<div class="bg-white rounded-xl border border-gray-200 p-4 mb-4 shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
+                <i class="fas fa-percent text-base"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-1.5">
+                    <h2 class="text-base font-bold text-gray-900 tracking-tight">GST Tax Slabs & HSN Directory</h2>
+                    {% include 'includes/settings_help_popover.html' with topic='gst_slabs' %}
+                </div>
+                <p class="text-xs text-gray-500">Configure CGST, SGST, IGST tax percentages and HSN codes for tractors, implements, and spare parts.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'settings_app:gst_add' %}" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors inline-flex items-center gap-1.5">
+                <i class="fas fa-plus text-xs"></i> Add GST Slab
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 2. KPI Overview Cards -->
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+    <div class="bg-white rounded-xl p-3.5 border-l-4 border-l-slate-700 border border-gray-200 shadow-xs">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Total Tax Slabs</p>
+            <i class="fas fa-tags text-slate-400 text-sm"></i>
+        </div>
+        <p class="text-xl font-bold font-mono text-gray-900 mt-1">{{ gst_configs|length }}</p>
+        <p class="text-[10px] text-gray-400 mt-0.5">Configured tax rules</p>
+    </div>
+
+    <div class="bg-white rounded-xl p-3.5 border-l-4 border-l-emerald-600 border border-gray-200 shadow-xs">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Active Slabs</p>
+            <i class="fas fa-check-circle text-emerald-500 text-sm"></i>
+        </div>
+        <p class="text-xl font-bold font-mono text-emerald-700 mt-1">{{ active_count|default:"0" }}</p>
+        <p class="text-[10px] text-emerald-600/70 mt-0.5">Available during billing</p>
+    </div>
+
+    <div class="bg-white rounded-xl p-3.5 border-l-4 border-l-blue-600 border border-gray-200 shadow-xs">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold text-blue-700 uppercase tracking-wider">HSN Codes Defined</p>
+            <i class="fas fa-barcode text-blue-500 text-sm"></i>
+        </div>
+        <p class="text-xl font-bold font-mono text-blue-700 mt-1">{{ gst_configs|length }}</p>
+        <p class="text-[10px] text-blue-600/70 mt-0.5">Automated invoice mapping</p>
+    </div>
+</div>
+
+<!-- 3. Advanced Table Card -->
+<div class="advanced-table-card bg-white rounded-xl border border-gray-200 shadow-xs overflow-visible">
+    <!-- Table Header Toolbar -->
+    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50/70 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+            <span class="text-xs font-bold text-gray-800 uppercase tracking-wider">Configured GST Tax Slabs</span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700" data-table-count>
+                Showing {{ gst_configs|length }} slabs
+            </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Columns Dropdown Menu -->
+            <div class="relative" data-columns-dropdown>
+                <button type="button" class="px-2.5 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-colors" data-columns-toggle>
+                    <i class="fas fa-columns text-gray-400 text-xs"></i>
+                    <span>Columns</span>
+                    <i class="fas fa-chevron-down text-[10px] text-gray-400"></i>
+                </button>
+                <div class="hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1.5 z-30" data-columns-dropdown-menu>
+                    <!-- Populated dynamically by advanced-table.js -->
+                </div>
+            </div>
+
+            <!-- Export to Excel -->
+            <button type="button" data-export-excel class="px-2.5 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-emerald-700 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors">
+                <i class="fas fa-file-excel text-emerald-600 text-xs"></i>
+                <span>Excel</span>
+            </button>
+
+            <!-- Export to PDF -->
+            <button type="button" data-export-pdf class="px-2.5 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-rose-700 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors">
+                <i class="fas fa-file-pdf text-rose-600 text-xs"></i>
+                <span>PDF</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse" id="gstTable" data-advanced-table>
+            <thead>
+                <tr class="bg-slate-900 text-slate-100 font-bold uppercase text-[11px] tracking-wider select-none">
+                    <th class="py-2.5 px-3 w-12 text-center" data-column-id="sr">#</th>
+                    <th class="py-2.5 px-3" data-column-id="name" data-sortable="true">Tax Slab Name</th>
+                    <th class="py-2.5 px-3" data-column-id="hsn" data-sortable="true">HSN Code</th>
+                    <th class="py-2.5 px-3 text-right" data-column-id="cgst" data-sortable="true">CGST %</th>
+                    <th class="py-2.5 px-3 text-right" data-column-id="sgst" data-sortable="true">SGST %</th>
+                    <th class="py-2.5 px-3 text-right" data-column-id="igst" data-sortable="true">IGST %</th>
+                    <th class="py-2.5 px-3 text-center" data-column-id="status" data-sortable="true">Status</th>
+                    <th class="py-2.5 px-3 text-right" data-column-id="actions">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 bg-white">
+                {% for gst in gst_configs %}
+                <tr class="hover:bg-blue-50/40 transition-colors">
+                    <td class="py-2.5 px-3 text-center text-gray-400 font-mono text-[11px] row-sr">{{ forloop.counter }}</td>
+                    <td class="py-2.5 px-3 font-bold text-gray-900">{{ gst.name }}</td>
+                    <td class="py-2.5 px-3 font-mono font-semibold text-gray-700">{{ gst.hsn_code|default:"--" }}</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-gray-800">{{ gst.cgst_rate }}%</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-gray-800">{{ gst.sgst_rate }}%</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-blue-700">{{ gst.igst_rate }}%</td>
+                    <td class="py-2.5 px-3 text-center">
+                        {% if gst.is_active %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                            Inactive
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="py-2.5 px-3 text-right">
+                        <a href="{% url 'settings_app:gst_edit' gst.pk %}" class="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded text-xs font-bold transition-colors inline-flex items-center gap-1">
+                            <i class="fas fa-edit text-[10px]"></i> Edit
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="py-12 px-4 text-center text-gray-400">
+                        <div class="max-w-xs mx-auto">
+                            <i class="fas fa-percent text-3xl text-gray-300 mb-2"></i>
+                            <p class="font-bold text-gray-600">No GST tax slabs created yet</p>
+                            <p class="text-xs text-gray-400 mt-1">Add GST tax slabs to configure tractor and implement tax rates.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

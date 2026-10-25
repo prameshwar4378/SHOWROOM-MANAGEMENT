@@ -1,0 +1,1690 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+{% block page_subtitle %}Enter document details, line items, and real-time pricing{% endblock %}
+
+{% block content %}
+<div x-data="billCalculator()" class="space-y-6">
+<form method="post" id="bill-form" novalidate @submit="isSubmitting = true" @keydown.enter="if ($event.target.tagName !== 'TEXTAREA' && !$event.target.classList.contains('allow-enter-submit')) { $event.preventDefault(); }" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- Top Global Validation Alert Banner -->
+    {% if form.errors or formset.errors or margin_form.errors or challan_form.errors %}
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-xs">
+        <div class="flex items-start">
+            <div class="shrink-0 text-red-500 mt-0.5">
+                <i class="fas fa-exclamation-triangle text-base"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-xs font-bold text-red-800">Please correct the following before saving:</h3>
+                <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-0.5">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li><span class="font-semibold">{{ field|capfirst }}:</span> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for form_errors in formset.errors %}
+                        {% for field, errors in form_errors.items %}
+                            {% for error in errors %}
+                                <li><span class="font-semibold">Line Item {{ forloop.parentloop.counter }} ({{ field|capfirst }}):</span> {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                    {% if bill_type == 'MARGIN_MONEY' and margin_form.errors %}
+                        {% for field, errors in margin_form.errors.items %}
+                            {% for error in errors %}
+                                <li><span class="font-semibold">Margin Details ({{ field|capfirst }}):</span> {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
+                    {% if bill_type == 'DELIVERY_CHALLAN' and challan_form.errors %}
+                        {% for field, errors in challan_form.errors.items %}
+                            {% for error in errors %}
+                                <li><span class="font-semibold">Delivery Challan ({{ field|capfirst }}):</span> {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 1. Document & Customer Header -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-2xs">
+                    <i class="fas fa-file-invoice text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 tracking-tight">1. Document & Customer Details</h3>
+                    <p class="text-xs text-slate-500">Configure document type, buyer party details, and billing dates</p>
+                </div>
+            </div>
+            <span class="px-3 py-1 bg-blue-50 text-blue-700 font-semibold text-xs rounded-full border border-blue-100/80">Step 1 of 3</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Bill Type -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Bill / Document Type <span class="text-red-500 font-bold">*</span></label>
+                {{ form.bill_type }}
+                {% if form.bill_type.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ form.bill_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Customer -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-semibold text-slate-700">Customer <span class="text-red-500 font-bold">*</span></label>
+                    <div class="flex items-center gap-2">
+                        <!-- Two action icons appear when a customer is selected: Eye (View) and Pencil (Edit) -->
+                        <div x-show="selectedCustomer" x-cloak class="inline-flex items-center gap-1 bg-slate-100 border border-slate-200/80 rounded-md px-1.5 py-0.5 shadow-2xs">
+                            <button type="button"
+                                    @click="openCustomerViewModal()"
+                                    class="p-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors flex items-center gap-1 text-[11px] font-medium focus:outline-none cursor-pointer"
+                                    title="View Customer Details">
+                                <i class="fas fa-eye text-xs"></i>
+                                <span class="text-[10px] font-semibold hidden sm:inline">View</span>
+                            </button>
+                            <span class="text-slate-300 text-xs select-none">|</span>
+                            <button type="button"
+                                    @click="openCustomerEditModal()"
+                                    class="p-1 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors flex items-center gap-1 text-[11px] font-medium focus:outline-none cursor-pointer"
+                                    title="Edit Customer Details (In-Place)">
+                                <i class="fas fa-pencil-alt text-xs"></i>
+                                <span class="text-[10px] font-semibold hidden sm:inline">Edit</span>
+                            </button>
+                        </div>
+                        <button type="button" @click="openCustomerModal()" class="text-[11px] text-blue-600 font-semibold hover:text-blue-800 hover:underline flex items-center gap-1 focus:outline-none cursor-pointer">
+                            <i class="fas fa-user-plus text-[10px]"></i> + New Customer
+                        </button>
+                    </div>
+                </div>
+                {{ form.customer }}
+                {% if form.customer.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ form.customer.errors.0 }}</p>
+                {% endif %}
+                <!-- Instant Success Feedback Alert -->
+                <p x-show="customerSuccessMsg" x-transition x-cloak class="text-xs text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-lg p-2.5 mt-2 flex items-center gap-2 font-semibold shadow-xs">
+                    <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                    <span x-text="customerSuccessMsg"></span>
+                </p>
+                <p x-show="isInterstate" x-cloak class="text-[11px] text-amber-600 font-semibold mt-1">
+                    <i class="fas fa-route mr-1"></i> Inter-State Customer detected (IGST will apply)
+                </p>
+            </div>
+
+            <!-- Bill Date -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Document Date <span class="text-red-500 font-bold">*</span></label>
+                {{ form.bill_date }}
+                {% if form.bill_date.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ form.bill_date.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Due Date -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Payment Due Date (Optional)</label>
+                {{ form.due_date }}
+            </div>
+
+            <!-- Document Status -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Status <span class="text-red-500 font-bold">*</span></label>
+                {{ form.status }}
+            </div>
+
+            <!-- Bank Name (For Loan Quotation) -->
+            <div x-show="billType === 'QUOTATION'" x-cloak>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Bank Name (For Loan Quotation)</label>
+                {{ form.bank_name }}
+                {% if form.bank_name.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ form.bank_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Supplier Ref (Tax Invoice / Delivery Challan) -->
+            <div x-show="billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN'" x-cloak>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Supplier Ref (Showroom Name)</label>
+                {{ form.supplier_ref }}
+                {% if form.supplier_ref.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ form.supplier_ref.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Other Ref (Financer / Finance Ltd.) -->
+            <div x-show="billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN'" x-cloak>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Other Ref (Financer / Bank)</label>
+                {{ form.other_ref }}
+                {% if form.other_ref.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ form.other_ref.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- GST Engine Toggle & Slab Selection -->
+            <div class="md:col-span-2 lg:col-span-3 bg-gradient-to-r from-slate-50 via-blue-50/20 to-slate-50 border border-slate-200/90 rounded-xl p-4 transition-all shadow-2xs">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <label for="id_is_gst_bill" class="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-2.5">
+                            <input type="checkbox" name="is_gst_bill" id="id_is_gst_bill" x-model="isGst" @change="recalculate()"
+                                   class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                            <span>Enable GST Calculation</span>
+                        </label>
+                        <span x-show="isGst" class="text-[11px] px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold border border-blue-200">GST Mode Active</span>
+                        <span x-show="!isGst" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-medium">Non-GST (Commercial)</span>
+                    </div>
+                    <div x-show="isGst" x-cloak class="flex items-center gap-2">
+                        <label class="text-xs font-semibold text-slate-700 whitespace-nowrap">GST Tax Slab:</label>
+                        <div class="w-48">
+                            {{ form.gst_config }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Line Items Section (Interactive Formset) -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs">
+                    <i class="fas fa-boxes-stacked text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 tracking-tight">2. Tractor, Implements & Accessories Line Items</h3>
+                    <p class="text-xs text-slate-500">Live item pricing, HSN tax codes, and quantity discounts</p>
+                </div>
+            </div>
+            <button type="button" @click="addItemRow()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer">
+                <i class="fas fa-plus text-xs"></i> Add Line Item
+            </button>
+        </div>
+
+        {% if formset.non_form_errors %}
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium">
+            {% for err in formset.non_form_errors %}
+            <p class="flex items-center gap-1.5"><i class="fas fa-exclamation-circle text-red-500"></i> {{ err }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {{ formset.management_form }}
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs">
+            <table class="w-full text-left text-xs" id="items-table">
+                <thead class="bg-slate-50/90 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+                    <tr>
+                        <th class="px-3 py-3 w-12 text-center">Sr.</th>
+                        <th class="px-3 py-3 min-w-[280px]">Item Description (Model / Implement / Accessory) <span class="text-red-500 font-bold">*</span></th>
+                        <th class="px-2 py-3 w-36" x-show="billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN'" x-cloak>Chassis No</th>
+                        <th class="px-2 py-3 w-36" x-show="billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN'" x-cloak>Engine No</th>
+                        <th class="px-3 py-3 w-28" x-show="isGst" x-cloak>HSN / SAC</th>
+                        <th class="px-3 py-3 w-24 text-center">Qty <span class="text-red-500 font-bold">*</span></th>
+                        <th class="px-3 py-3 w-36 text-right">Unit Price (₹) <span class="text-red-500 font-bold">*</span></th>
+                        <th class="px-3 py-3 w-32 text-right">Disc (₹)</th>
+                        <th class="px-3 py-3 w-36 text-right">Line Total (₹)</th>
+                        <th class="px-3 py-3 w-14 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white" id="formset-tbody">
+                    {% for item_form in formset %}
+                    <tr class="item-row hover:bg-blue-50/20 transition-colors" data-row-idx="{{ forloop.counter0 }}">
+                        {{ item_form.id }}
+                        <td class="px-3 py-2 text-center align-middle">
+                            <span class="row-sr-badge font-bold text-slate-700 text-xs px-2 py-1 bg-slate-100 rounded-md border border-slate-200">{{ forloop.counter }}</span>
+                            <span class="hidden">{{ item_form.sr_no }}</span>
+                        </td>
+                        <td class="px-3 py-2 align-middle relative"
+                            x-data="searchableItemDropdown('{{ item_form.item_description.value|default:''|escapejs }}')"
+                            @click.away="dropdownOpen = false"
+                            @scroll.window.capture.passive="if (dropdownOpen) updateCoords()"
+                            @resize.window.passive="if (dropdownOpen) updateCoords()">
+                            <div class="relative">
+                                <input type="text"
+                                       name="{{ item_form.item_description.html_name }}"
+                                       id="{{ item_form.item_description.auto_id }}"
+                                       value="{{ item_form.item_description.value|default:'' }}"
+                                       x-model="query"
+                                       @focus="openDropdown()"
+                                       @click="openDropdown()"
+                                       @input="syncInput($event)"
+                                       @keydown.escape="dropdownOpen = false"
+                                       @keydown.arrow-down.prevent="highlightNext()"
+                                       @keydown.arrow-up.prevent="highlightPrev()"
+                                       @keydown.enter.prevent.stop="handleEnter($event)"
+                                       placeholder="Click or type to search product / tractor model..."
+                                       class="w-full pl-3.5 pr-8 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition shadow-2xs"
+                                       autocomplete="off">
+                                <button type="button"
+                                        @click="toggleDropdown()"
+                                        class="absolute right-2 top-2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                                        tabindex="-1"
+                                        title="Toggle products list">
+                                    <i class="fas fa-chevron-down text-xs transition-transform" :class="dropdownOpen && 'rotate-180'"></i>
+                                </button>
+                            </div>
+
+                            <!-- Searchable Dropdown Popup Menu (Fixed Floating Layer escaping table overflow) -->
+                            <div x-show="dropdownOpen" x-cloak
+                                 :style="`position: fixed; top: ${menuCoords.top}px; left: ${menuCoords.left}px; width: ${menuCoords.width}px; z-index: 99999;`"
+                                 class="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                                
+                                <!-- Dropdown Header -->
+                                <div class="px-3.5 py-2 bg-gradient-to-r from-slate-50 to-blue-50/50 flex items-center justify-between text-[11px] text-slate-600 font-semibold border-b border-slate-200">
+                                    <span class="flex items-center gap-1.5 text-slate-700">
+                                        <i class="fas fa-boxes-stacked text-blue-600"></i> Showroom Catalog & Inventory
+                                    </span>
+                                    <span class="text-[10px] text-slate-400 font-mono" x-text="filteredItems.length + ' items'"></span>
+                                </div>
+
+                                <!-- Scrollable List of Items -->
+                                <div class="max-h-56 overflow-y-auto divide-y divide-slate-100">
+                                    <template x-for="(item, idx) in filteredItems" :key="idx">
+                                        <div @click="selectItem(item)"
+                                             :class="highlightedIndex === idx ? 'bg-blue-100/70 text-blue-900' : 'hover:bg-blue-50/70'"
+                                             class="px-3.5 py-2.5 cursor-pointer transition-colors group flex items-center justify-between gap-2"
+                                             :style="!item.is_in_stock && (billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN') ? 'opacity: 0.65;' : ''">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0 shadow-2xs"
+                                                      :class="item.is_stock ? 'bg-purple-100 text-purple-700 border border-purple-200' : (item.is_in_stock ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-red-100 text-red-700 border border-red-200')">
+                                                    <i :class="item.is_stock || item.category_code === 'TRACTOR' ? 'fas fa-tractor' : (item.category_code === 'IMPLEMENT' ? 'fas fa-tools' : (item.category_code === 'TROLLEY' ? 'fas fa-trailer' : (item.category_code === 'LUBRICANT' ? 'fas fa-oil-can' : 'fas fa-cog')))"></i>
+                                                </span>
+                                                <div class="min-w-0">
+                                                    <p class="text-xs font-bold text-slate-900 group-hover:text-blue-700 truncate" x-text="item.name"></p>
+                                                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                                                        <span class="px-1.5 py-0.2 rounded font-medium text-[9px]"
+                                                              :class="item.is_stock ? 'bg-purple-100 text-purple-800 font-bold' : 'bg-slate-100 text-slate-700'"
+                                                              x-text="item.category"></span>
+                                                        <span>&bull;</span>
+                                                        <span class="font-mono text-slate-600" x-text="'HSN: ' + item.hsn"></span>
+                                                        <template x-if="item.is_in_stock">
+                                                            <span class="px-1.5 py-0.2 rounded font-bold text-[9px] bg-emerald-100 text-emerald-800" x-text="'In Stock: ' + item.stock_qty"></span>
+                                                        </template>
+                                                        <template x-if="!item.is_in_stock">
+                                                            <span class="px-1.5 py-0.2 rounded font-bold text-[9px] bg-rose-100 text-rose-700">Out of Stock</span>
+                                                        </template>
+                                                        <template x-if="item.chassis">
+                                                            <span class="text-emerald-700 font-mono font-bold" x-text="' | ' + item.chassis"></span>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="text-right shrink-0">
+                                                <p class="text-xs font-bold text-slate-900 font-mono" x-text="'₹' + Number(item.price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></p>
+                                                <template x-if="item.is_in_stock || billType === 'QUOTATION'">
+                                                    <span class="text-[10px] text-blue-600 font-semibold group-hover:underline">Select &rarr;</span>
+                                                </template>
+                                                <template x-if="!item.is_in_stock && billType !== 'QUOTATION'">
+                                                    <span class="text-[10px] text-rose-600 font-bold">Out of Stock</span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- No items match state -->
+                                    <div x-show="filteredItems.length === 0" class="p-4 text-center text-slate-400 text-xs">
+                                        <i class="fas fa-search text-slate-300 text-lg mb-1"></i>
+                                        <p>No catalog match for "<span x-text="query" class="font-semibold text-slate-600"></span>"</p>
+                                        <p class="text-[10px] text-slate-400 mt-1">Press Tab or Enter to keep custom description.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if item_form.item_description.errors %}
+                            <p class="text-xs text-red-500 mt-0.5">{{ item_form.item_description.errors.0 }}</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-2 py-2 align-middle" x-show="billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN'" x-cloak>
+                            {{ item_form.chassis_number }}
+                        </td>
+                        <td class="px-2 py-2 align-middle" x-show="billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN'" x-cloak>
+                            {{ item_form.engine_number }}
+                        </td>
+                        <td class="px-3 py-2 align-middle" x-show="isGst" x-cloak>
+                            {{ item_form.hsn_code }}
+                        </td>
+                        <td class="px-3 py-2 text-center align-middle">
+                            {{ item_form.quantity }}
+                            {% if item_form.quantity.errors %}
+                            <p class="text-[10px] text-red-500 mt-0.5">{{ item_form.quantity.errors.0 }}</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-2 text-right align-middle">
+                            {{ item_form.unit_price }}
+                            {% if item_form.unit_price.errors %}
+                            <p class="text-[10px] text-red-500 mt-0.5">{{ item_form.unit_price.errors.0 }}</p>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-2 text-right align-middle">
+                            {{ item_form.discount }}
+                        </td>
+                        <td class="px-3 py-2 text-right align-middle font-bold text-slate-900">
+                            <span class="row-total-display font-mono font-bold text-slate-900 text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-200/90 rounded-lg inline-block">₹0.00</span>
+                        </td>
+                        <td class="px-3 py-2 text-center align-middle">
+                            {% if item_form.instance.pk %}
+                            <div class="flex items-center justify-center">
+                                <label class="text-[11px] text-rose-600 font-semibold cursor-pointer hover:underline flex items-center gap-1">
+                                    {{ item_form.DELETE }} Del
+                                </label>
+                            </div>
+                            {% else %}
+                            <button type="button" @click="removeItemRow($el)" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer" title="Remove item">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+            <div class="flex flex-wrap items-center gap-3">
+                <button type="button" @click="addItemRow()" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition cursor-pointer">
+                    <i class="fas fa-plus-circle"></i> Add another line item
+                </button>
+                <div x-show="availableTractors && availableTractors.length > 0" x-cloak class="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200/90 rounded-xl text-xs text-emerald-800 font-medium">
+                    <i class="fas fa-warehouse text-emerald-600"></i>
+                    <select @change="addTractorLineItem($event.target.value); $event.target.value = '';"
+                            class="text-xs py-0.5 px-2 bg-transparent text-emerald-900 font-semibold focus:outline-none cursor-pointer">
+                        <option value="">+ Add Tractor from Inventory</option>
+                        <template x-for="t in availableTractors" :key="t.id">
+                            <option :value="t.id" x-text="`${t.model} (${t.chassis}) - ₹${t.price}`"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-400 flex items-center gap-1">
+                <i class="fas fa-info-circle text-slate-300"></i> All calculations use standard commercial integer rupee round-off.
+            </p>
+        </div>
+    </div>
+
+    <!-- 3. Specialized Type Details (Margin Money or Delivery Challan) -->
+    <!-- For Margin Money -->
+    <div x-show="billType === 'MARGIN_MONEY'" x-cloak class="bg-white rounded-2xl border border-purple-200/90 p-6 shadow-sm">
+        <div class="flex items-center gap-3 mb-5 border-b border-purple-100 pb-3">
+            <div class="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 shadow-2xs">
+                <i class="fas fa-hand-holding-dollar text-sm"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 tracking-tight">3. Margin Money Booking Details</h3>
+                <p class="text-xs text-slate-500">Record customer advance booking, financier hypothecation, and expected delivery</p>
+            </div>
+        </div>
+
+        <!-- Quick Select from Inventory / Catalog -->
+        <div x-show="availableTractors && availableTractors.length > 0" x-cloak class="mb-5 bg-purple-50/70 border border-purple-200 rounded-xl p-3.5">
+            <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                    <i class="fas fa-magic text-purple-600"></i> Quick Select from Inventory / Catalog:
+                </label>
+                <span class="text-[10px] text-purple-700 font-semibold bg-purple-100/80 px-2 py-0.5 rounded-full">Auto-fills Model Name</span>
+            </div>
+            <select @change="pickMarginModel($event.target.value)" class="w-full px-3.5 py-2 text-xs border border-purple-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 font-medium cursor-pointer">
+                <option value="">-- Choose Tractor Model from Inventory --</option>
+                <template x-for="t in availableTractors" :key="t.id">
+                    <option :value="t.model" x-text="`${t.model} (In Stock: Chassis ${t.chassis})`"></option>
+                </template>
+            </select>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Booking Date <span class="text-red-500 font-bold">*</span></label>
+                {{ margin_form.booking_date }}
+                {% if margin_form.booking_date.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ margin_form.booking_date.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Payment Reason (Region of Rs)</label>
+                {{ margin_form.reason_for_payment }}
+                {% if margin_form.reason_for_payment.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ margin_form.reason_for_payment.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Payment Mode <span class="text-red-500 font-bold">*</span></label>
+                {{ margin_form.payment_mode }}
+                {% if margin_form.payment_mode.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ margin_form.payment_mode.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Receiver Name</label>
+                {{ margin_form.receiver_name }}
+                {% if margin_form.receiver_name.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ margin_form.receiver_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Hypothecation (HYP / Financer)</label>
+                {{ margin_form.hypothecation }}
+                {% if margin_form.hypothecation.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ margin_form.hypothecation.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tractor Model Booked <span class="text-red-500 font-bold">*</span></label>
+                {{ margin_form.tractor_model }}
+                {% if margin_form.tractor_model.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ margin_form.tractor_model.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Cheque Number (if Cheque)</label>
+                {{ margin_form.cheque_number }}
+                {% if margin_form.cheque_number.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ margin_form.cheque_number.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Bank Reference / UTR Number</label>
+                {{ margin_form.bank_reference }}
+                {% if margin_form.bank_reference.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ margin_form.bank_reference.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Expected Vehicle Delivery Date</label>
+                {{ margin_form.expected_delivery_date }}
+                {% if margin_form.expected_delivery_date.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ margin_form.expected_delivery_date.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- For Delivery Challan -->
+    <div x-show="billType === 'DELIVERY_CHALLAN'" x-cloak class="bg-white rounded-2xl border border-amber-200/90 p-6 shadow-sm">
+        <div class="flex items-center gap-3 mb-5 border-b border-amber-100 pb-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-2xs">
+                <i class="fas fa-truck-moving text-sm"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 tracking-tight">3. Vehicle Delivery & Transportation Details</h3>
+                <p class="text-xs text-slate-500">Record vehicle dispatch particulars, driver/receiver details, and destination</p>
+            </div>
+        </div>
+
+        <!-- Quick Select from Available Inventory -->
+        <div x-show="availableTractors && availableTractors.length > 0" x-cloak class="mb-5 bg-amber-50/70 border border-amber-200 rounded-xl p-3.5">
+            <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                    <i class="fas fa-magic text-amber-600"></i> Quick Select from Available Inventory:
+                </label>
+                <span class="text-[10px] text-amber-700 font-semibold bg-amber-100/80 px-2 py-0.5 rounded-full">Auto-fills Chassis & Engine numbers</span>
+            </div>
+            <select @change="pickStockUnit($event.target.value)" class="w-full px-3.5 py-2 text-xs border border-amber-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-200 font-medium cursor-pointer">
+                <option value="">-- Choose Stock Vehicle from Inventory --</option>
+                <template x-for="t in availableTractors" :key="t.id">
+                    <option :value="t.id" x-text="`${t.model} | Chassis: ${t.chassis} | Engine: ${t.engine}`"></option>
+                </template>
+            </select>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Delivered From (Showroom Location)</label>
+                {{ challan_form.delivered_from }}
+                {% if challan_form.delivered_from.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ challan_form.delivered_from.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Financer / Bank</label>
+                {{ challan_form.financer }}
+                {% if challan_form.financer.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ challan_form.financer.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Vehicle / Reg Number</label>
+                {{ challan_form.vehicle_number }}
+                {% if challan_form.vehicle_number.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ challan_form.vehicle_number.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Chassis / Frame Number <span class="text-red-500 font-bold">*</span></label>
+                {{ challan_form.chassis_number }}
+                {% if challan_form.chassis_number.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ challan_form.chassis_number.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Engine Serial Number <span class="text-red-500 font-bold">*</span></label>
+                {{ challan_form.engine_number }}
+                {% if challan_form.engine_number.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ challan_form.engine_number.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Transport Mode</label>
+                {{ challan_form.transport_mode }}
+                {% if challan_form.transport_mode.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ challan_form.transport_mode.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Receiver Person Name</label>
+                {{ challan_form.receiver_name }}
+                {% if challan_form.receiver_name.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ challan_form.receiver_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Receiver Mobile Number</label>
+                {{ challan_form.receiver_mobile }}
+                {% if challan_form.receiver_mobile.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ challan_form.receiver_mobile.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Delivery Destination Address</label>
+                {{ challan_form.delivery_address }}
+                {% if challan_form.delivery_address.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ challan_form.delivery_address.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Pricing Calculation & Summary Card -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Notes & Remarks Left Side -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm space-y-5">
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-2xs">
+                    <i class="fas fa-percent text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 tracking-tight">Overall Discounts & Terms</h3>
+                    <p class="text-xs text-slate-500">Apply document-level percentage or flat commercial discounts</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Overall Discount (%)</label>
+                    {{ form.discount_percentage }}
+                    {% if form.discount_percentage.errors %}
+                    <p class="text-xs text-red-500 mt-1">{{ form.discount_percentage.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Overall Flat Discount (₹)</label>
+                    {{ form.discount_amount }}
+                    {% if form.discount_amount.errors %}
+                    <p class="text-xs text-red-500 mt-1">{{ form.discount_amount.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Accessories & Insurance (as per Tax Invoice format) -->
+            <div x-show="billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN'" x-cloak>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Accessories and Insurance Charges (₹)</label>
+                {{ form.accessories_insurance }}
+                {% if form.accessories_insurance.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ form.accessories_insurance.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Remarks / Quotation Terms / Special Conditions</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                <p class="text-xs text-red-500 mt-1">{{ form.notes.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Real-Time Calculation Preview Card Right Side -->
+        <div class="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 border border-slate-800 text-white rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3.5 mb-4">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Calculation Preview</span>
+                    <span class="inline-flex items-center gap-1.5 text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-mono font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Real-Time
+                    </span>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between items-center text-slate-300">
+                        <span>Items Subtotal:</span>
+                        <span class="font-mono font-bold text-white" x-text="formatCurrency(subtotal)">₹0.00</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-rose-400" x-show="totalDiscount > 0">
+                        <span>Discount:</span>
+                        <span class="font-mono font-bold" x-text="'- ' + formatCurrency(totalDiscount)">- ₹0.00</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-slate-300 border-t border-slate-800/80 pt-2.5">
+                        <span>Taxable Amount:</span>
+                        <span class="font-mono font-bold text-white" x-text="formatCurrency(taxableAmount)">₹0.00</span>
+                    </div>
+
+                    <!-- GST rows if enabled -->
+                    <template x-if="isGst">
+                        <div class="space-y-2 pt-1 text-slate-400">
+                            <template x-if="!isInterstate">
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <span x-text="'CGST (' + cgstRate + '%):'">CGST:</span>
+                                        <span class="font-mono font-semibold text-slate-200" x-text="formatCurrency(cgstAmount)">₹0.00</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span x-text="'SGST (' + sgstRate + '%):'">SGST:</span>
+                                        <span class="font-mono font-semibold text-slate-200" x-text="formatCurrency(sgstAmount)">₹0.00</span>
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="isInterstate">
+                                <div class="flex justify-between items-center">
+                                    <span x-text="'IGST (' + igstRate + '%):'">IGST:</span>
+                                    <span class="font-mono font-semibold text-slate-200" x-text="formatCurrency(igstAmount)">₹0.00</span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <div class="flex justify-between items-center text-slate-300" x-show="accessoriesInsurance > 0" x-cloak>
+                        <span>Accessories & Insurance:</span>
+                        <span class="font-mono font-semibold text-slate-200" x-text="formatCurrency(accessoriesInsurance)">₹0.00</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-slate-400 text-[11px] pt-1">
+                        <span>Round-Off (Commercial):</span>
+                        <span class="font-mono font-semibold" x-text="(roundOff >= 0 ? '+' : '') + formatCurrency(roundOff)">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grand Total Display -->
+            <div class="mt-6 pt-4 border-t border-slate-800">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Net Document Total</span>
+                <div class="text-3xl font-black font-mono text-emerald-400 tracking-tight" x-text="formatCurrency(grandTotal)">
+                    ₹0.00
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1 italic">
+                    Amount will be auto-converted into Indian currency words on save.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+        <a href="{% url 'billing:bill_list' %}" class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold shadow-2xs transition cursor-pointer">
+            Cancel
+        </a>
+        <button type="submit"
+                id="btn-save-bill"
+                form="bill-form"
+                :disabled="isSubmitting"
+                class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-60 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
+            <i class="fas" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+            <span x-text="isSubmitting ? 'Saving & Generating Document...' : 'Save & Generate Document'">Save & Generate Document</span>
+        </button>
+    </div>
+</form>
+
+    <!-- Quick Register New Customer Dialog Modal -->
+    {% include 'includes/customer_quick_modal.html' %}
+    <!-- In-Place View and Edit Customer Modals -->
+    {% include 'includes/customer_view_edit_modals.html' %}
+</div>
+
+
+<!-- Hidden Empty Template Row for Dynamic Row Addition -->
+<template id="empty-item-template">
+    <tr class="item-row hover:bg-gray-50/60 transition-colors" data-row-idx="__prefix__">
+        <input type="hidden" name="items-__prefix__-id" id="id_items-__prefix__-id">
+        <td class="px-3 py-2 text-center align-middle">
+            <span class="row-sr-badge font-bold text-gray-600">#</span>
+            <span class="hidden">
+                <input type="number" name="items-__prefix__-sr_no" id="id_items-__prefix__-sr_no" class="w-16">
+            </span>
+        </td>
+        <td class="px-3 py-2 align-middle relative"
+            x-data="searchableItemDropdown('')"
+            @click.away="dropdownOpen = false"
+            @scroll.window.capture.passive="if (dropdownOpen) updateCoords()"
+            @resize.window.passive="if (dropdownOpen) updateCoords()">
+            <div class="relative">
+                <input type="text"
+                       name="items-__prefix__-item_description"
+                       id="id_items-__prefix__-item_description"
+                       x-model="query"
+                       @focus="openDropdown()"
+                       @click="openDropdown()"
+                       @input="syncInput($event)"
+                       @keydown.escape="dropdownOpen = false"
+                       @keydown.arrow-down.prevent="highlightNext()"
+                       @keydown.arrow-up.prevent="highlightPrev()"
+                       @keydown.enter.prevent.stop="handleEnter($event)"
+                       placeholder="Click or type to search product / tractor model..."
+                        class="w-full pl-3.5 pr-8 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition shadow-2xs"
+                        autocomplete="off">
+                <button type="button"
+                        @click="toggleDropdown()"
+                        class="absolute right-2 top-2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                        tabindex="-1"
+                        title="Toggle products list">
+                    <i class="fas fa-chevron-down text-xs transition-transform" :class="dropdownOpen && 'rotate-180'"></i>
+                </button>
+            </div>
+
+            <!-- Searchable Dropdown Popup Menu (Fixed Floating Layer escaping table overflow) -->
+            <div x-show="dropdownOpen" x-cloak
+                 :style="`position: fixed; top: ${menuCoords.top}px; left: ${menuCoords.left}px; width: ${menuCoords.width}px; z-index: 99999;`"
+                 class="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                
+                <!-- Dropdown Header -->
+                <div class="px-3.5 py-2 bg-gradient-to-r from-slate-50 to-blue-50/50 flex items-center justify-between text-[11px] text-slate-600 font-semibold border-b border-slate-200">
+                    <span class="flex items-center gap-1.5 text-slate-700">
+                        <i class="fas fa-boxes-stacked text-blue-600"></i> Showroom Catalog & Inventory
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-mono" x-text="filteredItems.length + ' items'"></span>
+                </div>
+
+                <!-- Scrollable List of Items -->
+                <div class="max-h-56 overflow-y-auto divide-y divide-slate-100">
+                    <template x-for="(item, idx) in filteredItems" :key="idx">
+                        <div @click="selectItem(item)"
+                             :class="highlightedIndex === idx ? 'bg-blue-100/70 text-blue-900' : 'hover:bg-blue-50/70'"
+                             class="px-3.5 py-2.5 cursor-pointer transition-colors group flex items-center justify-between gap-2"
+                             :style="!item.is_in_stock && (billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN') ? 'opacity: 0.65;' : ''">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0 shadow-2xs"
+                                      :class="item.is_stock ? 'bg-purple-100 text-purple-700 border border-purple-200' : (item.is_in_stock ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-red-100 text-red-700 border border-red-200')">
+                                    <i :class="item.is_stock || item.category_code === 'TRACTOR' ? 'fas fa-tractor' : (item.category_code === 'IMPLEMENT' ? 'fas fa-tools' : (item.category_code === 'TROLLEY' ? 'fas fa-trailer' : (item.category_code === 'LUBRICANT' ? 'fas fa-oil-can' : 'fas fa-cog')))"></i>
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-slate-900 group-hover:text-blue-700 truncate" x-text="item.name"></p>
+                                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                                        <span class="px-1.5 py-0.2 rounded font-medium text-[9px]"
+                                              :class="item.is_stock ? 'bg-purple-100 text-purple-800 font-bold' : 'bg-slate-100 text-slate-700'"
+                                              x-text="item.category"></span>
+                                        <span>&bull;</span>
+                                        <span class="font-mono text-slate-600" x-text="'HSN: ' + item.hsn"></span>
+                                        <template x-if="item.is_in_stock">
+                                            <span class="px-1.5 py-0.2 rounded font-bold text-[9px] bg-emerald-100 text-emerald-800" x-text="'In Stock: ' + item.stock_qty"></span>
+                                        </template>
+                                        <template x-if="!item.is_in_stock">
+                                            <span class="px-1.5 py-0.2 rounded font-bold text-[9px] bg-rose-100 text-rose-700">Out of Stock</span>
+                                        </template>
+                                        <template x-if="item.chassis">
+                                            <span class="text-emerald-700 font-mono font-bold" x-text="' | ' + item.chassis"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <p class="text-xs font-bold text-slate-900 font-mono" x-text="'₹' + Number(item.price).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></p>
+                                <template x-if="item.is_in_stock || billType === 'QUOTATION'">
+                                    <span class="text-[10px] text-blue-600 font-semibold group-hover:underline">Select &rarr;</span>
+                                </template>
+                                <template x-if="!item.is_in_stock && billType !== 'QUOTATION'">
+                                    <span class="text-[10px] text-rose-600 font-bold">Out of Stock</span>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- No items match state -->
+                    <div x-show="filteredItems.length === 0" class="p-4 text-center text-slate-400 text-xs">
+                        <i class="fas fa-search text-slate-300 text-lg mb-1"></i>
+                        <p>No catalog match for "<span x-text="query" class="font-semibold text-slate-600"></span>"</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Press Tab or Enter to keep custom description.</p>
+                    </div>
+                </div>
+            </div>
+        </td>
+        <td class="px-2 py-2 align-middle" x-show="billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN'" x-cloak>
+            <input type="text" name="items-__prefix__-chassis_number" id="id_items-__prefix__-chassis_number"
+                   placeholder="Chassis No." class="w-36 px-2.5 py-2 border border-slate-300 rounded-lg text-xs font-mono text-slate-800 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition shadow-2xs">
+        </td>
+        <td class="px-2 py-2 align-middle" x-show="billType === 'TAX_INVOICE' || billType === 'DELIVERY_CHALLAN'" x-cloak>
+            <input type="text" name="items-__prefix__-engine_number" id="id_items-__prefix__-engine_number"
+                   placeholder="Engine No." class="w-36 px-2.5 py-2 border border-slate-300 rounded-lg text-xs font-mono text-slate-800 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition shadow-2xs">
+        </td>
+        <td class="px-3 py-2 align-middle" x-show="isGst" x-cloak>
+            <input type="text" name="items-__prefix__-hsn_code" id="id_items-__prefix__-hsn_code"
+                   placeholder="8701" class="w-24 px-2.5 py-2 border border-slate-300 rounded-lg text-xs font-mono text-slate-800 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition shadow-2xs">
+        </td>
+        <td class="px-3 py-2 text-center align-middle">
+            <input type="number" name="items-__prefix__-quantity" id="id_items-__prefix__-quantity"
+                   value="1" min="1" class="w-20 px-2 py-2 border border-slate-300 rounded-lg text-center text-xs font-semibold text-slate-800 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition shadow-2xs">
+        </td>
+        <td class="px-3 py-2 text-right align-middle">
+            <input type="number" name="items-__prefix__-unit_price" id="id_items-__prefix__-unit_price"
+                   step="0.01" placeholder="0.00" class="w-32 px-3 py-2 border border-slate-300 rounded-lg text-right text-xs font-semibold font-mono text-slate-800 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition shadow-2xs">
+        </td>
+        <td class="px-3 py-2 text-right align-middle">
+            <input type="number" name="items-__prefix__-discount" id="id_items-__prefix__-discount"
+                   step="0.01" value="0.00" class="w-28 px-3 py-2 border border-slate-300 rounded-lg text-right text-xs font-medium font-mono text-slate-800 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition shadow-2xs">
+        </td>
+        <td class="px-3 py-2 text-right align-middle font-bold text-slate-900">
+            <span class="row-total-display font-mono font-bold text-slate-900 text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-200/90 rounded-lg inline-block">₹0.00</span>
+        </td>
+        <td class="px-3 py-2 text-center align-middle">
+            <button type="button" @click="removeItemRow($el)" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer" title="Remove item">
+                <i class="fas fa-trash-alt text-xs"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    window.catalogItems = {{ catalog_items_json|safe|default:"[]" }};
+
+    function searchableItemDropdown(initialVal = '') {
+        return {
+            dropdownOpen: false,
+            query: initialVal,
+            highlightedIndex: -1,
+            isSelecting: false,
+            menuCoords: { top: 0, left: 0, width: 440 },
+
+            updateCoords() {
+                const cell = this.$el;
+                const input = cell ? cell.querySelector('input[name$="-item_description"]') : null;
+                if (!input) return;
+                const rect = input.getBoundingClientRect();
+
+                // If input scrolled off-screen, auto-close dropdown
+                if (rect.bottom < 0 || rect.top > window.innerHeight) {
+                    this.dropdownOpen = false;
+                    return;
+                }
+
+                const menuWidth = Math.max(rect.width, 440);
+                const viewportHeight = window.innerHeight;
+                const spaceBelow = viewportHeight - rect.bottom;
+                const spaceAbove = rect.top;
+                const estimatedHeight = 310;
+
+                let top = rect.bottom + 4;
+                if (spaceBelow < estimatedHeight && spaceAbove > spaceBelow) {
+                    top = Math.max(8, rect.top - estimatedHeight - 4);
+                }
+
+                let left = rect.left;
+                if (left + menuWidth > window.innerWidth - 16) {
+                    left = window.innerWidth - menuWidth - 16;
+                }
+                if (left < 16) left = 16;
+
+                this.menuCoords = {
+                    top: Math.round(top),
+                    left: Math.round(left),
+                    width: Math.round(menuWidth)
+                };
+            },
+
+            openDropdown() {
+                if (this.isSelecting) return;
+                this.updateCoords();
+                this.dropdownOpen = true;
+            },
+
+            toggleDropdown() {
+                if (this.dropdownOpen) {
+                    this.dropdownOpen = false;
+                } else {
+                    this.openDropdown();
+                }
+            },
+
+            get filteredItems() {
+                const items = window.catalogItems || [];
+                if (!this.query || this.query.trim() === '') {
+                    return items.slice(0, 30);
+                }
+                const q = this.query.toLowerCase().trim();
+                return items.filter(item => {
+                    const name = (item.name || '').toLowerCase();
+                    const cat = (item.category || '').toLowerCase();
+                    const chassis = (item.chassis || '').toLowerCase();
+                    const hsn = (item.hsn || '').toLowerCase();
+                    return name.includes(q) || cat.includes(q) || chassis.includes(q) || hsn.includes(q);
+                }).slice(0, 30);
+            },
+
+            syncInput(e) {
+                if (this.isSelecting) return;
+                this.query = e.target.value;
+                this.highlightedIndex = -1;
+                this.updateCoords();
+                this.dropdownOpen = true;
+            },
+
+            highlightNext() {
+                if (!this.dropdownOpen) {
+                    this.openDropdown();
+                    return;
+                }
+                const count = this.filteredItems.length;
+                if (count > 0) {
+                    this.highlightedIndex = (this.highlightedIndex + 1) % count;
+                }
+            },
+
+            highlightPrev() {
+                if (!this.dropdownOpen) {
+                    this.openDropdown();
+                    return;
+                }
+                const count = this.filteredItems.length;
+                if (count > 0) {
+                    this.highlightedIndex = (this.highlightedIndex - 1 + count) % count;
+                }
+            },
+
+            handleEnter(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (this.dropdownOpen) {
+                    if (this.highlightedIndex >= 0 && this.highlightedIndex < this.filteredItems.length) {
+                        this.selectItem(this.filteredItems[this.highlightedIndex]);
+                    } else if (this.filteredItems.length > 0) {
+                        // If typed a search query and directly hit Enter, auto-select top match
+                        this.selectItem(this.filteredItems[0]);
+                    } else {
+                        this.dropdownOpen = false;
+                    }
+                }
+            },
+
+            selectItem(item) {
+                const bType = window._billCalcInstance ? window._billCalcInstance.billType : 'QUOTATION';
+                if ((bType === 'TAX_INVOICE' || bType === 'DELIVERY_CHALLAN') && (!item.is_in_stock || item.stock_qty <= 0)) {
+                    alert('⚠️ Cannot Add Out-of-Stock Item:\n\n"' + item.name + '" is currently OUT OF STOCK (0 available in showroom).\n\nBilling rules prohibit generating a ' + (bType === 'TAX_INVOICE' ? 'Tax Invoice' : 'Delivery Challan') + ' for out-of-stock items.\n\nPlease inward stock first via Inventory -> Inward Stock (Bills).');
+                    this.dropdownOpen = false;
+                    this.highlightedIndex = -1;
+                    return;
+                }
+
+                this.isSelecting = true;
+                this.query = item.name;
+                this.dropdownOpen = false;
+                this.highlightedIndex = -1;
+
+                const cell = this.$el;
+                const input = cell.querySelector('input[name$="-item_description"]');
+                if (input) {
+                    input.value = item.name;
+                }
+
+                const row = cell.closest('tr');
+                if (row) {
+                    const priceInput = row.querySelector('input[name$="-unit_price"]');
+                    const hsnInput = row.querySelector('input[name$="-hsn_code"]');
+                    const qtyInput = row.querySelector('input[name$="-quantity"]');
+
+                    if (priceInput) {
+                        priceInput.value = parseFloat(item.price || 0).toFixed(2);
+                        priceInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    if (hsnInput && item.hsn) {
+                        hsnInput.value = item.hsn;
+                        hsnInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    if (qtyInput && (!qtyInput.value || parseInt(qtyInput.value) <= 0)) {
+                        qtyInput.value = 1;
+                        qtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+
+                    // Auto-fill item row and delivery challan chassis/engine if present and blank
+                    if (item.chassis) {
+                        const rowChassis = row.querySelector('input[name$="-chassis_number"]');
+                        const rowEngine = row.querySelector('input[name$="-engine_number"]');
+                        if (rowChassis && !rowChassis.value) rowChassis.value = item.chassis;
+                        if (rowEngine && !rowEngine.value) rowEngine.value = item.engine;
+
+                        const ch = document.getElementById('id_chassis_number');
+                        const eng = document.getElementById('id_engine_number');
+                        if (ch && !ch.value) ch.value = item.chassis;
+                        if (eng && !eng.value) eng.value = item.engine;
+                    }
+                }
+
+                if (window._billCalcInstance) {
+                    window._billCalcInstance.recalculate();
+                }
+
+                setTimeout(() => {
+                    this.isSelecting = false;
+                }, 150);
+            }
+        };
+    }
+
+    function billCalculator() {
+        return {
+            billType: '{{ bill_type|default:"QUOTATION" }}',
+            isGst: {% if form.is_gst_bill.value %}true{% else %}false{% endif %},
+            selectedCustomer: '{{ form.customer.value|default:"" }}',
+            selectedGstConfig: '{{ form.gst_config.value|default:"" }}',
+            gstConfigs: {{ gst_configs_json|safe|default:"{}" }},
+            customerStates: {{ customer_states_json|safe|default:"{}" }},
+            companyState: '{{ company_state|default:"maharashtra" }}',
+            availableTractors: {{ available_tractors_json|safe|default:"[]" }},
+
+            showCustomerModal: false,
+            showCustomerViewModal: false,
+            showCustomerEditModal: false,
+            isLoadingCustomer: false,
+            isSavingCustomerEdit: false,
+            customerViewError: '',
+            customerEditErrors: [],
+            customerDetail: {},
+            editCustomerData: {},
+            isSavingCustomer: false,
+            customerErrors: [],
+            customerSuccessMsg: '',
+            newCustomer: {
+                full_name: '',
+                father_name: '',
+                mobile_primary: '',
+                mobile_secondary: '',
+                email: '',
+                village: '',
+                taluka: '',
+                district: '',
+                state: 'Maharashtra',
+                pin_code: '',
+                aadhar_number: '',
+                pan_number: '',
+                bank_name: ''
+            },
+
+            subtotal: 0.00,
+            totalDiscount: 0.00,
+            taxableAmount: 0.00,
+            cgstRate: 6.00,
+            sgstRate: 6.00,
+            igstRate: 12.00,
+            cgstAmount: 0.00,
+            sgstAmount: 0.00,
+            igstAmount: 0.00,
+            accessoriesInsurance: 0.00,
+            totalTax: 0.00,
+            roundOff: 0.00,
+            grandTotal: 0.00,
+            isInterstate: false,
+            isSubmitting: false,
+
+            init() {
+                window._billCalcInstance = this;
+                // Attach listeners
+                const billTypeSelect = document.getElementById('id_bill_type');
+                if (billTypeSelect) {
+                    this.billType = billTypeSelect.value;
+                    billTypeSelect.addEventListener('change', (e) => {
+                        this.billType = e.target.value;
+                        this.recalculate();
+                    });
+                }
+
+                const customerSelect = document.getElementById('id_customer');
+                if (customerSelect) {
+                    this.selectedCustomer = customerSelect.value;
+                    customerSelect.addEventListener('change', (e) => {
+                        this.selectedCustomer = e.target.value;
+                        this.checkInterstate();
+                        this.recalculate();
+                    });
+                }
+
+                const gstSelect = document.getElementById('id_gst_config');
+                if (gstSelect) {
+                    this.selectedGstConfig = gstSelect.value;
+                    gstSelect.addEventListener('change', (e) => {
+                        this.selectedGstConfig = e.target.value;
+                        this.updateGstRates();
+                        this.recalculate();
+                    });
+                }
+
+                const discPctInput = document.getElementById('id_discount_percentage');
+                if (discPctInput) {
+                    discPctInput.addEventListener('input', () => this.recalculate());
+                }
+                const discAmtInput = document.getElementById('id_discount_amount');
+                if (discAmtInput) {
+                    discAmtInput.addEventListener('input', () => this.recalculate());
+                }
+                const accInput = document.getElementById('id_accessories_insurance');
+                if (accInput) {
+                    accInput.addEventListener('input', () => this.recalculate());
+                }
+
+                // Attach row event delegation
+                const tbody = document.getElementById('formset-tbody');
+                if (tbody) {
+                    tbody.addEventListener('input', (e) => {
+                        if (e.target.matches('[name$="-quantity"], [name$="-unit_price"], [name$="-discount"]')) {
+                            this.recalculate();
+                        }
+                    });
+                    tbody.addEventListener('change', (e) => {
+                        if (e.target.matches('[name$="-DELETE"]')) {
+                            const row = e.target.closest('tr');
+                            if (row) {
+                                if (e.target.checked) {
+                                    row.classList.add('opacity-40', 'bg-red-50/40');
+                                } else {
+                                    row.classList.remove('opacity-40', 'bg-red-50/40');
+                                }
+                            }
+                            this.updateSerialNumbers();
+                            this.recalculate();
+                        }
+                    });
+                }
+
+                // Apply visual indication to already-marked deleted rows
+                document.querySelectorAll('#formset-tbody [name$="-DELETE"]').forEach(cb => {
+                    if (cb.checked) {
+                        const row = cb.closest('tr');
+                        if (row) row.classList.add('opacity-40', 'bg-red-50/40');
+                    }
+                });
+
+                this.checkInterstate();
+                this.updateGstRates();
+                this.updateSerialNumbers();
+                this.recalculate();
+            },
+
+            checkInterstate() {
+                if (!this.selectedCustomer) {
+                    this.isInterstate = false;
+                    return;
+                }
+                const custState = (this.customerStates[this.selectedCustomer] || '').trim().toLowerCase();
+                const compState = (this.companyState || '').trim().toLowerCase();
+                this.isInterstate = Boolean(custState && compState && custState !== compState);
+            },
+
+            updateGstRates() {
+                if (this.selectedGstConfig && this.gstConfigs[this.selectedGstConfig]) {
+                    const cfg = this.gstConfigs[this.selectedGstConfig];
+                    this.cgstRate = cfg.cgst;
+                    this.sgstRate = cfg.sgst;
+                    this.igstRate = cfg.igst;
+                } else {
+                    this.cgstRate = 6.00;
+                    this.sgstRate = 6.00;
+                    this.igstRate = 12.00;
+                }
+            },
+
+            formatCurrency(val) {
+                const num = parseFloat(val) || 0;
+                return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            },
+
+            addItemRow() {
+                const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+                const currentCount = parseInt(totalForms.value, 10);
+                const template = document.getElementById('empty-item-template').innerHTML;
+                const newRowHtml = template.replace(/__prefix__/g, currentCount);
+
+                const tbody = document.getElementById('formset-tbody');
+                tbody.insertAdjacentHTML('beforeend', newRowHtml);
+                totalForms.value = currentCount + 1;
+
+                const newRow = tbody.lastElementChild;
+                if (window.Alpine && newRow) {
+                    window.Alpine.initTree(newRow);
+                }
+                if (window.initSearchableSelects && newRow) {
+                    window.initSearchableSelects(newRow);
+                }
+
+                this.updateSerialNumbers();
+                this.recalculate();
+            },
+
+            removeItemRow(btn) {
+                const row = btn.closest('tr');
+                if (row) {
+                    row.remove();
+                    // Re-index all item rows in the table to keep Django formset indexing continuous
+                    const rows = document.querySelectorAll('#formset-tbody tr.item-row');
+                    rows.forEach((r, idx) => {
+                        r.dataset.rowIdx = idx;
+                        r.querySelectorAll('input, select, textarea').forEach((input) => {
+                            if (input.name) {
+                                input.name = input.name.replace(/items-\d+-/, `items-${idx}-`);
+                            }
+                            if (input.id) {
+                                input.id = input.id.replace(/id_items-\d+-/, `id_items-${idx}-`);
+                            }
+                        });
+                    });
+                    const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+                    if (totalForms) {
+                        totalForms.value = rows.length;
+                    }
+                    this.updateSerialNumbers();
+                    this.recalculate();
+                }
+            },
+
+            updateSerialNumbers() {
+                const rows = document.querySelectorAll('#formset-tbody tr.item-row');
+                let counter = 1;
+                rows.forEach((row) => {
+                    const deleteInput = row.querySelector('[name$="-DELETE"]');
+                    if (deleteInput && deleteInput.checked) {
+                        const srBadge = row.querySelector('.row-sr-badge');
+                        if (srBadge) srBadge.innerText = '—';
+                        return;
+                    }
+
+                    const srBadge = row.querySelector('.row-sr-badge');
+                    if (srBadge) srBadge.innerText = counter;
+
+                    const srInput = row.querySelector('[name$="-sr_no"]');
+                    if (srInput) srInput.value = counter;
+
+                    counter++;
+                });
+            },
+
+            recalculate() {
+                let subtotal = 0;
+                const rows = document.querySelectorAll('#formset-tbody tr.item-row');
+
+                rows.forEach((row) => {
+                    const deleteInput = row.querySelector('[name$="-DELETE"]');
+                    if (deleteInput && deleteInput.checked) {
+                        return;
+                    }
+
+                    const qtyInput = row.querySelector('[name$="-quantity"]');
+                    const priceInput = row.querySelector('[name$="-unit_price"]');
+                    const discInput = row.querySelector('[name$="-discount"]');
+                    const display = row.querySelector('.row-total-display');
+
+                    const qty = parseFloat(qtyInput ? qtyInput.value : 1) || 0;
+                    const price = parseFloat(priceInput ? priceInput.value : 0) || 0;
+                    const disc = parseFloat(discInput ? discInput.value : 0) || 0;
+
+                    const lineTotal = Math.max(0, (qty * price) - disc);
+                    if (display) {
+                        display.innerText = '₹' + lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
+                    subtotal += lineTotal;
+                });
+
+                this.subtotal = subtotal;
+
+                // Overall discount calculation
+                const discPctInput = document.getElementById('id_discount_percentage');
+                const discAmtInput = document.getElementById('id_discount_amount');
+                const discPct = parseFloat(discPctInput ? discPctInput.value : 0) || 0;
+                const discFlat = parseFloat(discAmtInput ? discAmtInput.value : 0) || 0;
+
+                let discount = 0;
+                if (discPct > 0) {
+                    discount = (subtotal * discPct) / 100;
+                    if (discAmtInput) discAmtInput.value = discount.toFixed(2);
+                } else if (discFlat > 0) {
+                    discount = discFlat;
+                }
+
+                this.totalDiscount = discount;
+                this.taxableAmount = Math.max(0, subtotal - discount);
+
+                // GST Calculation
+                if (this.isGst && this.taxableAmount > 0) {
+                    this.updateGstRates();
+                    if (this.isInterstate) {
+                        this.cgstAmount = 0;
+                        this.sgstAmount = 0;
+                        this.igstAmount = (this.taxableAmount * this.igstRate) / 100;
+                    } else {
+                        this.cgstAmount = (this.taxableAmount * this.cgstRate) / 100;
+                        this.sgstAmount = (this.taxableAmount * this.sgstRate) / 100;
+                        this.igstAmount = 0;
+                    }
+                    this.totalTax = this.cgstAmount + this.sgstAmount + this.igstAmount;
+                } else {
+                    this.cgstAmount = 0;
+                    this.sgstAmount = 0;
+                    this.igstAmount = 0;
+                    this.totalTax = 0;
+                }
+
+                // Extra charges (accessories and insurance)
+                const accInput = document.getElementById('id_accessories_insurance');
+                const accessories = parseFloat(accInput ? accInput.value : 0) || 0;
+                this.accessoriesInsurance = accessories;
+
+                // Commercial Indian Round-off
+                const unrounded = this.taxableAmount + this.totalTax + accessories;
+                const rounded = Math.round(unrounded);
+                this.roundOff = rounded - unrounded;
+                this.grandTotal = rounded;
+            },
+
+            pickStockUnit(tractorId) {
+                if (!tractorId) return;
+                const unit = (this.availableTractors || []).find(t => String(t.id) === String(tractorId));
+                if (unit) {
+                    const chassisEl = document.getElementById('id_chassis_number');
+                    const engineEl = document.getElementById('id_engine_number');
+                    if (chassisEl) chassisEl.value = unit.chassis;
+                    if (engineEl) engineEl.value = unit.engine;
+                }
+            },
+
+            pickMarginModel(modelName) {
+                if (!modelName) return;
+                const modelEl = document.getElementById('id_tractor_model');
+                if (modelEl) modelEl.value = modelName;
+            },
+
+            addTractorLineItem(tractorId) {
+                if (!tractorId) return;
+                const unit = (this.availableTractors || []).find(t => String(t.id) === String(tractorId));
+                if (unit) {
+                    this.addItemRow();
+                    const tbody = document.getElementById('formset-tbody');
+                    const lastRow = tbody ? tbody.lastElementChild : null;
+                    if (lastRow) {
+                        const desc = lastRow.querySelector('input[name$="-item_description"]');
+                        const chassis = lastRow.querySelector('input[name$="-chassis_number"]');
+                        const engine = lastRow.querySelector('input[name$="-engine_number"]');
+                        const hsn = lastRow.querySelector('input[name$="-hsn_code"]');
+                        const price = lastRow.querySelector('input[name$="-unit_price"]');
+                        if (desc) {
+                            desc.value = unit.model;
+                            desc.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                        if (chassis) chassis.value = unit.chassis || '';
+                        if (engine) engine.value = unit.engine || '';
+                        if (hsn) hsn.value = unit.hsn || '8701';
+                        if (price) {
+                            price.value = parseFloat(unit.price || 0).toFixed(2);
+                            price.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                        this.recalculate();
+                    }
+                }
+            },
+
+            async openCustomerViewModal(customerId = null) {
+                const id = customerId || this.selectedCustomer;
+                if (!id) return;
+                this.customerViewError = '';
+                this.isLoadingCustomer = true;
+                this.showCustomerViewModal = true;
+                try {
+                    const resp = await fetch(`/customers/api/${id}/`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const data = await resp.json();
+                    if (resp.ok && data.success) {
+                        this.customerDetail = data.customer;
+                    } else {
+                        this.customerViewError = data.error || 'Failed to fetch customer profile.';
+                    }
+                } catch (err) {
+                    this.customerViewError = 'Network error: ' + err.message;
+                } finally {
+                    this.isLoadingCustomer = false;
+                }
+            },
+
+            closeCustomerViewModal() {
+                this.showCustomerViewModal = false;
+                this.customerViewError = '';
+            },
+
+            async openCustomerEditModal(customerId = null) {
+                const id = customerId || this.selectedCustomer;
+                if (!id) return;
+                this.closeCustomerViewModal();
+                this.customerEditErrors = [];
+                this.showCustomerEditModal = true;
+
+                if (this.customerDetail && String(this.customerDetail.id) === String(id)) {
+                    this.editCustomerData = { ...this.customerDetail };
+                } else {
+                    this.isLoadingCustomer = true;
+                    try {
+                        const resp = await fetch(`/customers/api/${id}/`, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                        const data = await resp.json();
+                        if (resp.ok && data.success) {
+                            this.customerDetail = data.customer;
+                            this.editCustomerData = { ...data.customer };
+                        } else {
+                            this.customerEditErrors = [data.error || 'Failed to fetch customer for editing.'];
+                        }
+                    } catch (err) {
+                        this.customerEditErrors = ['Network error: ' + err.message];
+                    } finally {
+                        this.isLoadingCustomer = false;
+                    }
+                }
+            },
+
+            closeCustomerEditModal() {
+                this.showCustomerEditModal = false;
+                this.customerEditErrors = [];
+            },
+
+            async saveCustomerEdit() {
+                this.customerEditErrors = [];
+                if (!this.editCustomerData.full_name || !this.editCustomerData.full_name.trim()) {
+                    this.customerEditErrors.push("Please enter customer's Full Name.");
+                }
+                if (!this.editCustomerData.mobile_primary || !this.editCustomerData.mobile_primary.trim()) {
+                    this.customerEditErrors.push("Please enter Primary Mobile Number.");
+                }
+                if (!this.editCustomerData.village || !this.editCustomerData.village.trim()) {
+                    this.customerEditErrors.push("Please enter Village / Town.");
+                }
+                if (!this.editCustomerData.taluka || !this.editCustomerData.taluka.trim()) {
+                    this.customerEditErrors.push("Please enter Taluka / Tehsil.");
+                }
+                if (!this.editCustomerData.district || !this.editCustomerData.district.trim()) {
+                    this.customerEditErrors.push("Please enter District.");
+                }
+                if (this.customerEditErrors.length > 0) return;
+
+                this.isSavingCustomerEdit = true;
+                try {
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+                    const resp = await fetch(`/customers/api/${this.editCustomerData.id}/update/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify(this.editCustomerData)
+                    });
+
+                    const data = await resp.json();
+                    if (resp.ok && data.success) {
+                        const updated = data.customer;
+                        this.customerDetail = updated;
+
+                        // Update dropdown option label in-place
+                        const custSelect = document.getElementById('id_customer');
+                        if (custSelect) {
+                            let opt = custSelect.querySelector(`option[value="${updated.id}"]`);
+                            if (opt) {
+                                opt.textContent = updated.display_text;
+                            }
+                            if (custSelect.tomselect) {
+                                custSelect.tomselect.updateOption(String(updated.id), { value: String(updated.id), text: updated.display_text });
+                                custSelect.tomselect.sync();
+                            }
+                        }
+
+                        // Update state mapping and check interstate
+                        this.customerStates[String(updated.id)] = (updated.state || '').trim().toLowerCase();
+                        this.checkInterstate();
+                        this.recalculate();
+
+                        // Close modal & show feedback
+                        this.showCustomerEditModal = false;
+                        this.customerSuccessMsg = `Customer "${updated.full_name}" details updated successfully!`;
+                        setTimeout(() => { this.customerSuccessMsg = ''; }, 7000);
+                    } else {
+                        if (data.errors) {
+                            const errList = [];
+                            for (const f in data.errors) {
+                                data.errors[f].forEach(m => errList.push(`${f.replace('_', ' ')}: ${m}`));
+                            }
+                            this.customerEditErrors = errList;
+                        } else if (data.error) {
+                            this.customerEditErrors = [data.error];
+                        } else {
+                            this.customerEditErrors = ["Failed to save customer changes. Please verify all fields."];
+                        }
+                    }
+                } catch (e) {
+                    this.customerEditErrors = ["Network error: " + e.message];
+                } finally {
+                    this.isSavingCustomerEdit = false;
+                }
+            },
+
+            openCustomerModal() {
+                this.customerErrors = [];
+                this.showCustomerModal = true;
+                this.$nextTick(() => {
+                    const el = document.getElementById('modal_customer_full_name');
+                    if (el) el.focus();
+                });
+            },
+
+            closeCustomerModal() {
+                this.showCustomerModal = false;
+                this.customerErrors = [];
+            },
+
+            async submitQuickCustomer() {
+                this.customerErrors = [];
+                if (!this.newCustomer.full_name || !this.newCustomer.full_name.trim()) {
+                    this.customerErrors.push("Please enter customer's Full Name.");
+                }
+                if (!this.newCustomer.mobile_primary || !this.newCustomer.mobile_primary.trim()) {
+                    this.customerErrors.push("Please enter Primary Mobile Number.");
+                }
+                if (!this.newCustomer.village || !this.newCustomer.village.trim()) {
+                    this.customerErrors.push("Please enter Village / Town.");
+                }
+                if (!this.newCustomer.taluka || !this.newCustomer.taluka.trim()) {
+                    this.customerErrors.push("Please enter Taluka / Tehsil.");
+                }
+                if (!this.newCustomer.district || !this.newCustomer.district.trim()) {
+                    this.customerErrors.push("Please enter District.");
+                }
+                if (this.customerErrors.length > 0) return;
+
+                this.isSavingCustomer = true;
+                try {
+                    const formData = new FormData();
+                    for (const [k, v] of Object.entries(this.newCustomer)) {
+                        formData.append(k, v ? v.trim() : '');
+                    }
+                    formData.append('is_active', 'on');
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+                    const response = await fetch("{% url 'customers:customer_quick_create' %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        const cust = data.customer;
+                        const custSelect = document.getElementById('id_customer');
+                        if (custSelect) {
+                            let opt = custSelect.querySelector(`option[value="${cust.id}"]`);
+                            if (!opt) {
+                                opt = document.createElement('option');
+                                opt.value = cust.id;
+                                opt.textContent = cust.display_text;
+                                custSelect.appendChild(opt);
+                            }
+                            custSelect.value = cust.id;
+                            custSelect.dispatchEvent(new Event('change'));
+                            if (custSelect.tomselect) {
+                                custSelect.tomselect.addOption({ value: String(cust.id), text: cust.display_text });
+                                custSelect.tomselect.setValue(String(cust.id), true);
+                            }
+                        }
+
+                        this.selectedCustomer = String(cust.id);
+                        this.customerStates[String(cust.id)] = (cust.state || '').trim().toLowerCase();
+                        this.checkInterstate();
+                        this.recalculate();
+
+                        this.newCustomer = {
+                            full_name: '',
+                            father_name: '',
+                            mobile_primary: '',
+                            mobile_secondary: '',
+                            email: '',
+                            village: '',
+                            taluka: '',
+                            district: '',
+                            state: 'Maharashtra',
+                            pin_code: '',
+                            aadhar_number: '',
+                            pan_number: '',
+                            bank_name: ''
+                        };
+                        this.showCustomerModal = false;
+                        this.customerSuccessMsg = `Customer "${cust.full_name}" registered & auto-selected!`;
+                        setTimeout(() => { this.customerSuccessMsg = ''; }, 7000);
+                    } else {
+                        if (data.errors) {
+                            const errList = [];
+                            for (const f in data.errors) {
+                                data.errors[f].forEach(m => errList.push(`${f.replace('_', ' ')}: ${m}`));
+                            }
+                            this.customerErrors = errList;
+                        } else if (data.error) {
+                            this.customerErrors = [data.error];
+                        } else {
+                            this.customerErrors = ["Failed to save customer. Please check the entered information."];
+                        }
+                    }
+                } catch (e) {
+                    this.customerErrors = ["Network error: " + e.message];
+                } finally {
+                    this.isSavingCustomer = false;
+                }
+            }
+        };
+    }
+</script>
+{% endblock %}

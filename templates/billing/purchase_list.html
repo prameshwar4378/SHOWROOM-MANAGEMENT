@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Inward Stock Bills (Purchases){% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- 1. Header (Icon, Title, Subtitle, and Primary Actions) -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-lg font-bold shadow-2xs">
+                <i class="fas fa-truck-ramp-box"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Inward Stock Bills (Purchases)</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Record and manage supplier purchase invoices to inward stock directly into showroom inventory.</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2.5">
+            <a href="{% url 'billing:inventory_dashboard' %}"
+               class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer">
+                <i class="fas fa-boxes-stacked text-blue-600 text-xs"></i>
+                <span>Inventory Stockyard</span>
+            </a>
+            <a href="{% url 'billing:purchase_add' %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer">
+                <i class="fas fa-plus text-xs"></i>
+                <span>Record Inward Bill</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. KPI Overview Metric Cards (4 Cards: Total Procurement, Tractors, Implements, Total Bills) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Total Procurement (Emerald Theme) -->
+        <div class="bg-emerald-50/30 rounded-2xl border border-emerald-200/80 p-4 shadow-2xs">
+            <div class="flex items-center justify-between text-emerald-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Total Inward Value</span>
+                <i class="fas fa-vault text-xs"></i>
+            </div>
+            <h3 class="text-2xl font-black text-emerald-800 tracking-tight">₹{{ total_inward_amount|intcomma }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                Cumulative stock purchases
+            </p>
+        </div>
+
+        <!-- Card 2: Tractor Inwards (Purple Theme) -->
+        <a href="?type=TRACTOR" class="bg-purple-50/30 hover:bg-purple-50/60 rounded-2xl border border-purple-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-purple-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Tractor Inwards</span>
+                <i class="fas fa-tractor text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-purple-800 tracking-tight">₹{{ tractor_bills_sum|intcomma }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="font-bold text-purple-700">{{ tractor_bills_count }}</span> invoices with chassis/engine units
+            </p>
+        </a>
+
+        <!-- Card 3: Implements & Equipment (Blue Theme) -->
+        <a href="?type=IMPLEMENT" class="bg-blue-50/30 hover:bg-blue-50/60 rounded-2xl border border-blue-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-blue-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Agricultural Implements</span>
+                <i class="fas fa-tools text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-blue-800 tracking-tight">₹{{ implement_bills_sum|intcomma }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="font-bold text-blue-700">{{ implement_bills_count }}</span> equipment shipments
+            </p>
+        </a>
+
+        <!-- Card 4: Total Bills (Dark Navy Border) -->
+        <div class="bg-white rounded-2xl border-2 border-slate-800 p-4 shadow-sm">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Procurement Invoices</span>
+                <i class="fas fa-file-invoice text-xs text-slate-500"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tight">{{ total_inward_bills }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                Manufacturer stock receipts
+            </p>
+        </div>
+    </div>
+
+    <!-- 3. Quick Status Filter Tabs / Pills -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <a href="{% url 'billing:purchase_list' %}"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if not current_type %}bg-slate-900 text-white shadow-xs{% else %}bg-white border border-slate-200 text-slate-700 hover:bg-slate-50{% endif %}">
+            <i class="fas fa-list-check text-[10px]"></i>
+            <span>All Purchases</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if not current_type %}bg-slate-700 text-white{% else %}bg-slate-100 text-slate-700{% endif %}">
+                {{ total_inward_bills }}
+            </span>
+        </a>
+
+        <a href="?type=TRACTOR"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_type == 'TRACTOR' %}bg-purple-600 text-white shadow-xs{% else %}bg-white border border-purple-200 text-purple-700 hover:bg-purple-50/60{% endif %}">
+            <i class="fas fa-tractor text-[10px]"></i>
+            <span>Tractors</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_type == 'TRACTOR' %}bg-purple-800 text-white{% else %}bg-purple-100 text-purple-800{% endif %}">
+                {{ tractor_bills_count }}
+            </span>
+        </a>
+
+        <a href="?type=IMPLEMENT"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_type == 'IMPLEMENT' %}bg-blue-600 text-white shadow-xs{% else %}bg-white border border-blue-200 text-blue-700 hover:bg-blue-50/60{% endif %}">
+            <i class="fas fa-tools text-[10px]"></i>
+            <span>Implements</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_type == 'IMPLEMENT' %}bg-blue-800 text-white{% else %}bg-blue-100 text-blue-800{% endif %}">
+                {{ implement_bills_count }}
+            </span>
+        </a>
+
+        <a href="?type=SPARE"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_type == 'SPARE' %}bg-amber-600 text-white shadow-xs{% else %}bg-white border border-amber-200 text-amber-700 hover:bg-amber-50/60{% endif %}">
+            <i class="fas fa-gear text-[10px]"></i>
+            <span>Spares & Parts</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_type == 'SPARE' %}bg-amber-800 text-white{% else %}bg-amber-100 text-amber-800{% endif %}">
+                {{ spare_bills_count }}
+            </span>
+        </a>
+    </div>
+
+    <!-- 4. Search & Multi-Filter Toolbar (Uniform Standard ERP Design) -->
+    <div class="bg-white rounded-xl border border-slate-200/90 p-3 mb-4 shadow-xs">
+        <form method="get" class="flex flex-wrap items-center gap-3">
+            <div class="relative flex-1 min-w-[240px]">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <input type="text" name="q" value="{{ search_query }}"
+                       placeholder="Search by supplier invoice no, supplier name, GSTIN..."
+                       class="w-full h-9 pl-8 pr-3 text-xs font-medium bg-white text-slate-800 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-xs">
+            </div>
+
+            <div class="w-56 shrink-0">
+                <select name="type" data-icon="fas fa-boxes-stacked" class="w-full">
+                    <option value="">All Purchase Types</option>
+                    {% for code, label in types %}
+                    <option value="{{ code }}" {% if current_type == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-xs transition-colors cursor-pointer shrink-0">
+                <i class="fas fa-filter text-[11px]"></i>
+                <span>Apply Filters</span>
+            </button>
+
+            <a href="{% url 'billing:purchase_list' %}"
+               class="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition-colors shrink-0">
+                <i class="fas fa-rotate-left text-[11px]"></i>
+                <span>Reset All Filters</span>
+            </a>
+        </form>
+    </div>
+
+    <!-- 5. Advanced Table Card (Zoho Books Style High-Density Table with Show/Hide & Sort & Export) -->
+    <div data-advanced-table
+         data-table-id="inward-stock-table"
+         data-table-title="Inward_Stock_Purchases_Register"
+         class="advanced-table-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-visible">
+
+        <!-- Table Toolbar -->
+        <div class="p-4 bg-slate-50/70 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <h3 class="text-xs font-bold text-slate-900 tracking-tight uppercase">Inward Procurement Register</h3>
+                <span data-table-count class="px-2.5 py-0.5 bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-full border border-slate-200">
+                    Showing {{ purchases|length }} entries
+                </span>
+                <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">&bull; Stockyard Inward Log</span>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Page Size Selector -->
+                <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                    <span class="text-[11px] text-slate-400 font-medium">Page Size:</span>
+                    <select id="pageSizeSelect"
+                            onchange="const u = new URL(window.location.href); u.searchParams.set('page_size', this.value); u.searchParams.set('page', '1'); window.location.href = u.toString();"
+                            class="no-search text-xs py-1.5 px-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs">
+                        <option value="15" {% if current_page_size == 15 %}selected{% endif %}>15 per page</option>
+                        <option value="25" {% if current_page_size == 25 %}selected{% endif %}>25 per page</option>
+                        <option value="50" {% if current_page_size == 50 %}selected{% endif %}>50 per page</option>
+                        <option value="100" {% if current_page_size == 100 %}selected{% endif %}>100 per page</option>
+                    </select>
+                </div>
+
+                <!-- Show / Hide Columns Dropdown Toggle -->
+                <div x-data="{ openCols: false }" class="relative">
+                    <button type="button"
+                            @click="openCols = !openCols"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                            title="Customize Visible Columns">
+                        <i class="fas fa-table-columns text-slate-500 text-xs"></i>
+                        <span>Columns</span>
+                        <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
+                    </button>
+                    <!-- Dropdown populated dynamically by advanced-table.js -->
+                    <div x-show="openCols"
+                         @click.away="openCols = false"
+                         x-cloak
+                         data-columns-dropdown-menu
+                         class="absolute right-0 mt-1.5 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden divide-y divide-slate-100">
+                    </div>
+                </div>
+
+                <!-- Export to Excel Button -->
+                <button type="button"
+                        data-export-excel
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Export Inward Bills to Excel">
+                    <i class="fas fa-file-excel text-emerald-600"></i>
+                    <span>Export Excel</span>
+                </button>
+
+                <!-- Export to PDF Button -->
+                <button type="button"
+                        data-export-pdf
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Print or Save Register as PDF">
+                    <i class="fas fa-file-pdf text-rose-600"></i>
+                    <span>Export PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- The High-Density Responsive Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <!-- Sleek Dark Table Header (Zoho Books Style) -->
+                <thead class="bg-slate-900 text-slate-100 uppercase tracking-wider text-[11px] font-bold border-b border-slate-800 select-none">
+                    <tr>
+                        <th data-col-name="Supplier Invoice #" class="py-3 px-4">Supplier Invoice #</th>
+                        <th data-col-name="Supplier / Manufacturer" class="py-3 px-4">Supplier / Manufacturer</th>
+                        <th data-col-name="Purchase Type" class="py-3 px-3.5">Purchase Type</th>
+                        <th data-col-name="Invoice Date" class="py-3 px-3.5">Invoice Date</th>
+                        <th data-col-name="Received Date" class="py-3 px-3.5">Received Date</th>
+                        <th data-col-name="Items Received" class="py-3 px-3.5 text-center">Items Received</th>
+                        <th data-col-name="Total Amount" class="py-3 px-4 text-right">Total Amount (₹)</th>
+                        <th data-no-sort data-no-toggle data-col-name="Actions" class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for p in purchases %}
+                    <tr class="hover:bg-blue-50/40 transition-colors group">
+                        <!-- Supplier Invoice # -->
+                        <td class="py-2.5 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
+                            <a href="{% url 'billing:purchase_detail' p.pk %}" class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 hover:underline">
+                                <i class="fas fa-file-invoice text-slate-400 text-xs"></i>
+                                <span>{{ p.invoice_number }}</span>
+                            </a>
+                        </td>
+
+                        <!-- Supplier / Manufacturer -->
+                        <td class="py-2.5 px-4 font-medium text-slate-900">
+                            <p class="font-bold text-slate-900">{{ p.supplier_name }}</p>
+                            {% if p.supplier_gstin %}
+                            <p class="text-[10px] text-slate-400 font-mono">GSTIN: {{ p.supplier_gstin }}</p>
+                            {% endif %}
+                        </td>
+
+                        <!-- Purchase Type -->
+                        <td class="py-2.5 px-3.5 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border
+                                {% if p.purchase_type == 'TRACTOR' %}bg-purple-50 text-purple-700 border-purple-200
+                                {% elif p.purchase_type == 'IMPLEMENT' %}bg-blue-50 text-blue-700 border-blue-200
+                                {% elif p.purchase_type == 'SPARE' %}bg-amber-50 text-amber-700 border-amber-200
+                                {% else %}bg-slate-50 text-slate-700 border-slate-200{% endif %}">
+                                {{ p.get_purchase_type_display }}
+                            </span>
+                        </td>
+
+                        <!-- Invoice Date -->
+                        <td class="py-2.5 px-3.5 text-slate-600 font-mono whitespace-nowrap" data-sort-val="{{ p.invoice_date|date:'Y-m-d' }}">
+                            {{ p.invoice_date|date:"d M Y" }}
+                        </td>
+
+                        <!-- Received Date -->
+                        <td class="py-2.5 px-3.5 text-slate-500 font-mono whitespace-nowrap" data-sort-val="{{ p.received_date|date:'Y-m-d' }}">
+                            {{ p.received_date|date:"d M Y" }}
+                        </td>
+
+                        <!-- Items Received -->
+                        <td class="py-2.5 px-3.5 text-center whitespace-nowrap" data-sort-val="{{ p.items.count }}">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-xs border border-blue-200">
+                                {{ p.items.count }} item{{ p.items.count|pluralize }}
+                            </span>
+                        </td>
+
+                        <!-- Total Amount -->
+                        <td class="py-2.5 px-4 text-right font-mono font-black text-emerald-700 text-sm whitespace-nowrap" data-sort-val="{{ p.total_amount }}">
+                            ₹{{ p.total_amount|intcomma }}
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="py-2.5 px-4 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1">
+                                <a href="{% url 'billing:purchase_detail' p.pk %}"
+                                   class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md text-[11px] font-semibold border border-slate-200 transition-colors"
+                                   title="View Inward Bill Details">
+                                    <i class="fas fa-eye text-xs"></i>
+                                    <span>View Details</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="empty-row">
+                        <td colspan="8" class="py-12 px-4 text-center">
+                            <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl shadow-2xs">
+                                <i class="fas fa-truck-ramp-box"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800">No Inward Stock Bills Found</h4>
+                            <p class="text-xs text-slate-400 mt-1">Record a purchase bill to add inventory into your showroom.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Table Footer: Pagination & Record Count Summary -->
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-200/80">
+            {% include "includes/pagination.html" %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

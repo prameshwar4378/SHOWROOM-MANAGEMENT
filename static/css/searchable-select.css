@@ -1,0 +1,379 @@
+/* =========================================================================
+   Universal Searchable Dropdown & Form Controls Stylesheet
+   Showroom Management ERP - Shadcn / Tailwind Unified Design Tokens
+   ========================================================================= */
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%; /* #2563eb */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem; /* 8px - rounded-lg */
+}
+
+/* Hide native select when upgraded */
+select.searchable-select-hidden {
+  display: none !important;
+}
+
+/* Custom Trigger Button - Exactly 36px (h-9) matching standard ERP inputs */
+.searchable-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0 !important;
+  height: 2.25rem; /* 36px / h-9 */
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem; /* 12px / text-xs */
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: #1e293b; /* slate-800 */
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 0.5rem; /* rounded-lg */
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease-in-out;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.searchable-select-trigger:hover:not(.is-disabled) {
+  border-color: #cbd5e1; /* slate-300 */
+  background-color: #f8fafc; /* slate-50 */
+}
+
+.searchable-select-trigger:focus-visible,
+.searchable-select-trigger.is-active {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  background-color: #ffffff;
+}
+
+.searchable-select-trigger.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: #f1f5f9;
+}
+
+.searchable-select-label {
+  flex: 1 1 0%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+.searchable-select-label.is-placeholder {
+  color: #64748b; /* slate-500 */
+  font-weight: 500;
+}
+
+.searchable-select-chevron {
+  flex-shrink: 0;
+  width: 0.8125rem;
+  height: 0.8125rem;
+  color: #94a3b8; /* slate-400 */
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s;
+}
+
+.searchable-select-trigger.is-active .searchable-select-chevron {
+  transform: rotate(180deg);
+  color: #2563eb;
+}
+
+/* Floating Dropdown Menu (Fixed in document.body to prevent clipping by tables/cards) */
+.searchable-select-menu {
+  position: fixed;
+  z-index: 999999;
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: searchableSelectFadeIn 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top;
+  font-family: inherit;
+}
+
+.searchable-select-menu.is-flipped {
+  transform-origin: bottom;
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.12), 0 -8px 10px -6px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes searchableSelectFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Search Header Input Inside Dropdown */
+.searchable-select-search-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.45rem;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.searchable-select-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.85rem;
+  height: 0.85rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.searchable-select-search-input {
+  width: 100%;
+  height: 1.875rem; /* 30px */
+  padding-left: 1.875rem;
+  padding-right: 1.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #0f172a;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.searchable-select-search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
+}
+
+.searchable-select-search-clear {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.12s;
+}
+
+.searchable-select-search-clear:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+/* Options List */
+.searchable-select-options-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 14rem;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  overscroll-behavior: contain;
+}
+
+.searchable-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s, color 0.1s;
+}
+
+.searchable-select-option:hover,
+.searchable-select-option.is-focused {
+  background-color: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.searchable-select-option.is-selected {
+  background-color: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.searchable-select-option-text {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.searchable-select-option-text mark {
+  background-color: rgba(37, 99, 235, 0.2);
+  color: #1e3a8a;
+  font-weight: 700;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.searchable-select-check-icon {
+  flex-shrink: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: #2563eb;
+}
+
+.searchable-select-empty {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.searchable-select-options-list::-webkit-scrollbar {
+  width: 5px;
+}
+.searchable-select-options-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.searchable-select-options-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+/* =========================================================================
+   Standardized Filter Toolbar Components (Matches Gold Standard Screenshot)
+   ========================================================================= */
+
+/* Filter Form Container */
+.erp-filter-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* Standardized Search Input (h-9 / 36px) */
+.erp-search-input {
+  height: 2.25rem !important; /* 36px */
+  font-size: 0.75rem !important; /* 12px */
+  font-weight: 500;
+  color: #1e293b;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding-left: 2rem !important;
+  padding-right: 0.75rem !important;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.erp-search-input:hover {
+  border-color: #cbd5e1;
+}
+
+.erp-search-input:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+}
+
+.erp-search-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* Standardized Primary Filter Button (h-9 / 36px) */
+.erp-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 2.25rem !important; /* 36px */
+  padding: 0 1rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700;
+  color: #ffffff !important;
+  background-color: #2563eb !important;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease-in-out, transform 0.05s;
+  white-space: nowrap;
+}
+
+.erp-filter-btn:hover {
+  background-color: #1d4ed8 !important;
+}
+
+.erp-filter-btn:active {
+  background-color: #1e40af !important;
+  transform: translateY(1px);
+}
+
+/* Standardized Reset Filters Link (Red / Rose like in Screenshot) */
+.erp-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #e11d48 !important; /* rose-600 */
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.erp-reset-btn:hover {
+  color: #be123c !important; /* rose-700 */
+}

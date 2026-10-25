@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Customer Directory{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- 1. Header (Icon, Title, Subtitle, and Primary Actions) -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-lg font-bold shadow-2xs">
+                <i class="fas fa-users"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Customer Directory</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Manage customer accounts, tractor sales profiles, and view individual customer ledger statements.</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2.5">
+            <a href="{% url 'customers:customer_add' %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer">
+                <i class="fas fa-user-plus text-xs"></i>
+                <span>Add Customer</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. KPI Overview Metric Cards (4 Cards: Active, Pending Dues, Inactive, Total) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Active Customers (Green Theme) -->
+        <a href="?status=active" class="bg-emerald-50/30 hover:bg-emerald-50/60 rounded-2xl border border-emerald-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-emerald-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Active Customers</span>
+                <i class="fas fa-user-check text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-emerald-800 tracking-tight">{{ active_customers_count }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                Verified showroom client profiles
+            </p>
+        </a>
+
+        <!-- Card 2: With Pending Dues (Red Theme) -->
+        <a href="{% url 'payments:pending_payments' %}" class="bg-red-50/30 hover:bg-red-50/60 rounded-2xl border border-red-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-red-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Pending Dues Accounts</span>
+                <i class="fas fa-triangle-exclamation text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-red-800 tracking-tight">₹{{ with_pending_amount|intcomma }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="font-bold text-red-700">{{ with_pending_count }}</span> accounts with balance
+            </p>
+        </a>
+
+        <!-- Card 3: Inactive Accounts (Amber/Gray Theme) -->
+        <a href="?status=inactive" class="bg-amber-50/30 hover:bg-amber-50/60 rounded-2xl border border-amber-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-amber-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Inactive / Suspended</span>
+                <i class="fas fa-user-clock text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-amber-800 tracking-tight">{{ inactive_customers_count }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                Archived customer records
+            </p>
+        </a>
+
+        <!-- Card 4: Total Directory (Dark Slate / Navy Border) -->
+        <div class="bg-white rounded-2xl border-2 border-slate-800 p-4 shadow-sm">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Total Customer Base</span>
+                <i class="fas fa-address-book text-xs text-slate-500"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tight">{{ total_customers_count }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                Full registered database
+            </p>
+        </div>
+    </div>
+
+    <!-- 3. Quick Status Filter Tabs / Pills -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <a href="{% url 'customers:customer_list' %}"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if not current_status %}bg-slate-900 text-white shadow-xs{% else %}bg-white border border-slate-200 text-slate-700 hover:bg-slate-50{% endif %}">
+            <i class="fas fa-list-check text-[10px]"></i>
+            <span>All Customers</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if not current_status %}bg-slate-700 text-white{% else %}bg-slate-100 text-slate-700{% endif %}">
+                {{ total_customers_count }}
+            </span>
+        </a>
+
+        <a href="?status=active"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_status == 'active' %}bg-emerald-600 text-white shadow-xs{% else %}bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50/60{% endif %}">
+            <i class="fas fa-user-check text-[10px]"></i>
+            <span>Active Only</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_status == 'active' %}bg-emerald-800 text-white{% else %}bg-emerald-100 text-emerald-800{% endif %}">
+                {{ active_customers_count }}
+            </span>
+        </a>
+
+        <a href="{% url 'payments:pending_payments' %}"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors bg-white border border-rose-200 text-rose-700 hover:bg-rose-50/60">
+            <i class="fas fa-triangle-exclamation text-[10px]"></i>
+            <span>With Outstanding Dues</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                {{ with_pending_count }}
+            </span>
+        </a>
+
+        <a href="?status=inactive"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_status == 'inactive' %}bg-slate-700 text-white shadow-xs{% else %}bg-white border border-slate-200 text-slate-600 hover:bg-slate-50{% endif %}">
+            <i class="fas fa-user-clock text-[10px]"></i>
+            <span>Inactive Only</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_status == 'inactive' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-700{% endif %}">
+                {{ inactive_customers_count }}
+            </span>
+        </a>
+    </div>
+
+    <!-- 4. Search and Filter Toolbar (Uniform Standard ERP Design) -->
+    <div class="bg-white rounded-xl border border-slate-200/90 p-3 mb-4 shadow-xs">
+        <form method="get" class="flex flex-wrap items-center gap-2.5">
+            <div class="relative flex-1 min-w-[240px]">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <input type="text"
+                       name="q"
+                       id="customer-search-input"
+                       value="{{ search_query }}"
+                       placeholder="Search by customer name, mobile, village, taluka, Aadhaar, or PAN..."
+                       class="w-full h-9 pl-8 pr-3 text-xs font-medium bg-white text-slate-800 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-xs"
+                       autocomplete="off">
+            </div>
+
+            <div class="w-48 shrink-0">
+                <select name="status" data-icon="fas fa-users" class="w-full">
+                    <option value="" {% if not current_status %}selected{% endif %}>All Statuses</option>
+                    <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active Only</option>
+                    <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                </select>
+            </div>
+
+            <button type="submit" class="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-xs transition-colors cursor-pointer shrink-0">
+                <i class="fas fa-filter text-[11px]"></i>
+                <span>Apply Filters</span>
+            </button>
+
+            <a href="{% url 'customers:customer_list' %}"
+               class="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition-colors shrink-0">
+                <i class="fas fa-rotate-left text-[11px]"></i>
+                <span>Reset All Filters</span>
+            </a>
+        </form>
+    </div>
+
+    <!-- 5. Advanced Table Card (Zoho Books Style High-Density Table with Show/Hide & Sort & Export) -->
+    <div data-advanced-table
+         data-table-id="customer-directory-table"
+         data-table-title="Customer_Directory_Ledger"
+         class="advanced-table-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-visible">
+
+        <!-- Table Toolbar -->
+        <div class="p-4 bg-slate-50/70 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <h3 class="text-xs font-bold text-slate-900 tracking-tight uppercase">Customer Directory & Profiles</h3>
+                <span data-table-count class="px-2.5 py-0.5 bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-full border border-slate-200">
+                    Showing {{ customers|length }} entries
+                </span>
+                <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">&bull; Integrated Financial Directory</span>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Page Size Selector -->
+                <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                    <span class="text-[11px] text-slate-400 font-medium">Page Size:</span>
+                    <select id="pageSizeSelect"
+                            onchange="const u = new URL(window.location.href); u.searchParams.set('page_size', this.value); u.searchParams.set('page', '1'); window.location.href = u.toString();"
+                            class="no-search text-xs py-1.5 px-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs">
+                        <option value="15" {% if current_page_size == 15 %}selected{% endif %}>15 per page</option>
+                        <option value="25" {% if current_page_size == 25 %}selected{% endif %}>25 per page</option>
+                        <option value="50" {% if current_page_size == 50 %}selected{% endif %}>50 per page</option>
+                        <option value="100" {% if current_page_size == 100 %}selected{% endif %}>100 per page</option>
+                    </select>
+                </div>
+
+                <!-- Show / Hide Columns Dropdown Toggle -->
+                <div x-data="{ openCols: false }" class="relative">
+                    <button type="button"
+                            @click="openCols = !openCols"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                            title="Customize Visible Columns">
+                        <i class="fas fa-table-columns text-slate-500 text-xs"></i>
+                        <span>Columns</span>
+                        <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
+                    </button>
+                    <!-- Dropdown populated dynamically by advanced-table.js -->
+                    <div x-show="openCols"
+                         @click.away="openCols = false"
+                         x-cloak
+                         data-columns-dropdown-menu
+                         class="absolute right-0 mt-1.5 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden divide-y divide-slate-100">
+                    </div>
+                </div>
+
+                <!-- Export to Excel Button -->
+                <button type="button"
+                        data-export-excel
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Export Current Customers to Excel Spreadsheet">
+                    <i class="fas fa-file-excel text-emerald-600"></i>
+                    <span>Export Excel</span>
+                </button>
+
+                <!-- Export to PDF Button -->
+                <button type="button"
+                        data-export-pdf
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Print or Save Directory as PDF">
+                    <i class="fas fa-file-pdf text-rose-600"></i>
+                    <span>Export PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- The High-Density Responsive Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <!-- Sleek Dark Table Header (Zoho Books Style) -->
+                <thead class="bg-slate-900 text-slate-100 uppercase tracking-wider text-[11px] font-bold border-b border-slate-800 select-none">
+                    <tr>
+                        <th data-col-name="#" class="py-3 px-3 text-center w-12 text-slate-400">#</th>
+                        <th data-col-name="Customer Name" class="py-3 px-4">Customer Name</th>
+                        <th data-col-name="Mobile" class="py-3 px-3.5">Mobile</th>
+                        <th data-col-name="Village" class="py-3 px-3.5">Village</th>
+                        <th data-col-name="Taluka" class="py-3 px-3.5">Taluka</th>
+                        <th data-col-name="District" class="py-3 px-3.5">District</th>
+                        <th data-col-name="Outstanding Balance" class="py-3 px-4 text-right">Outstanding (₹)</th>
+                        <th data-col-name="Status" class="py-3 px-3.5 text-center">Status</th>
+                        <th data-no-sort data-no-toggle data-col-name="Actions" class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customer-table-body" class="divide-y divide-slate-100 bg-white">
+                    {% include "customers/customer_list_partial.html" %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Table Footer: Pagination & Record Count Summary -->
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-200/80">
+            {% include "includes/pagination.html" %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

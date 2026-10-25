@@ -1,0 +1,321 @@
+{% load humanize %}
+<!-- ========================================================================= -->
+<!-- QUOTATION - NEXT-LEVEL EXECUTIVE VEHICLE & MACHINERY ESTIMATE             -->
+<!-- Modern Agency Corporate Aesthetic (Deep Navy & Vibrant Coral)            -->
+<!-- Rounded Background Sections, Spacious Post-Table Layout & 1-Page Fit     -->
+<!-- ========================================================================= -->
+<div class="quotation-container" style="width: 100%; max-width: 100%; box-sizing: border-box; background-color: #ffffff; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 4px 6px; margin: 0 auto;">
+
+    <!-- 1. TOP HEADER & BRANDING (Dealership Card on Left + Quotation Title on Right) -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+        <tr>
+            <!-- Left: Dealership Branding in Deep Navy Rounded Card (Reference Images 1 & 2) -->
+            <td style="width: 58%; vertical-align: top; padding-right: 12px;">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #0f172a; border-radius: 12px; overflow: hidden;">
+                    <tr>
+                        <td style="padding: 10px 14px; vertical-align: middle;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    {% if company.brand_logo or company.company_logo %}
+                                    <td style="width: 48px; vertical-align: middle; padding-right: 10px;">
+                                        <div style="background-color: #ffffff; padding: 3px 5px; border-radius: 6px; display: inline-block;">
+                                            {% if company.brand_logo %}
+                                            <img src="{{ company.brand_logo.url }}" alt="Logo" height="32" style="height: 32px; max-height: 32px; max-width: 44px; object-fit: contain; display: block;">
+                                            {% else %}
+                                            <img src="{{ company.company_logo.url }}" alt="Logo" height="32" style="height: 32px; max-height: 32px; max-width: 44px; object-fit: contain; display: block;">
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                    <td style="vertical-align: middle;">
+                                        <div style="font-size: 13.5pt; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.15;">
+                                            {{ company.company_name|default:"SAIGANGA ENTERPRISES" }}
+                                        </div>
+                                        <div style="font-size: 7.5pt; font-weight: 700; color: #fb923c; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 1px;">
+                                            {{ company.tagline|default:"Authorized Dealership & Service Center" }}{% if company.city %} &bull; {{ company.city }}{% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div style="font-size: 7pt; color: #cbd5e1; margin-top: 4px; line-height: 1.25;">
+                                {{ company.full_address|default:"Subhadra Complex, Ladgaon Road, Vaijapur, Dist. Aurangabad" }}
+                            </div>
+                            <div style="font-size: 7pt; font-weight: 700; color: #ffffff; margin-top: 2px;">
+                                {% if company.mobile_numbers %}
+                                <span>Mob: {{ company.mobile_numbers }}</span>
+                                {% endif %}
+                                {% if company.gstin_number %}
+                                &nbsp;&bull;&nbsp;<span>GSTIN: {{ company.gstin_number }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+
+            <!-- Right: QUOTATION Title & Metadata (Reference Images 1 & 2) -->
+            <td style="width: 42%; vertical-align: top; text-align: right;">
+                <div style="font-size: 24pt; font-weight: 900; color: #ea580c; letter-spacing: 2px; line-height: 1; text-transform: uppercase;">
+                    QUOTATION
+                </div>
+                <div style="font-size: 7.5pt; font-weight: 700; color: #64748b; letter-spacing: 0.8px; text-transform: uppercase; margin-top: 2px;">
+                    Proforma Estimate For Bank Finance
+                </div>
+                <div style="margin-top: 4px;">
+                    <span id="copy-badge" style="display: inline-block; padding: 2px 9px; background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 7pt; font-weight: 700; color: #475569; letter-spacing: 0.5px;">
+                        [ CUSTOMER ESTIMATE ]
+                    </span>
+                </div>
+
+                <!-- Quotation Meta Info Card (Clean Rounded Box) -->
+                <table style="width: 88%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 5px; margin-left: auto; font-size: 7.5pt; overflow: hidden;">
+                    <tr>
+                        <td style="padding: 4px 8px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="text-align: right; color: #64748b; font-weight: 700; text-transform: uppercase; padding: 1px 6px 1px 0;">Quotation # :</td>
+                                    <td style="text-align: right; font-weight: 900; color: #0f172a; font-family: Courier, monospace; font-size: 9pt; padding: 1px 0; width: 75px;">{{ bill.bill_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: right; color: #64748b; font-weight: 700; text-transform: uppercase; padding: 1px 6px 1px 0;">Date :</td>
+                                    <td style="text-align: right; font-weight: 800; color: #0f172a; padding: 1px 0;">{{ bill.bill_date|date:"d / m / Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: right; color: #64748b; font-weight: 700; text-transform: uppercase; padding: 1px 6px 1px 0;">Validity :</td>
+                                    <td style="text-align: right; font-weight: 800; color: #059669; padding: 1px 0;">30 Days (Loan)</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 2. CUSTOMER & BANK FINANCING SECTION (Dual Rounded Cards with Distinct Accents) -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+        <tr>
+            <!-- Left Card: Quotation To / Customer Details -->
+            <td style="width: 54%; vertical-align: top; padding-right: 8px;">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 3px solid #ea580c; border-radius: 10px; overflow: hidden;">
+                    <tr>
+                        <td style="padding: 8px 12px;">
+                            <div style="font-size: 7.5pt; font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px;">
+                                Quotation To :
+                            </div>
+                            <div style="font-size: 11.5pt; font-weight: 900; color: #0f172a; line-height: 1.2;">
+                                {{ bill.customer.full_name }}
+                            </div>
+                            <div style="font-size: 7.5pt; color: #475569; margin-top: 3px; line-height: 1.3;">
+                                <span style="color: #64748b; font-weight: 600;">Village:</span> <strong>{{ bill.customer.village|default:"--" }}</strong> &bull;
+                                <span style="color: #64748b; font-weight: 600;">Taluka:</span> <strong>{{ bill.customer.taluka|default:"--" }}</strong>
+                            </div>
+                            <div style="font-size: 7.5pt; color: #475569; margin-top: 1px;">
+                                <span style="color: #64748b; font-weight: 600;">District:</span> <strong>{{ bill.customer.district|default:"--" }}</strong>
+                            </div>
+                            <div style="font-size: 7.5pt; color: #0f172a; font-weight: 700; margin-top: 2px;">
+                                <span style="color: #64748b;">Mobile:</span> <span style="font-family: Courier, monospace;">{{ bill.customer.mobile_primary|default:"--" }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+
+            <!-- Right Card: Proposed Financing Bank Details -->
+            <td style="width: 46%; vertical-align: top; padding-left: 2px;">
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 3px solid #0f172a; border-radius: 10px; overflow: hidden;">
+                    <tr>
+                        <td style="padding: 8px 12px;">
+                            <div style="font-size: 7.5pt; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px;">
+                                Proposed Financing Bank :
+                            </div>
+                            <div style="font-size: 11pt; font-weight: 900; color: #0f172a; line-height: 1.2;">
+                                {{ bill.bank_name|default:bill.customer.bank_name|default:"State Bank of India" }}
+                            </div>
+                            <div style="font-size: 7.5pt; color: #475569; margin-top: 3px;">
+                                <span style="color: #64748b; font-weight: 600;">Branch :</span> <strong style="color: #1e293b;">{{ bill.customer.bank_branch|default:"Main Branch" }}</strong>
+                            </div>
+                            <div style="font-size: 6.5pt; color: #64748b; margin-top: 3px; font-style: italic; line-height: 1.25;">
+                                Official proforma estimate for agricultural machinery loan sanction
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 3. ITEMS SPECIFICATION TABLE (Card Container with Rounded Borders) -->
+    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background-color: #ffffff;">
+        <thead>
+            <tr>
+                <th style="background-color: #ea580c; color: #ffffff; padding: 6px 6px; font-size: 7.5pt; font-weight: 800; text-align: center; width: 6%; text-transform: uppercase;">
+                    No.
+                </th>
+                <th style="background-color: #ea580c; color: #ffffff; padding: 6px 10px; font-size: 7.5pt; font-weight: 800; text-align: left; width: 56%; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Product Description & Specifications
+                </th>
+                <th style="background-color: #0f172a; color: #ffffff; padding: 6px 6px; font-size: 7.5pt; font-weight: 800; text-align: center; width: 10%; text-transform: uppercase;">
+                    Quantity
+                </th>
+                <th style="background-color: #0f172a; color: #ffffff; padding: 6px 10px; font-size: 7.5pt; font-weight: 800; text-align: right; width: 14%; text-transform: uppercase;">
+                    Price (Rs.)
+                </th>
+                <th style="background-color: #0f172a; color: #ffffff; padding: 6px 10px; font-size: 7.5pt; font-weight: 800; text-align: right; width: 14%; text-transform: uppercase;">
+                    Total (Rs.)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr style="border-bottom: 1px solid #e2e8f0; {% if forloop.counter|divisibleby:2 %}background-color: #fafbfc;{% else %}background-color: #ffffff;{% endif %}">
+                <td style="padding: 7px 6px; text-align: center; font-size: 7.5pt; font-weight: 700; color: #64748b; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
+                    {{ forloop.counter|stringformat:"02d" }}
+                </td>
+                <td style="padding: 7px 10px; font-size: 8.5pt; font-weight: 800; color: #0f172a; vertical-align: top; line-height: 1.3; border-bottom: 1px solid #f1f5f9;">
+                    {{ item.item_description }}
+                </td>
+                <td style="padding: 7px 6px; text-align: center; font-size: 8pt; font-weight: 800; color: #1e293b; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
+                    {{ item.quantity }}
+                </td>
+                <td style="padding: 7px 10px; text-align: right; font-size: 8pt; font-weight: 700; font-family: Courier, monospace; color: #475569; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
+                    {{ item.unit_price|floatformat:2 }}
+                </td>
+                <td style="padding: 7px 10px; text-align: right; font-size: 8.5pt; font-weight: 900; font-family: Courier, monospace; color: #0f172a; vertical-align: top; border-bottom: 1px solid #f1f5f9;">
+                    {{ item.amount|floatformat:2 }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- PROPER GENEROUS GAP AFTER TABLE (Addressing User Crowding Feedback!) -->
+    <div style="height: 22px;"></div>
+
+    <!-- 4. FINANCIAL SUMMARY & BOTTOM ACCENT CARDS (All with Smooth Rounded Borders!) -->
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <!-- Left Side: Thanks, Rounded Payment Info Card, Rounded Words, Terms -->
+            <td style="width: 58%; vertical-align: top; padding-right: 14px;">
+                <div style="font-size: 10pt; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
+                    Thank You For Your Business
+                </div>
+
+                <!-- Showroom Bank Card (Smooth Rounded Borders with Left Accent) -->
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1.5px solid #e2e8f0; border-left: 4px solid #ea580c; border-radius: 10px; overflow: hidden; margin-bottom: 7px;">
+                    <tr>
+                        <td style="padding: 6px 10px;">
+                            <div style="font-size: 7.5pt; font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+                                Payment Info (Showroom Direct Bank):
+                            </div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 7pt; line-height: 1.35; color: #334155;">
+                                <tr>
+                                    <td style="width: 80px; color: #64748b; font-weight: 600; padding: 1px 0;">Bank & Branch :</td>
+                                    <td style="padding: 1px 0;"><strong style="color: #0f172a;">{{ company.primary_bank.bank_name|default:"Bank Of Baroda" }}</strong>, {{ company.primary_bank.branch_name|default:company.city|default:"Vaijapur" }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #64748b; font-weight: 600; padding: 1px 0;">Account Name :</td>
+                                    <td style="padding: 1px 0;"><strong style="color: #0f172a;">{{ company.primary_bank.account_holder_name|default:company.company_name|default:"Saiganga Enterprises" }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #64748b; font-weight: 600; padding: 1px 0;">A/C No & IFSC :</td>
+                                    <td style="padding: 1px 0;">
+                                        <strong style="font-family: Courier, monospace; color: #0f172a;">{{ company.primary_bank.account_number|default:"46450200000262" }}</strong>
+                                        &nbsp;&bull;&nbsp; IFSC: <strong style="font-family: Courier, monospace; color: #0f172a;">{{ company.primary_bank.ifsc_code|default:"BARB0VAIJAP" }}</strong>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Amount in Words Card (With Smooth Rounded Borders) -->
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 7px;">
+                    <tr>
+                        <td style="padding: 5px 10px;">
+                            <span style="font-size: 7.5pt; font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.5px;">Amount in Words :</span>
+                            <span style="font-size: 7.5pt; font-weight: 800; color: #0f172a; margin-left: 4px; text-transform: capitalize;">
+                                {{ bill.amount_in_words|default:"Rupees Zero Only" }}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Terms & Conditions -->
+                <div>
+                    <div style="font-size: 6.5pt; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px;">
+                        Terms & Conditions :
+                    </div>
+                    <div style="font-size: 5.5pt; color: #64748b; line-height: 1.3; text-align: justify;">
+                        “I/We hereby certify that my/our registration certificate under the Maharashtra value added Tax Act-2002 is in force on the date on which the sale of the goods specified in the tax invoice a made by me/us and the transaction of sale covered by this tax invoice has been effected by me/us and it shall be accounted for the turnover of sale while filling of return and the due tax if any payable on the sale has been paid or shall be paid{% if bill.is_gst_bill and company.gstin_number %} &bull; <strong>GST No. {{ company.gstin_number }}</strong>{% endif %}”
+                    </div>
+                </div>
+            </td>
+
+            <!-- Right Side: Totals & Signature (Rounded Total Block!) -->
+            <td style="width: 42%; vertical-align: top;">
+                <!-- Sub Total & Tax Rows -->
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px; font-size: 7.5pt;">
+                    <tr>
+                        <td style="padding: 2px 0; color: #64748b; font-weight: 700;">Subtotal :</td>
+                        <td style="padding: 2px 0; text-align: right; font-weight: 800; color: #0f172a; font-family: Courier, monospace; white-space: nowrap;">
+                            Rs. {{ bill.subtotal|default:bill.grand_total|floatformat:2 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 0; color: #64748b; font-weight: 700;">Tax (GST) :</td>
+                        <td style="padding: 2px 0; text-align: right; font-weight: 800; color: #0f172a; font-family: Courier, monospace;">
+                            {% if bill.is_gst_bill and bill.tax_amount > 0 %}Rs. {{ bill.tax_amount|floatformat:2 }}{% else %}0.00%{% endif %}
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Solid Coral Total Box (With Smooth Rounded Corners - Reference Images 1 & 2) -->
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #ea580c; border-radius: 10px; overflow: hidden; margin-bottom: 8px;">
+                    <tr>
+                        <td style="width: 30%; padding: 7px 10px; font-size: 8.5pt; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Total :
+                        </td>
+                        <td style="width: 70%; padding: 7px 10px; text-align: right; font-size: 11pt; font-weight: 900; color: #ffffff; font-family: Courier, monospace; white-space: nowrap;">
+                            Rs. {{ bill.grand_total|floatformat:2 }}
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Authorised Signatory Card (Rounded Borders) -->
+                <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1.5px dashed #cbd5e1; border-radius: 10px; background-color: #fafbfc; overflow: hidden;">
+                    <tr>
+                        <td style="padding: 6px 10px; text-align: center;">
+                            <div style="font-size: 7pt; font-weight: 800; color: #0f172a; text-transform: uppercase;">
+                                For {{ company.company_name|default:"Saiganga Enterprises" }}
+                            </div>
+                            {% if company.signature_image %}
+                            <div style="height: 26px; display: flex; align-items: center; justify-content: center; margin: 2px 0;">
+                                <img src="{{ company.signature_image.url }}" alt="Signature" height="24" style="max-height: 24px; max-width: 100px; object-fit: contain;">
+                            </div>
+                            {% else %}
+                            <div style="height: 26px;"></div>
+                            {% endif %}
+                            <div style="border-top: 1px solid #94a3b8; width: 80%; margin: 0 auto; padding-top: 2px;">
+                                <span style="font-size: 7pt; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">Authorised Sign</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 5. BOTTOM GEOMETRIC ACCENT BAR (Matching Reference Image 2!) -->
+    <div style="height: 10px;"></div>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="width: 65%;"></td>
+            <td style="width: 35%; height: 5px; background-color: #0f172a; border-radius: 4px;"></td>
+        </tr>
+    </table>
+    <div style="text-align: center; font-size: 6pt; color: #94a3b8; margin-top: 2px; letter-spacing: 0.3px;">
+        This is a Computer Generated Quotation / Estimate &bull; Valid for 30 Days from Date of Issue
+    </div>
+
+</div>

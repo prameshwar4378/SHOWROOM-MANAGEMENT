@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Payment #{{ payment.receipt_number }}{% endblock %}
+{% block page_title %}Delete Payment Receipt{% endblock %}
+{% block page_subtitle %}Confirm removal of payment receipt #{{ payment.receipt_number }}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+    <div class="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-4 text-xl">
+        <i class="fas fa-trash-alt"></i>
+    </div>
+    <h3 class="text-lg font-bold text-gray-800">Delete Payment Receipt?</h3>
+    <p class="text-sm text-gray-500 mt-2">
+        Are you sure you want to delete payment receipt <strong class="text-gray-800">{{ payment.receipt_number }}</strong>
+        of <strong class="text-gray-800">₹{{ payment.amount }}</strong> recorded for <strong class="text-gray-800">{{ payment.customer.full_name }}</strong>?
+    </p>
+
+    <form method="post" class="mt-6 flex items-center gap-3">
+        {% csrf_token %}
+        <button type="submit" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors">
+            Yes, Delete Receipt
+        </button>
+        <a href="{% url 'payments:payment_detail' payment.pk %}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors">
+            Cancel
+        </a>
+    </form>
+</div>
+{% endblock %}

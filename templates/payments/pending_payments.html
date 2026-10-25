@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Customer Outstanding Dues Register{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- 1. Page Header (Icon, Title, Subtitle, and Primary Action) -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-lg font-bold shadow-2xs">
+                <i class="fas fa-clock-rotate-left"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Customer Outstanding Dues Register</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Track customer balances, identify overdue accounts, send WhatsApp reminders, and collect pending amounts.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <a href="{% url 'payments:payment_add' %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer">
+                <i class="fas fa-hand-holding-dollar text-sm"></i>
+                <span>Collect Payment Now</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. KPI Overview Metric Cards (4 Cards: Overdue, High Dues, Partial, Total Outstanding) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Overdue Dues (Red Accent) -->
+        <a href="?status=overdue" class="bg-red-50/30 hover:bg-red-50/60 rounded-2xl border border-red-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-red-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Overdue Dues</span>
+                <i class="fas fa-triangle-exclamation text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-red-800 tracking-tight">₹{{ overdue_amount|intcomma }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="font-bold text-red-700">{{ overdue_count }}</span> accounts overdue
+            </p>
+        </a>
+
+        <!-- Card 2: High Priority / Due (Amber Accent) -->
+        <a href="?status=high" class="bg-amber-50/30 hover:bg-amber-50/60 rounded-2xl border border-amber-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-amber-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">High Dues (> ₹50K)</span>
+                <i class="fas fa-calendar-day text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-amber-800 tracking-tight">₹{{ high_pending_amount|intcomma }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="font-bold text-amber-700">{{ high_pending_count }}</span> accounts high priority
+            </p>
+        </a>
+
+        <!-- Card 3: Partially Settled (Blue Accent) -->
+        <a href="?status=partial" class="bg-blue-50/30 hover:bg-blue-50/60 rounded-2xl border border-blue-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-blue-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Partially Settled</span>
+                <i class="fas fa-wave-square text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-blue-800 tracking-tight">{{ partially_paid_count }} Accounts</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="font-bold text-emerald-600">₹{{ partially_paid_amount|intcomma }}</span> partial paid
+            </p>
+        </a>
+
+        <!-- Card 4: Total Outstanding (Dark Slate / Navy Border) -->
+        <div class="bg-white rounded-2xl border-2 border-slate-800 p-4 shadow-sm">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Total Outstanding</span>
+                <i class="fas fa-clock text-xs text-slate-500"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tight">₹{{ total_outstanding_sum|intcomma }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                Across <span class="font-bold text-slate-800">{{ all_pending_count }}</span> pending accounts
+            </p>
+        </div>
+    </div>
+
+    <!-- 3. Quick Status Filter Tabs / Pills -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <a href="{% url 'payments:pending_payments' %}"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if not current_status %}bg-slate-900 text-white shadow-xs{% else %}bg-white border border-slate-200 text-slate-700 hover:bg-slate-50{% endif %}">
+            <i class="fas fa-list-check text-[10px]"></i>
+            <span>All Pending</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if not current_status %}bg-slate-700 text-white{% else %}bg-slate-100 text-slate-700{% endif %}">
+                {{ all_pending_count }}
+            </span>
+        </a>
+
+        <a href="?status=overdue{% if search_query %}&q={{ search_query }}{% endif %}{% if current_village %}&village={{ current_village }}{% endif %}"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_status == 'overdue' %}bg-rose-600 text-white shadow-xs{% else %}bg-white border border-rose-200 text-rose-700 hover:bg-rose-50/60{% endif %}">
+            <i class="fas fa-triangle-exclamation text-[10px]"></i>
+            <span>Overdue</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_status == 'overdue' %}bg-rose-800 text-white{% else %}bg-rose-100 text-rose-800{% endif %}">
+                {{ overdue_count }}
+            </span>
+        </a>
+
+        <a href="?status=high{% if search_query %}&q={{ search_query }}{% endif %}{% if current_village %}&village={{ current_village }}{% endif %}"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_status == 'high' %}bg-amber-600 text-white shadow-xs{% else %}bg-white border border-amber-200 text-amber-700 hover:bg-amber-50/60{% endif %}">
+            <i class="fas fa-calendar-day text-[10px]"></i>
+            <span>High Dues (> ₹50K)</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_status == 'high' %}bg-amber-800 text-white{% else %}bg-amber-100 text-amber-800{% endif %}">
+                {{ high_pending_count }}
+            </span>
+        </a>
+
+        <a href="?status=partial{% if search_query %}&q={{ search_query }}{% endif %}{% if current_village %}&village={{ current_village }}{% endif %}"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_status == 'partial' %}bg-blue-600 text-white shadow-xs{% else %}bg-white border border-blue-200 text-blue-700 hover:bg-blue-50/60{% endif %}">
+            <i class="fas fa-wave-square text-[10px]"></i>
+            <span>Partially Paid</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_status == 'partial' %}bg-blue-800 text-white{% else %}bg-blue-100 text-blue-800{% endif %}">
+                {{ partially_paid_count }}
+            </span>
+        </a>
+
+        <a href="?status=unpaid{% if search_query %}&q={{ search_query }}{% endif %}{% if current_village %}&village={{ current_village }}{% endif %}"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_status == 'unpaid' %}bg-purple-600 text-white shadow-xs{% else %}bg-white border border-purple-200 text-purple-700 hover:bg-purple-50/60{% endif %}">
+            <i class="fas fa-file-invoice-dollar text-[10px]"></i>
+            <span>Unpaid / New</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_status == 'unpaid' %}bg-purple-800 text-white{% else %}bg-purple-100 text-purple-800{% endif %}">
+                {{ unpaid_count }}
+            </span>
+        </a>
+    </div>
+
+    <!-- 4. Search and Multi-Filter Toolbar (Uniform Standard ERP Design) -->
+    <div class="bg-white rounded-xl border border-slate-200/90 p-3 mb-4 shadow-xs">
+        <form method="get" class="space-y-3">
+            <div class="flex flex-wrap items-center gap-2.5">
+                <!-- Search query -->
+                <div class="relative flex-1 min-w-[240px]">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                    <input type="text" name="q" value="{{ search_query }}"
+                           placeholder="Search customer name, mobile, village, taluka, district..."
+                           class="w-full h-9 pl-8 pr-3 text-xs font-medium bg-white text-slate-800 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-xs">
+                </div>
+
+                <!-- Village Location Filter -->
+                <div class="w-60 min-w-[180px]">
+                    <select name="village" data-icon="fas fa-location-dot" class="w-full">
+                        <option value="">All Branch / Village Locations</option>
+                        {% for v in villages %}
+                        <option value="{{ v }}" {% if current_village == v %}selected{% endif %}>{{ v }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="w-52 min-w-[170px]">
+                    <select name="status" data-icon="fas fa-filter" class="w-full">
+                        <option value="">All Pending Statuses</option>
+                        <option value="overdue" {% if current_status == 'overdue' %}selected{% endif %}>Overdue Accounts</option>
+                        <option value="high" {% if current_status == 'high' %}selected{% endif %}>High Dues (> ₹50,000)</option>
+                        <option value="partial" {% if current_status == 'partial' %}selected{% endif %}>Partially Paid</option>
+                        <option value="unpaid" {% if current_status == 'unpaid' %}selected{% endif %}>Unpaid / Full Balance</option>
+                    </select>
+                </div>
+
+                <!-- Action Button & Reset -->
+                <button type="submit" class="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-xs transition-colors cursor-pointer shrink-0">
+                    <i class="fas fa-filter text-[11px]"></i>
+                    <span>Apply Filters</span>
+                </button>
+
+                <a href="{% url 'payments:pending_payments' %}" class="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition-colors shrink-0">
+                    <i class="fas fa-rotate-left text-[11px]"></i>
+                    <span>Reset All Filters</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- 5. Advanced Table Card (Zoho Books Style High-Density Table with Show/Hide & Sort & Export) -->
+    <div data-advanced-table
+         data-table-id="pending-dues-register"
+         data-table-title="Customer_Outstanding_Dues_Register"
+         class="advanced-table-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-visible">
+
+        <!-- Table Toolbar (Title, Showing Count, Page Size, Columns Menu, Export Excel, Export PDF) -->
+        <div class="p-4 bg-slate-50/70 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <h3 class="text-xs font-bold text-slate-900 tracking-tight uppercase">Pending Customer Dues</h3>
+                <span data-table-count class="px-2.5 py-0.5 bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-full border border-slate-200">
+                    Showing {{ pending_list|length }} entries
+                </span>
+                <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">&bull; Real-time Showroom Ledger</span>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Page Size Selector -->
+                <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                    <span class="text-[11px] text-slate-400 font-medium">Page Size:</span>
+                    <select id="pageSizeSelect"
+                            onchange="const u = new URL(window.location.href); u.searchParams.set('page_size', this.value); u.searchParams.set('page', '1'); window.location.href = u.toString();"
+                            class="no-search text-xs py-1.5 px-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs">
+                        <option value="15" {% if current_page_size == 15 %}selected{% endif %}>15 per page</option>
+                        <option value="25" {% if current_page_size == 25 %}selected{% endif %}>25 per page</option>
+                        <option value="50" {% if current_page_size == 50 %}selected{% endif %}>50 per page</option>
+                        <option value="100" {% if current_page_size == 100 %}selected{% endif %}>100 per page</option>
+                    </select>
+                </div>
+
+                <!-- Show / Hide Columns Dropdown Toggle (Alpine.js) -->
+                <div x-data="{ openCols: false }" class="relative">
+                    <button type="button"
+                            @click="openCols = !openCols"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                            title="Customize Visible Columns">
+                        <i class="fas fa-table-columns text-slate-500 text-xs"></i>
+                        <span>Columns</span>
+                        <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
+                    </button>
+                    <!-- Dropdown populated dynamically by advanced-table.js -->
+                    <div x-show="openCols"
+                         @click.away="openCols = false"
+                         x-cloak
+                         data-columns-dropdown-menu
+                         class="absolute right-0 mt-1.5 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden divide-y divide-slate-100">
+                    </div>
+                </div>
+
+                <!-- Export to Excel Button -->
+                <a href="{% url 'reports:export_dues_excel' %}"
+                   data-export-excel
+                   data-server-url="{% url 'reports:export_dues_excel' %}"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                   title="Export Current Dues to Excel Spreadsheet">
+                    <i class="fas fa-file-excel text-emerald-600"></i>
+                    <span>Export Excel</span>
+                </a>
+
+                <!-- Batch Send WhatsApp Reminders -->
+                <form method="post" action="{% url 'payments:batch_send_reminders' %}" class="inline" onsubmit="return confirm('Send WhatsApp/SMS balance reminders to all active pending customers?');">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+                            title="Auto-dispatch reminders via configured gateway/simulator">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>Send Reminders</span>
+                    </button>
+                </form>
+
+                <!-- Export to PDF Button -->
+                <button type="button"
+                        data-export-pdf
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Print or Save Register as PDF">
+                    <i class="fas fa-file-pdf text-rose-600"></i>
+                    <span>Export PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- The High-Density Responsive Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <!-- Sleek Dark Table Header (Zoho Books Style) -->
+                <thead class="bg-slate-900 text-slate-100 uppercase tracking-wider text-[11px] font-bold border-b border-slate-800 select-none">
+                    <tr>
+                        <th data-col-name="#" class="py-3 px-3 text-center w-12 text-slate-400">#</th>
+                        <th data-col-name="Customer Name" class="py-3 px-4">Customer Name</th>
+                        <th data-col-name="Location" class="py-3 px-3.5">Location</th>
+                        <th data-col-name="Contact No." class="py-3 px-3.5">Contact No.</th>
+                        <th data-col-name="Total Billed" class="py-3 px-4 text-right">Total Billed (₹)</th>
+                        <th data-col-name="Total Paid" class="py-3 px-4 text-right">Total Paid (₹)</th>
+                        <th data-col-name="Balance Due" class="py-3 px-4 text-right text-rose-300 font-extrabold">Balance Due (₹)</th>
+                        <th data-col-name="Status" class="py-3 px-3.5 text-center">Status</th>
+                        <th data-no-sort data-no-toggle data-col-name="Actions" class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for item in pending_list %}
+                    <tr class="hover:bg-blue-50/40 transition-colors group">
+                        <!-- # / Sequential Serial Badge -->
+                        <td class="py-2.5 px-3 text-center font-bold text-slate-500 font-mono text-[11px]">
+                            <span class="row-sr">{{ forloop.counter }}</span>
+                        </td>
+
+                        <!-- Customer Name -->
+                        <td class="py-2.5 px-4 font-bold text-slate-900">
+                            <a href="{% url 'customers:customer_detail' item.customer.pk %}" class="hover:text-blue-600 transition-colors flex items-center gap-1.5">
+                                <span>{{ item.customer.full_name }}</span>
+                            </a>
+                            <span class="text-[10px] text-slate-400 font-mono block font-normal">CUST-{{ item.customer.pk|stringformat:"04d" }}</span>
+                        </td>
+
+                        <!-- Location (Village, Taluka) -->
+                        <td class="py-2.5 px-3.5 text-slate-700">
+                            <span class="font-medium text-slate-900">{{ item.customer.village }}</span>
+                            <span class="text-slate-400 text-[10px] block">{{ item.customer.taluka }}, {{ item.customer.district }}</span>
+                        </td>
+
+                        <!-- Contact No. -->
+                        <td class="py-2.5 px-3.5 font-mono text-slate-700 whitespace-nowrap">
+                            <a href="tel:{{ item.customer.mobile_primary }}" class="hover:text-blue-600 flex items-center gap-1">
+                                <i class="fas fa-phone text-[10px] text-slate-400"></i>
+                                <span>{{ item.customer.mobile_primary }}</span>
+                            </a>
+                        </td>
+
+                        <!-- Total Billed -->
+                        <td class="py-2.5 px-4 text-right font-mono text-slate-800 whitespace-nowrap font-medium" data-sort-val="{{ item.total_billed }}">
+                            ₹{{ item.total_billed|intcomma }}
+                        </td>
+
+                        <!-- Total Paid -->
+                        <td class="py-2.5 px-4 text-right font-mono text-emerald-700 whitespace-nowrap font-semibold" data-sort-val="{{ item.total_paid }}">
+                            ₹{{ item.total_paid|intcomma }}
+                        </td>
+
+                        <!-- Balance Due -->
+                        <td class="py-2.5 px-4 text-right font-mono font-black text-rose-700 text-sm whitespace-nowrap bg-rose-50/20" data-sort-val="{{ item.outstanding }}">
+                            ₹{{ item.outstanding|intcomma }}
+                        </td>
+
+                        <!-- Status Pill Badge -->
+                        <td class="py-2.5 px-3.5 text-center whitespace-nowrap">
+                            {% if item.is_overdue %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span> OVERDUE
+                            </span>
+                            {% elif item.is_partial %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> PARTIAL
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span> UNPAID
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions Inline Buttons -->
+                        <td class="py-2.5 px-4 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <!-- WhatsApp Reminder (Web/App) -->
+                                {% if item.wa_url and item.wa_url != '#' %}
+                                <a href="{{ item.wa_url }}" target="_blank" rel="noopener noreferrer"
+                                   class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-md text-[11px] font-semibold flex items-center gap-1 shadow-2xs transition-colors"
+                                   title="Open WhatsApp Web chat">
+                                    <i class="fab fa-whatsapp text-emerald-600 text-xs"></i>
+                                    <span class="hidden sm:inline">WhatsApp</span>
+                                </a>
+                                <form method="post" action="{% url 'payments:customer_send_reminder' item.customer.pk %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="px-2 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded-md text-[11px] font-semibold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                                            title="Auto-dispatch reminder via Showroom Gateway / Simulator">
+                                        <i class="fas fa-paper-plane text-teal-600 text-xs"></i>
+                                        <span class="hidden md:inline">Auto-Send</span>
+                                    </button>
+                                </form>
+                                {% endif %}
+
+                                <!-- Receive Money / Collect -->
+                                <a href="{% url 'payments:payment_add' %}?customer={{ item.customer.pk }}"
+                                   class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-bold shadow-2xs flex items-center gap-1 transition-colors"
+                                   title="Record Payment from Customer">
+                                    <i class="fas fa-hand-holding-dollar text-xs"></i>
+                                    <span>Collect</span>
+                                </a>
+
+                                <!-- Ledger Statement -->
+                                <a href="{% url 'payments:customer_ledger' item.customer.pk %}"
+                                   class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-semibold flex items-center gap-1 border border-slate-200 transition-colors"
+                                   title="View Complete Customer Ledger">
+                                    <i class="fas fa-book text-slate-600 text-xs"></i>
+                                    <span class="hidden md:inline">Ledger</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="empty-row">
+                        <td colspan="9" class="py-12 px-4 text-center">
+                            <div class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto mb-3 text-2xl shadow-2xs">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800">Excellent! No Outstanding Dues Found</h4>
+                            <p class="text-xs text-slate-400 mt-1">All customer accounts are settled, or no records matched your filter criteria.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Table Footer: Pagination & Record Count Summary -->
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-200/80">
+            {% include "includes/pagination.html" %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

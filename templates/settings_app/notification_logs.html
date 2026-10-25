@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Notification Audit Trail{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Audit log of all SMS & WhatsApp notifications dispatched to showroom clients{% endblock %}
+
+{% block content %}
+<!-- Settings Tab Bar -->
+<div class="flex items-center gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
+    <a href="{% url 'settings_app:company_profile' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-building mr-1.5"></i> Company Profile & Headers
+    </a>
+    <a href="{% url 'settings_app:bank_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-landmark mr-1.5"></i> Bank Accounts
+    </a>
+    <a href="{% url 'settings_app:gst_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-percent mr-1.5"></i> GST Configurations
+    </a>
+    <a href="{% url 'settings_app:sequence_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-list-ol mr-1.5"></i> Bill Number Sequences
+    </a>
+    <a href="{% url 'settings_app:notification_settings' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fab fa-whatsapp mr-1.5"></i> WhatsApp & SMS Notifications
+    </a>
+    <a href="{% url 'settings_app:notification_logs' %}" class="px-4 py-2.5 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 whitespace-nowrap">
+        <i class="fas fa-clock-rotate-left mr-1.5"></i> Notification Logs
+    </a>
+</div>
+
+<!-- 1. Top Header Banner -->
+<div class="bg-white rounded-xl border border-gray-200 p-4 mb-4 shadow-xs">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
+            <i class="fas fa-clock-rotate-left text-base"></i>
+        </div>
+        <div>
+            <div class="flex items-center gap-1.5">
+                <h2 class="text-base font-bold text-gray-900 tracking-tight">Notification Audit Trail & Dispatch Logs</h2>
+                {% include 'includes/settings_help_popover.html' with topic='notification_audit' %}
+            </div>
+            <p class="text-xs text-gray-500">Chronological audit trail of all automated WhatsApp and SMS alerts sent to showroom customers.</p>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Metric Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-500 uppercase">Total Messages</span>
+            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+        </div>
+        <p class="text-xl font-black text-slate-800 font-mono">{{ total_count|intcomma }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-500 uppercase">Successfully Sent</span>
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                <i class="fas fa-check-double"></i>
+            </div>
+        </div>
+        <p class="text-xl font-black text-emerald-600 font-mono">{{ sent_count|intcomma }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-500 uppercase">Simulated (Dev)</span>
+            <div class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xs">
+                <i class="fas fa-flask"></i>
+            </div>
+        </div>
+        <p class="text-xl font-black text-sky-600 font-mono">{{ simulated_count|intcomma }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200/90 p-4 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-500 uppercase">Delivery Failed</span>
+            <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-xs">
+                <i class="fas fa-circle-exclamation"></i>
+            </div>
+        </div>
+        <p class="text-xl font-black text-rose-600 font-mono">{{ failed_count|intcomma }}</p>
+    </div>
+</div>
+
+<!-- Search & Filter Toolbar -->
+<div class="bg-white rounded-xl border border-slate-200/90 p-3 mb-4 shadow-xs">
+    <form method="get" class="flex flex-wrap items-center gap-3">
+        <div class="relative flex-1 min-w-[220px]">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+            <input type="text" name="q" value="{{ search_query }}"
+                   placeholder="Search mobile, document ref, message content..."
+                   class="w-full h-9 pl-8 pr-3 text-xs bg-white text-slate-800 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-xs">
+        </div>
+
+        <div class="w-44">
+            <select name="status" class="w-full h-9 px-3 text-xs bg-white text-slate-800 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all cursor-pointer">
+                <option value="">All Statuses</option>
+                <option value="SENT" {% if current_status == 'SENT' %}selected{% endif %}>Sent (Live Gateway)</option>
+                <option value="SIMULATED" {% if current_status == 'SIMULATED' %}selected{% endif %}>Simulated (Dev)</option>
+                <option value="FAILED" {% if current_status == 'FAILED' %}selected{% endif %}>Failed</option>
+            </select>
+        </div>
+
+        <div class="w-52">
+            <select name="type" class="w-full h-9 px-3 text-xs bg-white text-slate-800 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all cursor-pointer">
+                <option value="">All Notification Types</option>
+                {% for key, label in type_choices %}
+                <option value="{{ key }}" {% if current_type == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="h-9 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
+            <i class="fas fa-filter text-[11px]"></i> Filter
+        </button>
+
+        {% if search_query or current_status or current_type %}
+        <a href="{% url 'settings_app:notification_logs' %}" class="h-9 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1">
+            <i class="fas fa-rotate-left text-[11px]"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Logs High-Density Table Card -->
+<div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-900 text-slate-100 uppercase tracking-wider text-[11px] font-bold border-b border-slate-800">
+                <tr>
+                    <th class="py-3 px-3.5 text-center w-12 text-slate-400">#</th>
+                    <th class="py-3 px-3.5">Dispatched At</th>
+                    <th class="py-3 px-3.5">Recipient Mobile</th>
+                    <th class="py-3 px-3.5">Category</th>
+                    <th class="py-3 px-3.5">Ref / Entity</th>
+                    <th class="py-3 px-3.5">Gateway</th>
+                    <th class="py-3 px-3.5 text-center">Delivery Status</th>
+                    <th class="py-3 px-4">Message Snippet</th>
+                    <th class="py-3 px-3 text-right">Sent By</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+                {% for log in logs %}
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                    <td class="py-2.5 px-3.5 text-center font-mono font-bold text-slate-400 text-[11px]">
+                        {{ forloop.counter }}
+                    </td>
+                    <td class="py-2.5 px-3.5 font-mono text-slate-600 whitespace-nowrap">
+                        {{ log.created_at|date:"d M Y, H:i" }}
+                    </td>
+                    <td class="py-2.5 px-3.5 font-mono font-bold text-slate-900 whitespace-nowrap">
+                        <a href="tel:+{{ log.recipient }}" class="hover:text-blue-600 flex items-center gap-1">
+                            <i class="fas fa-phone text-[10px] text-slate-400"></i>
+                            <span>+{{ log.recipient }}</span>
+                        </a>
+                    </td>
+                    <td class="py-2.5 px-3.5 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
+                            {{ log.get_notification_type_display }}
+                        </span>
+                    </td>
+                    <td class="py-2.5 px-3.5 font-mono text-slate-700 font-semibold whitespace-nowrap">
+                        {{ log.entity_id|default:"-" }}
+                    </td>
+                    <td class="py-2.5 px-3.5 text-slate-600 whitespace-nowrap text-[11px]">
+                        {{ log.provider }}
+                    </td>
+                    <td class="py-2.5 px-3.5 text-center whitespace-nowrap">
+                        {% if log.status == 'SENT' %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> SENT
+                        </span>
+                        {% elif log.status == 'SIMULATED' %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span> SIMULATED
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200" title="{{ log.error_message }}">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span> FAILED
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="py-2.5 px-4 text-slate-600 max-w-xs truncate" title="{{ log.message_body }}">
+                        {{ log.message_body|truncatechars:70 }}
+                    </td>
+                    <td class="py-2.5 px-3 text-right text-slate-500 font-medium text-[11px] whitespace-nowrap">
+                        {{ log.sent_by.username|default:"System Auto" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="py-12 text-center text-slate-400">
+                        <i class="fas fa-inbox text-3xl mb-2 text-slate-300 block"></i>
+                        <p class="font-semibold text-slate-600">No notification logs match your query.</p>
+                        <p class="text-xs text-slate-400 mt-1">Dispatches sent from payments or invoices will appear here.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="px-4 py-3 border-t border-slate-100 flex items-center justify-between">
+        {% include 'includes/pagination.html' %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

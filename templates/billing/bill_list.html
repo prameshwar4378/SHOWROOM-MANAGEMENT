@@ -1,0 +1,440 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Sales Invoices & Billing Register{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- 1. Header (Icon, Title, Subtitle, and Primary Actions) -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-lg font-bold shadow-2xs">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Sales Invoices & Billing Register</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Manage Quotations, Tax Invoices, Advance Margin Receipts, and Delivery Challans with real-time ledger sync.</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2.5">
+            <!-- Create Bill Dropdown -->
+            <div x-data="{ openCreate: false }" class="relative">
+                <button @click="openCreate = !openCreate"
+                        type="button"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer">
+                    <i class="fas fa-plus text-xs"></i>
+                    <span>Create Document</span>
+                    <i class="fas fa-chevron-down text-[9px] ml-0.5 transition-transform" :class="openCreate && 'rotate-180'"></i>
+                </button>
+                <div x-show="openCreate"
+                     @click.away="openCreate = false"
+                     x-cloak
+                     class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 py-2 z-50 divide-y divide-slate-100">
+                    <a href="{% url 'billing:bill_create' %}?type=QUOTATION" class="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50/70 transition-colors group">
+                        <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 font-black text-xs flex items-center justify-center">Q</span>
+                        <div>
+                            <p class="text-xs font-bold text-slate-900 group-hover:text-blue-700">Quotation</p>
+                            <p class="text-[10px] text-slate-400">Price estimate for bank loan or buyer</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'billing:bill_create' %}?type=TAX_INVOICE" class="flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50/70 transition-colors group">
+                        <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 font-black text-xs flex items-center justify-center">TI</span>
+                        <div>
+                            <p class="text-xs font-bold text-slate-900 group-hover:text-emerald-700">Tax Invoice</p>
+                            <p class="text-[10px] text-slate-400">GST sale bill with stock deduction</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'billing:bill_create' %}?type=MARGIN_MONEY" class="flex items-center gap-3 px-4 py-2.5 hover:bg-purple-50/70 transition-colors group">
+                        <span class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 font-black text-xs flex items-center justify-center">MM</span>
+                        <div>
+                            <p class="text-xs font-bold text-slate-900 group-hover:text-purple-700">Margin Money Receipt</p>
+                            <p class="text-[10px] text-slate-400">Down payment / booking receipt</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'billing:bill_create' %}?type=DELIVERY_CHALLAN" class="flex items-center gap-3 px-4 py-2.5 hover:bg-amber-50/70 transition-colors group">
+                        <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 font-black text-xs flex items-center justify-center">DC</span>
+                        <div>
+                            <p class="text-xs font-bold text-slate-900 group-hover:text-amber-700">Delivery Challan</p>
+                            <p class="text-[10px] text-slate-400">Handover dispatch document</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. KPI Overview Metric Cards (4 Cards: Tax Invoices, Quotations, Unpaid Dues, Total Bills) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Official Tax Invoices (Green Theme) -->
+        <a href="?type=TAX_INVOICE" class="bg-emerald-50/30 hover:bg-emerald-50/60 rounded-2xl border border-emerald-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-emerald-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Total Tax Sales</span>
+                <i class="fas fa-file-invoice text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-emerald-800 tracking-tight">₹{{ tax_invoices_sum|intcomma }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="font-bold text-emerald-700">{{ tax_invoices_count }}</span> GST invoices generated
+            </p>
+        </a>
+
+        <!-- Card 2: Quotations & Estimates (Blue Theme) -->
+        <a href="?type=QUOTATION" class="bg-blue-50/30 hover:bg-blue-50/60 rounded-2xl border border-blue-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-blue-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Quotations / Estimates</span>
+                <i class="fas fa-file-signature text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-blue-800 tracking-tight">{{ quotations_count }} Estimates</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                Value: <span class="font-bold text-blue-700">₹{{ quotations_sum|intcomma }}</span>
+            </p>
+        </a>
+
+        <!-- Card 3: Unpaid / Pending Dues (Red Theme) -->
+        <a href="?payment_status=UNPAID" class="bg-red-50/30 hover:bg-red-50/60 rounded-2xl border border-red-200/80 p-4 transition-all shadow-2xs group block">
+            <div class="flex items-center justify-between text-red-600 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Pending Invoice Dues</span>
+                <i class="fas fa-triangle-exclamation text-xs group-hover:scale-110 transition-transform"></i>
+            </div>
+            <h3 class="text-2xl font-black text-red-800 tracking-tight">₹{{ unpaid_invoices_amount|intcomma }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="font-bold text-red-700">{{ unpaid_invoices_count }}</span> invoices with balance
+            </p>
+        </a>
+
+        <!-- Card 4: Total Documents (Navy Theme) -->
+        <div class="bg-white rounded-2xl border-2 border-slate-800 p-4 shadow-sm">
+            <div class="flex items-center justify-between text-slate-700 mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider">Total Documents</span>
+                <i class="fas fa-boxes-stacked text-xs text-slate-500"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-900 tracking-tight">{{ total_bills_count }}</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                Invoices, Quotations, Challans
+            </p>
+        </div>
+    </div>
+
+    <!-- 3. Quick Status Filter Tabs / Pills -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <a href="{% url 'billing:bill_list' %}"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if not current_type and not current_status and not current_payment_status %}bg-slate-900 text-white shadow-xs{% else %}bg-white border border-slate-200 text-slate-700 hover:bg-slate-50{% endif %}">
+            <i class="fas fa-list-check text-[10px]"></i>
+            <span>All Documents</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if not current_type and not current_status and not current_payment_status %}bg-slate-700 text-white{% else %}bg-slate-100 text-slate-700{% endif %}">
+                {{ total_bills_count }}
+            </span>
+        </a>
+
+        <a href="?type=TAX_INVOICE"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_type == 'TAX_INVOICE' %}bg-emerald-600 text-white shadow-xs{% else %}bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50/60{% endif %}">
+            <i class="fas fa-file-invoice text-[10px]"></i>
+            <span>Tax Invoices</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_type == 'TAX_INVOICE' %}bg-emerald-800 text-white{% else %}bg-emerald-100 text-emerald-800{% endif %}">
+                {{ tax_invoices_count }}
+            </span>
+        </a>
+
+        <a href="?type=QUOTATION"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_type == 'QUOTATION' %}bg-blue-600 text-white shadow-xs{% else %}bg-white border border-blue-200 text-blue-700 hover:bg-blue-50/60{% endif %}">
+            <i class="fas fa-file-signature text-[10px]"></i>
+            <span>Quotations</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_type == 'QUOTATION' %}bg-blue-800 text-white{% else %}bg-blue-100 text-blue-800{% endif %}">
+                {{ quotations_count }}
+            </span>
+        </a>
+
+        <a href="?type=MARGIN_MONEY"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_type == 'MARGIN_MONEY' %}bg-purple-600 text-white shadow-xs{% else %}bg-white border border-purple-200 text-purple-700 hover:bg-purple-50/60{% endif %}">
+            <i class="fas fa-hand-holding-dollar text-[10px]"></i>
+            <span>Margin Money</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_type == 'MARGIN_MONEY' %}bg-purple-800 text-white{% else %}bg-purple-100 text-purple-800{% endif %}">
+                {{ margin_money_count }}
+            </span>
+        </a>
+
+        <a href="?type=DELIVERY_CHALLAN"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_type == 'DELIVERY_CHALLAN' %}bg-amber-600 text-white shadow-xs{% else %}bg-white border border-amber-200 text-amber-700 hover:bg-amber-50/60{% endif %}">
+            <i class="fas fa-truck-ramp-box text-[10px]"></i>
+            <span>Delivery Challans</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_type == 'DELIVERY_CHALLAN' %}bg-amber-800 text-white{% else %}bg-amber-100 text-amber-800{% endif %}">
+                {{ delivery_challan_count }}
+            </span>
+        </a>
+
+        <a href="?payment_status=UNPAID"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors
+                  {% if current_payment_status == 'UNPAID' %}bg-rose-600 text-white shadow-xs{% else %}bg-white border border-rose-200 text-rose-700 hover:bg-rose-50/60{% endif %}">
+            <i class="fas fa-triangle-exclamation text-[10px]"></i>
+            <span>Unpaid Invoices</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {% if current_payment_status == 'UNPAID' %}bg-rose-800 text-white{% else %}bg-rose-100 text-rose-800{% endif %}">
+                {{ unpaid_invoices_count }}
+            </span>
+        </a>
+    </div>
+
+    <!-- 4. Search & Multi-Filter Toolbar (Uniform Standard ERP Design) -->
+    <div class="bg-white rounded-xl border border-slate-200/90 p-3 mb-4 shadow-xs">
+        <form method="get" class="flex flex-wrap items-center gap-2.5">
+            <!-- Search query -->
+            <div class="relative flex-1 min-w-[220px]">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <input type="text" name="q" value="{{ search_query }}"
+                       placeholder="Search bill no, customer, mobile, village..."
+                       class="w-full h-9 pl-8 pr-3 text-xs font-medium bg-white text-slate-800 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-xs">
+            </div>
+
+            <!-- Document Type Filter -->
+            <div class="w-48 min-w-[160px]">
+                <select name="type" data-icon="fas fa-file-invoice" class="w-full">
+                    <option value="">All Document Types</option>
+                    {% for code, label in bill_types %}
+                    <option value="{{ code }}" {% if current_type == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Document Status Filter -->
+            <div class="w-44 min-w-[150px]">
+                <select name="status" data-icon="fas fa-bars-progress" class="w-full">
+                    <option value="">All Workflow Statuses</option>
+                    <option value="DRAFT" {% if current_status == 'DRAFT' %}selected{% endif %}>Draft</option>
+                    <option value="FINAL" {% if current_status == 'FINAL' %}selected{% endif %}>Final</option>
+                    <option value="CANCELLED" {% if current_status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+
+            <!-- Payment Status Filter -->
+            <div class="w-44 min-w-[150px]">
+                <select name="payment_status" data-icon="fas fa-indian-rupee-sign" class="w-full">
+                    <option value="">All Payment Statuses</option>
+                    <option value="PAID" {% if current_payment_status == 'PAID' %}selected{% endif %}>Fully Paid</option>
+                    <option value="PARTIAL" {% if current_payment_status == 'PARTIAL' %}selected{% endif %}>Partially Paid</option>
+                    <option value="UNPAID" {% if current_payment_status == 'UNPAID' %}selected{% endif %}>Unpaid / Overdue</option>
+                </select>
+            </div>
+
+            <!-- Action Button & Reset -->
+            <button type="submit" class="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-xs transition-colors cursor-pointer shrink-0">
+                <i class="fas fa-filter text-[11px]"></i>
+                <span>Apply Filters</span>
+            </button>
+
+            <a href="{% url 'billing:bill_list' %}" class="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition-colors shrink-0">
+                <i class="fas fa-rotate-left text-[11px]"></i>
+                <span>Reset All Filters</span>
+            </a>
+        </form>
+    </div>
+
+    <!-- 5. Advanced Table Card (Zoho Books Style High-Density Table with Show/Hide & Sort & Export) -->
+    <div data-advanced-table
+         data-table-id="billing-register-table"
+         data-table-title="Sales_Invoices_Billing_Register"
+         class="advanced-table-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-visible">
+
+        <!-- Table Toolbar -->
+        <div class="p-4 bg-slate-50/70 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <h3 class="text-xs font-bold text-slate-900 tracking-tight uppercase">Billing Document Register</h3>
+                <span data-table-count class="px-2.5 py-0.5 bg-slate-100 text-slate-700 font-semibold text-[11px] rounded-full border border-slate-200">
+                    Showing {{ bills|length }} entries
+                </span>
+                <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">&bull; Real-time Showroom Billing</span>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <!-- Page Size Selector -->
+                <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                    <span class="text-[11px] text-slate-400 font-medium">Page Size:</span>
+                    <select id="pageSizeSelect"
+                            onchange="const u = new URL(window.location.href); u.searchParams.set('page_size', this.value); u.searchParams.set('page', '1'); window.location.href = u.toString();"
+                            class="no-search text-xs py-1.5 px-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs">
+                        <option value="15" {% if current_page_size == 15 %}selected{% endif %}>15 per page</option>
+                        <option value="25" {% if current_page_size == 25 %}selected{% endif %}>25 per page</option>
+                        <option value="50" {% if current_page_size == 50 %}selected{% endif %}>50 per page</option>
+                        <option value="100" {% if current_page_size == 100 %}selected{% endif %}>100 per page</option>
+                    </select>
+                </div>
+
+                <!-- Show / Hide Columns Dropdown Toggle -->
+                <div x-data="{ openCols: false }" class="relative">
+                    <button type="button"
+                            @click="openCols = !openCols"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                            title="Customize Visible Columns">
+                        <i class="fas fa-table-columns text-slate-500 text-xs"></i>
+                        <span>Columns</span>
+                        <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
+                    </button>
+                    <!-- Dropdown populated dynamically by advanced-table.js -->
+                    <div x-show="openCols"
+                         @click.away="openCols = false"
+                         x-cloak
+                         data-columns-dropdown-menu
+                         class="absolute right-0 mt-1.5 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden divide-y divide-slate-100">
+                    </div>
+                </div>
+
+                <!-- Export to Excel Button -->
+                <a href="{% url 'reports:export_sales_excel' %}"
+                   data-export-excel
+                   data-server-url="{% url 'reports:export_sales_excel' %}"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                   title="Export Sales Register to Excel">
+                    <i class="fas fa-file-excel text-emerald-600"></i>
+                    <span>Export Excel</span>
+                </a>
+
+                <!-- Export to PDF Button -->
+                <button type="button"
+                        data-export-pdf
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Print or Save Register as PDF">
+                    <i class="fas fa-file-pdf text-rose-600"></i>
+                    <span>Export PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- The High-Density Responsive Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <!-- Sleek Dark Table Header (Zoho Books Style) -->
+                <thead class="bg-slate-900 text-slate-100 uppercase tracking-wider text-[11px] font-bold border-b border-slate-800 select-none">
+                    <tr>
+                        <th data-col-name="Bill No." class="py-3 px-4">Bill No.</th>
+                        <th data-col-name="Type" class="py-3 px-3.5">Type</th>
+                        <th data-col-name="Customer Name" class="py-3 px-4">Customer Name</th>
+                        <th data-col-name="Date" class="py-3 px-3.5">Date</th>
+                        <th data-col-name="Grand Total" class="py-3 px-4 text-right">Grand Total (₹)</th>
+                        <th data-col-name="Status" class="py-3 px-3.5 text-center">Status</th>
+                        <th data-col-name="Payment" class="py-3 px-3.5 text-center">Payment</th>
+                        <th data-no-sort data-no-toggle data-col-name="Actions" class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for bill in bills %}
+                    <tr class="hover:bg-blue-50/40 transition-colors group">
+                        <!-- Bill Number -->
+                        <td class="py-2.5 px-4 font-bold text-slate-900 whitespace-nowrap">
+                            <a href="{% url 'billing:bill_detail' bill.pk %}" class="hover:text-blue-600 transition-colors flex items-center gap-1.5 font-mono">
+                                <span>{{ bill.bill_number }}</span>
+                                {% if bill.is_gst_bill %}
+                                <span class="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.2 rounded border border-emerald-200">GST</span>
+                                {% endif %}
+                            </a>
+                        </td>
+
+                        <!-- Document Type -->
+                        <td class="py-2.5 px-3.5 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border
+                                {% if bill.bill_type == 'QUOTATION' %}bg-blue-50 text-blue-700 border-blue-200
+                                {% elif bill.bill_type == 'TAX_INVOICE' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                {% elif bill.bill_type == 'MARGIN_MONEY' %}bg-purple-50 text-purple-700 border-purple-200
+                                {% else %}bg-amber-50 text-amber-700 border-amber-200{% endif %}">
+                                {{ bill.get_bill_type_display }}
+                            </span>
+                        </td>
+
+                        <!-- Customer Details -->
+                        <td class="py-2.5 px-4 font-medium text-slate-900">
+                            <a href="{% url 'customers:customer_detail' bill.customer.pk %}" class="hover:text-blue-600 transition-colors font-bold block">
+                                {{ bill.customer.full_name }}
+                            </a>
+                            <span class="text-[10px] text-slate-400 font-normal block">{{ bill.customer.village }} &bull; {{ bill.customer.mobile_primary }}</span>
+                        </td>
+
+                        <!-- Date -->
+                        <td class="py-2.5 px-3.5 text-slate-600 font-mono whitespace-nowrap" data-sort-val="{{ bill.bill_date|date:'Y-m-d' }}">
+                            {{ bill.bill_date|date:"d M Y" }}
+                        </td>
+
+                        <!-- Grand Total -->
+                        <td class="py-2.5 px-4 text-right font-mono font-bold text-slate-900 text-sm whitespace-nowrap" data-sort-val="{{ bill.grand_total }}">
+                            ₹{{ bill.grand_total|intcomma }}
+                        </td>
+
+                        <!-- Status -->
+                        <td class="py-2.5 px-3.5 text-center whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border
+                                {% if bill.status == 'FINAL' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                {% elif bill.status == 'DRAFT' %}bg-amber-50 text-amber-700 border-amber-200
+                                {% else %}bg-rose-50 text-rose-700 border-rose-200{% endif %}">
+                                {{ bill.get_status_display }}
+                            </span>
+                        </td>
+
+                        <!-- Payment Status -->
+                        <td class="py-2.5 px-3.5 text-center whitespace-nowrap">
+                            {% if bill.bill_type == 'TAX_INVOICE' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border
+                                {% if bill.payment_status == 'PAID' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                                {% elif bill.payment_status == 'PARTIAL' %}bg-blue-50 text-blue-700 border-blue-200
+                                {% else %}bg-rose-50 text-rose-700 border-rose-200{% endif %}">
+                                {{ bill.payment_status }}
+                            </span>
+                            {% elif bill.bill_type == 'QUOTATION' %}
+                            <span class="text-[10px] text-slate-400 font-medium italic">Estimate</span>
+                            {% elif bill.bill_type == 'DELIVERY_CHALLAN' %}
+                            <span class="text-[10px] text-slate-400 font-medium italic">Challan</span>
+                            {% elif bill.bill_type == 'MARGIN_MONEY' %}
+                            <span class="text-[10px] text-slate-400 font-medium italic">Advance</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="py-2.5 px-4 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1">
+                                <a href="{% url 'billing:bill_detail' bill.pk %}" class="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View Document">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </a>
+                                <a href="{% url 'billing:bill_detail' bill.pk %}?print=1" class="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="Quick Print">
+                                    <i class="fas fa-print text-xs"></i>
+                                </a>
+                                <a href="{% url 'billing:bill_edit' bill.pk %}" class="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors" title="Edit">
+                                    <i class="fas fa-pencil text-xs"></i>
+                                </a>
+                                <a href="{% url 'billing:bill_duplicate' bill.pk %}" class="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Duplicate Document">
+                                    <i class="fas fa-copy text-xs"></i>
+                                </a>
+                                {% if bill.bill_type == 'QUOTATION' %}
+                                <a href="{% url 'billing:bill_convert' bill.pk %}" class="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title="Convert to Tax Invoice">
+                                    <i class="fas fa-arrow-right-arrow-left text-xs"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'billing:bill_delete' bill.pk %}" class="p-1.5 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors" title="Delete">
+                                    <i class="fas fa-trash-can text-xs"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr class="empty-row">
+                        <td colspan="8" class="py-12 px-4 text-center">
+                            <div class="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl shadow-2xs">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800">No Documents Found</h4>
+                            <p class="text-xs text-slate-400 mt-1">Try adjusting your filters or click "Create Document" to start a new bill.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Table Footer: Pagination & Record Count Summary -->
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-200/80">
+            {% include "includes/pagination.html" %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

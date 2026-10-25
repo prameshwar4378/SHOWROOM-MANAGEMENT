@@ -1,0 +1,411 @@
+{% extends 'base.html' %}
+
+{% block title %}WhatsApp & SMS Notifications{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Configure automated WhatsApp and SMS alerts for customer receipts, invoices, and payment reminders{% endblock %}
+
+{% block content %}
+<!-- Settings Tab Bar -->
+<div class="flex items-center gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
+    <a href="{% url 'settings_app:company_profile' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-building mr-1.5"></i> Company Profile & Headers
+    </a>
+    <a href="{% url 'settings_app:bank_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-landmark mr-1.5"></i> Bank Accounts
+    </a>
+    <a href="{% url 'settings_app:gst_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-percent mr-1.5"></i> GST Configurations
+    </a>
+    <a href="{% url 'settings_app:sequence_list' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-list-ol mr-1.5"></i> Bill Number Sequences
+    </a>
+    <a href="{% url 'settings_app:notification_settings' %}" class="px-4 py-2.5 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 whitespace-nowrap">
+        <i class="fab fa-whatsapp mr-1.5"></i> WhatsApp & SMS Notifications
+    </a>
+    <a href="{% url 'settings_app:notification_logs' %}" class="px-4 py-2.5 text-xs font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap">
+        <i class="fas fa-clock-rotate-left mr-1.5"></i> Notification Logs
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6" x-data="localBridgeManager()">
+    <!-- Main Configuration Form (Left 2 Columns) -->
+    <div class="lg:col-span-2 space-y-6">
+        <form method="post" id="notificationConfigForm" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- 1. Master Gateway Switch & Provider -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center text-sm shadow-2xs">
+                            <i class="fab fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <h3 class="text-sm font-bold text-slate-800">Gateway Provider & Engine</h3>
+                                {% include 'includes/settings_help_popover.html' with topic='notification_gateway' %}
+                            </div>
+                            <p class="text-xs text-slate-400">Choose between Local PC WhatsApp (Free/Zero API), Simulator Mode, or Cloud APIs</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        {{ form.is_enabled }}
+                        <span class="ml-2 text-xs font-bold text-slate-700">Service Active</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Gateway Provider <span class="text-red-500">*</span></label>
+                        {{ form.provider }}
+                        <p class="text-[11px] text-slate-400 mt-1">Select "Local WhatsApp Gateway" to send unlimited messages for free from this computer.</p>
+                    </div>
+
+                    <!-- Sender Phone ID (Only needed for Meta / UltraMsg) -->
+                    <div x-show="provider !== 'LOCAL_WHATSAPP' && provider !== 'SIMULATOR'">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Sender Phone ID / Instance ID</label>
+                        {{ form.sender_phone_id }}
+                        <p class="text-[11px] text-slate-400 mt-1">Phone Number ID for Meta WhatsApp Cloud API or Instance ID</p>
+                    </div>
+
+                    <!-- Local WhatsApp Bridge Interactive Card -->
+                    <div x-show="provider === 'LOCAL_WHATSAPP'" x-cloak class="md:col-span-2 rounded-2xl border p-5 transition-all"
+                         :class="bridgeStatus === 'READY' ? 'bg-gradient-to-br from-emerald-50/70 via-teal-50/30 to-emerald-50/50 border-emerald-300' : (bridgeStatus === 'QR_READY' ? 'bg-amber-50/80 border-amber-300' : 'bg-slate-50 border-slate-200')">
+                        
+                        <div class="flex items-center justify-between pb-3 border-b"
+                             :class="bridgeStatus === 'READY' ? 'border-emerald-200' : (bridgeStatus === 'QR_READY' ? 'border-amber-200' : 'border-slate-200')">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shadow-2xs"
+                                      :class="bridgeStatus === 'READY' ? 'bg-emerald-600 text-white' : (bridgeStatus === 'QR_READY' ? 'bg-amber-500 text-white animate-pulse' : 'bg-slate-300 text-slate-700')">
+                                    <i class="fab fa-whatsapp"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-800">Local PC WhatsApp Bridge</h4>
+                                    <p class="text-[10px] text-slate-500">100% Free Self-Hosted Gateway • Runs on this computer without cloud API tokens</p>
+                                </div>
+                            </div>
+
+                            <!-- Live Status Badge -->
+                            <div>
+                                <template x-if="bridgeStatus === 'READY'">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> CONNECTED & READY
+                                    </span>
+                                </template>
+                                <template x-if="bridgeStatus === 'QR_READY'">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span> SCAN QR TO LINK
+                                    </span>
+                                </template>
+                                <template x-if="bridgeStatus === 'OFFLINE'">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-700 border border-slate-300">
+                                        <i class="fas fa-power-off text-[10px]"></i> BRIDGE OFFLINE
+                                    </span>
+                                </template>
+                                <template x-if="bridgeStatus === 'CHECKING'">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                        <i class="fas fa-spinner fa-spin text-[10px]"></i> Checking bridge...
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- 1. Connected State -->
+                        <div x-show="bridgeStatus === 'READY'" class="pt-4 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-emerald-200 shadow-2xs">
+                                <div>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Linked WhatsApp Device</span>
+                                    <p class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                        <i class="fas fa-mobile-screen text-emerald-600"></i>
+                                        <span x-text="connectedName || 'Showroom Account'"></span>
+                                        <span class="font-mono text-emerald-700 text-xs font-bold" x-text="connectedPhone ? '(+' + connectedPhone + ')' : ''"></span>
+                                    </p>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">All customer tax invoices, receipts, and booking alerts will be sent automatically via this number.</p>
+                                </div>
+                                <button type="button" @click="unlinkDevice()" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer shrink-0">
+                                    <i class="fas fa-link-slash text-xs"></i>
+                                    <span>Unlink Device</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2. QR Code Ready State (Needs Phone Scan) -->
+                        <div x-show="bridgeStatus === 'QR_READY'" class="pt-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center bg-white p-4 rounded-xl border border-amber-200 shadow-2xs">
+                                <div class="sm:col-span-5 text-center flex flex-col items-center justify-center p-2 bg-slate-50 rounded-xl border border-slate-200">
+                                    <template x-if="qrDataUrl">
+                                        <img :src="qrDataUrl" alt="Scan WhatsApp QR" class="w-48 h-48 rounded-lg shadow-xs" />
+                                    </template>
+                                    <template x-if="!qrDataUrl">
+                                        <div class="w-48 h-48 flex items-center justify-center text-slate-400 text-xs">
+                                            <i class="fas fa-spinner fa-spin mr-2"></i> Generating QR...
+                                        </div>
+                                    </template>
+                                    <a href="http://localhost:3000/qr" target="_blank" class="text-[11px] font-bold text-blue-600 hover:underline mt-2 flex items-center gap-1">
+                                        <i class="fas fa-expand text-[10px]"></i> Open in New Window
+                                    </a>
+                                </div>
+                                <div class="sm:col-span-7 space-y-2.5 text-xs text-slate-700">
+                                    <h5 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                                        <i class="fas fa-qrcode text-amber-600"></i> Scan to Link Your Phone
+                                    </h5>
+                                    <ol class="list-decimal list-inside space-y-1.5 text-[11px] text-slate-600 font-medium">
+                                        <li>Open <strong>WhatsApp</strong> on your showroom phone.</li>
+                                        <li>Tap <strong>Settings</strong> (iOS) or <strong>Menu ⋮</strong> (Android).</li>
+                                        <li>Tap <strong>Linked Devices</strong> &rarr; <strong>Link a Device</strong>.</li>
+                                        <li>Point your camera at this QR code to connect.</li>
+                                    </ol>
+                                    <p class="text-[10px] text-slate-400 italic">This screen will update automatically as soon as your phone is linked.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Offline State -->
+                        <div x-show="bridgeStatus === 'OFFLINE'" class="pt-4 space-y-3">
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-2">
+                                <p class="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <i class="fas fa-triangle-exclamation text-amber-500"></i> Bridge service is not currently running on this PC.
+                                </p>
+                                <p class="text-[11px]">To start the local WhatsApp service, double click the launcher script located in your project root:</p>
+                                <div class="bg-slate-900 text-slate-100 p-2.5 rounded-lg font-mono text-[11px] flex items-center justify-between">
+                                    <code>start_whatsapp_bridge.bat</code>
+                                    <span class="text-[10px] text-emerald-400">Windows 1-Click Launcher</span>
+                                </div>
+                                <div class="flex items-center gap-2 pt-1">
+                                    <button type="button" @click="checkBridgeStatus()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                        <i class="fas fa-rotate text-xs"></i> Check Connection Again
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Endpoint URL -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">API Endpoint / Webhook URL</label>
+                        {{ form.api_endpoint }}
+                        <p class="text-[11px] text-slate-400 mt-1">Default for local bridge: <code class="bg-slate-100 px-1 py-0.5 rounded text-blue-600 font-bold">http://localhost:3000/send</code></p>
+                    </div>
+
+                    <!-- API Secret Key (Hidden if LOCAL_WHATSAPP) -->
+                    <div class="md:col-span-2" x-show="provider !== 'LOCAL_WHATSAPP' && provider !== 'SIMULATOR'">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">API Secret Key / Access Token</label>
+                        {{ form.api_key_or_token }}
+                        <p class="text-[11px] text-slate-400 mt-1">Bearer access token (Meta Cloud API) or API Authorization Key</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Automation Triggers -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-xs">
+                <div class="flex items-center gap-3 pb-4 mb-4 border-b border-slate-100">
+                    <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center text-sm shadow-2xs">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <h3 class="text-sm font-bold text-slate-800">Showroom Event Automation Triggers</h3>
+                            {% include 'includes/settings_help_popover.html' with topic='notification_triggers' %}
+                        </div>
+                        <p class="text-xs text-slate-400">Choose which transactions automatically trigger instant notifications</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-start justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50/50 transition-colors">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block">Auto-send Payment Receipts</span>
+                            <span class="text-[11px] text-slate-500">Automatically sends payment confirmation receipt with voucher number and updated balance whenever a payment is recorded.</span>
+                        </div>
+                        <div class="pt-0.5">
+                            {{ form.auto_send_payment_receipt }}
+                        </div>
+                    </div>
+
+                    <div class="flex items-start justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50/50 transition-colors">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block">Auto-send Tax Invoice Alerts</span>
+                            <span class="text-[11px] text-slate-500">Sends formal invoice details, items, chassis/engine numbers, and grand total upon bill approval.</span>
+                        </div>
+                        <div class="pt-0.5">
+                            {{ form.auto_send_invoice_alert }}
+                        </div>
+                    </div>
+
+                    <div class="flex items-start justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50/50 transition-colors">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800 block">Auto-send Booking Confirmation Alerts</span>
+                            <span class="text-[11px] text-slate-500">Alerts customer when a Margin Money booking voucher is created for tractor allocation.</span>
+                        </div>
+                        <div class="pt-0.5">
+                            {{ form.auto_send_booking_alert }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer">
+                    <i class="fas fa-check"></i>
+                    <span>Save Notification Configuration</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Right Column: Test Utility & Recent History -->
+    <div class="space-y-6">
+        <!-- Live Gateway Diagnostics & Test Ping -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
+            <div class="flex items-center gap-2.5 mb-3 pb-3 border-b border-slate-100">
+                <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-xs">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-800">Dispatch Test Alert</h4>
+                    <p class="text-[11px] text-slate-400">Verify gateway credentials with a test ping</p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Target Mobile Number</label>
+                    <input type="text" form="notificationConfigForm" name="test_recipient" placeholder="10-digit mobile number (e.g. 9876543210)" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition">
+                </div>
+                <div x-show="provider === 'LOCAL_WHATSAPP'" class="p-2.5 rounded-lg bg-emerald-50/80 border border-emerald-200 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold"><i class="fas fa-circle-check text-emerald-600 mr-1"></i>Local Gateway:</span> Sends to <strong>any valid 10-digit customer mobile number</strong> directly from your linked phone without trial restrictions or external API tokens.
+                </div>
+                <div x-show="provider === 'WAAPI'" class="p-2.5 rounded-lg bg-amber-50/70 border border-amber-200 text-[10px] text-amber-900 leading-normal">
+                    <span class="font-bold"><i class="fas fa-info-circle mr-1"></i>WaAPI Trial Account:</span> Trial plans can only send alerts to the registered account number (<code class="bg-amber-100 px-1 rounded font-bold">7776824564</code>). Upgrade your WaAPI plan to dispatch messages to any customer phone number.
+                </div>
+                <button type="submit" form="notificationConfigForm" name="action_test_send" value="1" class="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                    <span>Send Test Ping</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Dispatches Widget -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-clock-rotate-left text-slate-400 text-xs"></i>
+                    <h4 class="text-xs font-bold text-slate-800">Recent Dispatches</h4>
+                </div>
+                <a href="{% url 'settings_app:notification_logs' %}" class="text-[11px] font-bold text-blue-600 hover:text-blue-700">
+                    View All &rarr;
+                </a>
+            </div>
+
+            <div class="space-y-2.5">
+                {% for log in recent_logs %}
+                <div class="p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors text-xs">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-mono font-bold text-slate-800">+{{ log.recipient }}</span>
+                        {% if log.status == 'SENT' %}
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">SENT</span>
+                        {% elif log.status == 'SIMULATED' %}
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">SIMULATED</span>
+                        {% else %}
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">FAILED</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-[11px] text-slate-500 truncate mb-1">
+                        {{ log.get_notification_type_display }}: {{ log.entity_id|default:"-" }}
+                    </div>
+                    <div class="text-[10px] text-slate-400 flex items-center justify-between">
+                        <span>{{ log.provider }}</span>
+                        <span>{{ log.created_at|date:"d M H:i" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-xs text-slate-400 text-center py-4">No notifications dispatched yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function localBridgeManager() {
+        return {
+            provider: '{{ form.provider.value|default:"SIMULATOR" }}',
+            bridgeStatus: 'CHECKING',
+            connectedPhone: null,
+            connectedName: null,
+            qrDataUrl: null,
+            pollTimer: null,
+
+            init() {
+                const sel = document.getElementById('id_provider');
+                if (sel) {
+                    this.provider = sel.value;
+                    sel.addEventListener('change', (e) => {
+                        this.provider = e.target.value;
+                        if (this.provider === 'LOCAL_WHATSAPP') {
+                            const ep = document.getElementById('id_api_endpoint');
+                            if (ep && (!ep.value || ep.value.includes('waapi') || ep.value.includes('facebook') || ep.value.includes('ultramsg'))) {
+                                ep.value = 'http://localhost:3000/send';
+                            }
+                            this.checkBridgeStatus();
+                        }
+                    });
+                }
+                this.checkBridgeStatus();
+                this.pollTimer = setInterval(() => {
+                    if (this.provider === 'LOCAL_WHATSAPP') {
+                        this.checkBridgeStatus();
+                    }
+                }, 3500);
+            },
+
+            async checkBridgeStatus() {
+                try {
+                    const res = await fetch('http://localhost:3000/health', {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const data = await res.json();
+                    this.bridgeStatus = data.status;
+                    this.connectedPhone = data.connectedPhone;
+                    this.connectedName = data.connectedName;
+
+                    if (data.status === 'QR_READY') {
+                        const qrRes = await fetch('http://localhost:3000/qr?json=true', {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        if (qrRes.ok) {
+                            const qrData = await qrRes.json();
+                            this.qrDataUrl = qrData.qrDataUrl;
+                        }
+                    } else if (data.status === 'READY') {
+                        this.qrDataUrl = null;
+                    }
+                } catch (err) {
+                    this.bridgeStatus = 'OFFLINE';
+                    this.connectedPhone = null;
+                    this.connectedName = null;
+                    this.qrDataUrl = null;
+                }
+            },
+
+            async unlinkDevice() {
+                if (!confirm('Are you sure you want to unlink this phone from the Local WhatsApp Bridge? You will need to scan a new QR code to reconnect.')) {
+                    return;
+                }
+                try {
+                    await fetch('http://localhost:3000/logout', { method: 'POST' });
+                    this.checkBridgeStatus();
+                } catch (err) {
+                    alert('Error unlinking device: ' + err.message);
+                }
+            }
+        };
+    }
+</script>
+{% endblock %}

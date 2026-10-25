@@ -1,0 +1,816 @@
+{% extends 'base.html' %}
+
+{% block title %}Temporary Bill (Instant Print Panel){% endblock %}
+{% block page_title %}Temporary / Non-Record Bill{% endblock %}
+{% block page_subtitle %}Instant browser-based billing control panel • Zero database records • 1-Click A4 Print / PDF{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Print Specific Styling: Renders crisp single-page A4 document */
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 6mm 8mm;
+        }
+        html, body {
+            background: #ffffff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .no-print, header, aside, nav, .sidebar-link, [x-cloak] {
+            display: none !important;
+        }
+        main {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        main > div {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .temp-print-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            border: 2px solid #0f172a !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 12px 14px !important;
+            margin: 0 auto !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            display: block !important;
+        }
+        .editor-pane {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div x-data="tempBillApp()" class="space-y-6">
+
+    <!-- Top Action Toolbar (Interactive Control Panel) -->
+    <div class="no-print bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 border border-amber-200/80 flex items-center justify-center text-lg shadow-2xs">
+                <i class="fas fa-file-pen"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-sm font-bold text-slate-900 tracking-tight">Temporary Bill Workspace</h2>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> IN-MEMORY &bull; NO DB FOOTPRINT
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500">Fill in information and print immediate customer quotations, estimates, or counter memos.</p>
+            </div>
+        </div>
+
+        <div class="flex items-center flex-wrap gap-2">
+            <!-- View Mode Switcher -->
+            <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-xs font-semibold">
+                <button type="button" @click="viewMode = 'split'"
+                        :class="viewMode === 'split' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600 hover:text-slate-900'"
+                        class="px-2.5 py-1.5 rounded-md transition-all flex items-center gap-1 cursor-pointer">
+                    <i class="fas fa-columns text-xs"></i>
+                    <span>Split View</span>
+                </button>
+                <button type="button" @click="viewMode = 'preview'"
+                        :class="viewMode === 'preview' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600 hover:text-slate-900'"
+                        class="px-2.5 py-1.5 rounded-md transition-all flex items-center gap-1 cursor-pointer">
+                    <i class="fas fa-eye text-xs"></i>
+                    <span>Preview Only</span>
+                </button>
+                <button type="button" @click="viewMode = 'form'"
+                        :class="viewMode === 'form' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600 hover:text-slate-900'"
+                        class="px-2.5 py-1.5 rounded-md transition-all flex items-center gap-1 cursor-pointer">
+                    <i class="fas fa-pen-to-square text-xs"></i>
+                    <span>Form Only</span>
+                </button>
+            </div>
+
+            <!-- Demo Data Loader -->
+            <button type="button" @click="loadSample()"
+                    class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                    title="Fill sample tractor estimate data">
+                <i class="fas fa-bolt text-indigo-600 text-xs"></i>
+                <span>Load Sample Tractor</span>
+            </button>
+
+            <!-- Reset Button -->
+            <button type="button" @click="resetForm()"
+                    class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold shadow-2xs transition-colors flex items-center gap-1 cursor-pointer"
+                    title="Clear all fields">
+                <i class="fas fa-rotate-left text-slate-500 text-xs"></i>
+                <span>Reset</span>
+            </button>
+
+            <!-- Print Action Button -->
+            <button type="button" @click="window.print()"
+                    class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-print text-xs"></i>
+                <span>Print Document (A4)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Dual Layout: Input Form (Left) & Live Print-Accurate Preview (Right) -->
+    <div class="grid grid-cols-1 gap-6" :class="viewMode === 'split' ? 'xl:grid-cols-12' : ''">
+
+        <!-- ============================================================= -->
+        <!-- FORM / EDITOR PANE (Client-side interactive fields)            -->
+        <!-- ============================================================= -->
+        <div x-show="viewMode !== 'preview'" class="editor-pane space-y-5" :class="viewMode === 'split' ? 'xl:col-span-5' : 'max-w-4xl mx-auto w-full'">
+
+            <!-- 1. Document Configuration -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <i class="fas fa-sliders text-blue-600"></i> Document Parameters
+                    </span>
+                    <span class="text-[11px] text-slate-400 font-mono">No DB saving</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Document Type</label>
+                        <select x-model="docType" class="w-full rounded-xl border border-slate-300 p-2 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600">
+                            <option value="QUOTATION">Quotation / Bank Estimate</option>
+                            <option value="TAX_INVOICE">Tax Invoice Format</option>
+                            <option value="CASH_MEMO">Counter Cash Memo</option>
+                            <option value="DELIVERY_CHALLAN">Delivery Challan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Document No / Ref</label>
+                        <input type="text" x-model="docNo" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Date</label>
+                        <input type="date" x-model="docDate" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Validity / Delivery Date</label>
+                        <input type="date" x-model="validTill" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Customer Information -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <i class="fas fa-user text-blue-600"></i> Customer Particulars
+                    </span>
+                    <span class="text-[11px] text-slate-400">Buyer details</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="col-span-2">
+                        <label class="block font-bold text-slate-600 mb-1">Customer Full Name <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="customer.name" placeholder="e.g. Ramesh Shankar Patil"
+                               class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Mobile Contact</label>
+                        <input type="text" x-model="customer.mobile" placeholder="10-digit mobile"
+                               class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Village / Town</label>
+                        <input type="text" x-model="customer.village" placeholder="e.g. Ladgaon"
+                               class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Taluka & District</label>
+                        <input type="text" x-model="customer.talukaDistrict" placeholder="e.g. Vaijapur, Aurangabad"
+                               class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Aadhaar / GSTIN (Optional)</label>
+                        <input type="text" x-model="customer.idNumber" placeholder="Identification number"
+                               class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 font-mono uppercase">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Line Items (Dynamic Machines / Spares Repeater) -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <i class="fas fa-boxes-stacked text-blue-600"></i> Line Items & Machinery
+                    </span>
+                    <button type="button" @click="addItem()"
+                            class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer">
+                        <i class="fas fa-plus text-[10px]"></i> Add Item
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <template x-for="(item, index) in items" :key="item.id">
+                        <div class="p-3.5 bg-slate-50/70 border border-slate-200 rounded-xl space-y-2.5 relative">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-slate-500 font-mono" x-text="'Item #' + (index + 1)"></span>
+                                <button type="button" @click="removeItem(index)" x-show="items.length > 1"
+                                        class="text-rose-500 hover:text-rose-700 text-xs transition-colors p-1" title="Delete Row">
+                                    <i class="fas fa-trash-can"></i>
+                                </button>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Description / Model Name</label>
+                                <input type="text" x-model="item.desc" placeholder="e.g. Captain 280 DI 4WD Tractor"
+                                       class="w-full rounded-lg border border-slate-300 p-1.5 text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Chassis No.</label>
+                                    <input type="text" x-model="item.chassis" placeholder="Optional"
+                                           class="w-full rounded-lg border border-slate-300 p-1.5 text-xs text-slate-800 bg-white font-mono uppercase">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Engine No.</label>
+                                    <input type="text" x-model="item.engine" placeholder="Optional"
+                                           class="w-full rounded-lg border border-slate-300 p-1.5 text-xs text-slate-800 bg-white font-mono uppercase">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 text-xs">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">HSN</label>
+                                    <input type="text" x-model="item.hsn" class="w-full rounded-lg border border-slate-300 p-1.5 text-xs text-slate-800 bg-white font-mono">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Qty</label>
+                                    <input type="number" x-model.number="item.qty" min="1" class="w-full rounded-lg border border-slate-300 p-1.5 text-xs text-slate-800 bg-white font-mono text-center">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Rate (₹)</label>
+                                    <input type="number" x-model.number="item.rate" min="0" step="100" class="w-full rounded-lg border border-slate-300 p-1.5 text-xs text-slate-800 bg-white font-mono text-right">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Discount (₹)</label>
+                                    <input type="number" x-model.number="item.discount" min="0" class="w-full rounded-lg border border-slate-300 p-1.5 text-xs text-slate-800 bg-white font-mono text-right">
+                                </div>
+                            </div>
+                            <div class="text-right text-[11px] font-bold text-slate-700 pt-1 border-t border-slate-200">
+                                Line Amount: ₹<span x-text="formatNumber(lineTotal(item))"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- 4. Taxes & Extra Charges -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <i class="fas fa-percent text-blue-600"></i> Taxes & Additional Charges
+                    </span>
+                    <label class="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer">
+                        <input type="checkbox" x-model="tax.isGst" class="rounded text-blue-600">
+                        <span>Apply GST Tax</span>
+                    </label>
+                </div>
+
+                <div x-show="tax.isGst" x-collapse class="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">GST Tax Rate</label>
+                        <select x-model.number="tax.gstRate" class="w-full rounded-xl border border-slate-300 p-2 text-xs bg-white text-slate-800">
+                            <option value="12">12% (Tractor Standard: 6% CGST + 6% SGST)</option>
+                            <option value="18">18% (Commercial / Implements)</option>
+                            <option value="28">28% (Specialized Machinery)</option>
+                            <option value="5">5% (Agricultural Spares)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Tax Type / Supply State</label>
+                        <select x-model="tax.isInterstate" class="w-full rounded-xl border border-slate-300 p-2 text-xs bg-white text-slate-800">
+                            <option :value="false">Intra-State (CGST + SGST)</option>
+                            <option :value="true">Inter-State (IGST Only)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Accessories / Insurance (₹)</label>
+                        <input type="number" x-model.number="extraCharges" min="0" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 font-mono text-right">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Overall Discount (₹)</label>
+                        <input type="number" x-model.number="overallDiscount" min="0" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 font-mono text-right">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Showroom Branding & Bank Details (Editable Overrides) -->
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <i class="fas fa-building text-blue-600"></i> Showroom & Bank Details
+                    </span>
+                    <span class="text-[11px] text-slate-400">Printed on invoice</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="col-span-2">
+                        <label class="block font-bold text-slate-600 mb-1">Showroom / Dealership Name</label>
+                        <input type="text" x-model="dealership.name" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 font-bold uppercase">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Tagline</label>
+                        <input type="text" x-model="dealership.tagline" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Contact Mobiles</label>
+                        <input type="text" x-model="dealership.mobile" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 font-mono">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block font-bold text-slate-600 mb-1">Showroom Address</label>
+                        <input type="text" x-model="dealership.address" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Bank Name</label>
+                        <input type="text" x-model="bank.bankName" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Account No.</label>
+                        <input type="text" x-model="bank.accountNo" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">IFSC Code</label>
+                        <input type="text" x-model="bank.ifsc" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800 font-mono uppercase">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-600 mb-1">Branch</label>
+                        <input type="text" x-model="bank.branch" class="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-800">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- LIVE A4 PRINT-ACCURATE PREVIEW PANE                            -->
+        <!-- ============================================================= -->
+        <div x-show="viewMode !== 'form'" class="preview-pane space-y-4" :class="viewMode === 'split' ? 'xl:col-span-7' : 'max-w-4xl mx-auto w-full'">
+            
+            <div class="no-print flex items-center justify-between text-xs text-slate-500 pb-1">
+                <span class="font-bold flex items-center gap-1.5">
+                    <i class="fas fa-file-pdf text-rose-600"></i> Live A4 Print Output (Auto-Scaled)
+                </span>
+                <span class="text-[11px] text-slate-400">Ctrl+P to Print directly</span>
+            </div>
+
+            <!-- The Authentic Print Document Container -->
+            <div class="temp-print-container bg-white border border-slate-300 rounded-2xl p-6 shadow-md text-slate-900 font-sans"
+                 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+
+                <!-- 1. DEALERSHIP HEADER -->
+                <div class="border-b-2 border-slate-900 pb-3 mb-3">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h1 class="text-xl font-black uppercase tracking-wide text-slate-900 leading-tight" x-text="dealership.name"></h1>
+                            <p class="text-[11px] font-bold text-amber-700 uppercase tracking-wider" x-text="dealership.tagline"></p>
+                            <p class="text-[10px] text-slate-600 mt-0.5 leading-snug" x-text="dealership.address"></p>
+                            <div class="text-[10px] text-slate-700 font-semibold mt-0.5">
+                                <span x-show="dealership.mobile">Mob: <span x-text="dealership.mobile"></span></span>
+                                <span x-show="dealership.gstin" class="ml-2">&bull; GSTIN: <span x-text="dealership.gstin"></span></span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block px-3 py-1 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-md"
+                                  x-text="getDocTitle()"></span>
+                            <div class="text-[11px] font-mono font-bold text-slate-800 mt-1">
+                                Doc #: <span x-text="docNo"></span>
+                            </div>
+                            <div class="text-[10px] text-slate-600">
+                                Date: <span x-text="formatDisplayDate(docDate)"></span>
+                            </div>
+                            <div class="text-[10px] text-slate-500" x-show="validTill">
+                                Valid Till: <span x-text="formatDisplayDate(validTill)"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. BILL TO / CUSTOMER CARD -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 mb-3 text-xs">
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Customer / Consignee:</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <div class="font-bold text-slate-900 text-sm" x-text="customer.name || '[ Customer Name ]'"></div>
+                            <div class="text-slate-600 text-[11px]" x-show="customer.village || customer.talukaDistrict">
+                                <span x-text="customer.village"></span><span x-show="customer.village && customer.talukaDistrict">, </span><span x-text="customer.talukaDistrict"></span>
+                            </div>
+                        </div>
+                        <div class="text-right text-[11px] space-y-0.5 font-mono">
+                            <div x-show="customer.mobile">Contact: <span x-text="customer.mobile" class="font-bold text-slate-800"></span></div>
+                            <div x-show="customer.idNumber">ID/GST: <span x-text="customer.idNumber"></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. ITEMS TABLE -->
+                <table class="w-full text-xs border-collapse mb-3">
+                    <thead>
+                        <tr class="bg-slate-900 text-white uppercase text-[10px] font-bold tracking-wider">
+                            <th class="py-1.5 px-2 text-center w-8">#</th>
+                            <th class="py-1.5 px-2 text-left">Description of Goods / Vehicle</th>
+                            <th class="py-1.5 px-2 text-center w-14">HSN</th>
+                            <th class="py-1.5 px-2 text-center w-10">Qty</th>
+                            <th class="py-1.5 px-2 text-right w-20">Rate (₹)</th>
+                            <th class="py-1.5 px-2 text-right w-16" x-show="hasDiscount()">Disc (₹)</th>
+                            <th class="py-1.5 px-2 text-right w-24">Amount (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 border-b-2 border-slate-900">
+                        <template x-for="(item, index) in items" :key="item.id">
+                            <tr class="text-[11px]">
+                                <td class="py-1.5 px-2 text-center font-mono text-slate-500" x-text="index + 1"></td>
+                                <td class="py-1.5 px-2">
+                                    <div class="font-bold text-slate-900" x-text="item.desc || 'Machinery Item'"></div>
+                                    <div class="text-[9.5px] font-mono text-slate-500" x-show="item.chassis || item.engine">
+                                        <span x-show="item.chassis">Chassis: <span class="font-bold" x-text="item.chassis"></span></span>
+                                        <span x-show="item.chassis && item.engine">&nbsp;&bull;&nbsp;</span>
+                                        <span x-show="item.engine">Engine: <span class="font-bold" x-text="item.engine"></span></span>
+                                    </div>
+                                </td>
+                                <td class="py-1.5 px-2 text-center font-mono text-slate-600" x-text="item.hsn"></td>
+                                <td class="py-1.5 px-2 text-center font-mono font-semibold" x-text="item.qty"></td>
+                                <td class="py-1.5 px-2 text-right font-mono" x-text="formatNumber(item.rate)"></td>
+                                <td class="py-1.5 px-2 text-right font-mono text-slate-500" x-show="hasDiscount()" x-text="item.discount > 0 ? formatNumber(item.discount) : '-'"></td>
+                                <td class="py-1.5 px-2 text-right font-mono font-bold text-slate-900" x-text="formatNumber(lineTotal(item))"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+
+                <!-- 4. TOTALS & SUMMARY -->
+                <div class="grid grid-cols-12 gap-3 mb-3">
+                    <!-- Left: Amount in Words & Bank Details -->
+                    <div class="col-span-7 space-y-2 text-xs">
+                        <div class="bg-slate-50 border border-slate-200 rounded p-2 text-[10px]">
+                            <div class="font-bold uppercase tracking-wider text-slate-500 mb-0.5">Amount in Words:</div>
+                            <div class="font-bold text-slate-900 leading-snug italic" x-text="amountInWords() + ' Only.'"></div>
+                        </div>
+
+                        <!-- Bank Account Box -->
+                        <div class="border border-slate-200 rounded p-2 text-[9.5px]" x-show="bank.bankName">
+                            <div class="font-bold text-slate-800 uppercase tracking-wider mb-0.5">Bank Remittance Details:</div>
+                            <div class="grid grid-cols-2 gap-x-2 gap-y-0.5 text-slate-600 font-mono">
+                                <div>Bank: <span class="font-bold text-slate-800" x-text="bank.bankName"></span></div>
+                                <div>A/C: <span class="font-bold text-slate-800" x-text="bank.accountNo"></span></div>
+                                <div>IFSC: <span class="font-bold text-slate-800" x-text="bank.ifsc"></span></div>
+                                <div>Branch: <span class="font-bold text-slate-800" x-text="bank.branch"></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Math Summary Block -->
+                    <div class="col-span-5 text-xs font-mono">
+                        <table class="w-full text-right text-[11px]">
+                            <tbody>
+                                <tr>
+                                    <td class="py-0.5 text-slate-600">Subtotal:</td>
+                                    <td class="py-0.5 font-bold text-slate-800 w-24">₹<span x-text="formatNumber(subtotal())"></span></td>
+                                </tr>
+                                <tr x-show="overallDiscount > 0">
+                                    <td class="py-0.5 text-slate-600">Overall Discount:</td>
+                                    <td class="py-0.5 text-rose-600">-₹<span x-text="formatNumber(overallDiscount)"></span></td>
+                                </tr>
+                                <tr x-show="tax.isGst && !tax.isInterstate">
+                                    <td class="py-0.5 text-slate-600" x-text="'CGST (' + (tax.gstRate/2) + '%):'"></td>
+                                    <td class="py-0.5 font-semibold text-slate-800">₹<span x-text="formatNumber(cgstAmount())"></span></td>
+                                </tr>
+                                <tr x-show="tax.isGst && !tax.isInterstate">
+                                    <td class="py-0.5 text-slate-600" x-text="'SGST (' + (tax.gstRate/2) + '%):'"></td>
+                                    <td class="py-0.5 font-semibold text-slate-800">₹<span x-text="formatNumber(sgstAmount())"></span></td>
+                                </tr>
+                                <tr x-show="tax.isGst && tax.isInterstate">
+                                    <td class="py-0.5 text-slate-600" x-text="'IGST (' + tax.gstRate + '%):'"></td>
+                                    <td class="py-0.5 font-semibold text-slate-800">₹<span x-text="formatNumber(igstAmount())"></span></td>
+                                </tr>
+                                <tr x-show="extraCharges > 0">
+                                    <td class="py-0.5 text-slate-600">Insurance / Extras:</td>
+                                    <td class="py-0.5 font-semibold text-slate-800">₹<span x-text="formatNumber(extraCharges)"></span></td>
+                                </tr>
+                                <tr x-show="roundOff() !== 0">
+                                    <td class="py-0.5 text-slate-500 text-[10px]">Round Off:</td>
+                                    <td class="py-0.5 text-slate-500 text-[10px]">₹<span x-text="formatNumber(roundOff())"></span></td>
+                                </tr>
+                                <tr class="border-t-2 border-slate-900 text-sm font-black text-slate-900 bg-slate-100">
+                                    <td class="py-1 px-1">Grand Total:</td>
+                                    <td class="py-1 px-1 text-slate-900">₹<span x-text="formatNumber(grandTotal())"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 5. TERMS & SIGNATURE FOOTER -->
+                <div class="border-t border-slate-300 pt-2 grid grid-cols-2 gap-4 text-[9.5px] items-end">
+                    <div>
+                        <div class="font-bold text-slate-800 uppercase tracking-wider mb-0.5">Terms & Conditions:</div>
+                        <ol class="list-decimal list-inside text-slate-600 space-y-0.5 leading-snug">
+                            <li>Prices and specifications are subject to revision without prior notice.</li>
+                            <li>Delivery is subject to availability of tractor chassis from manufacturer stock.</li>
+                            <li>Valid for 30 days from document date for bank loan sanction processing.</li>
+                        </ol>
+                    </div>
+                    <div class="text-right space-y-10">
+                        <div class="font-bold text-slate-800 uppercase text-[10px]" x-text="'For ' + dealership.name"></div>
+                        <div class="text-slate-600 font-semibold border-t border-slate-400 inline-block pt-1 px-4">
+                            Authorized Signatory
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disclaimer footer watermark -->
+                <div class="text-center text-[8.5px] text-slate-400 mt-2 border-t border-slate-100 pt-1">
+                    This is an Instant Temporary Document generated for customer reference &bull; Not for permanent commercial audit
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function tempBillApp() {
+    return {
+        viewMode: 'split', // 'split', 'preview', 'form'
+        docType: 'QUOTATION',
+        docNo: 'TEMP-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000),
+        docDate: new Date().toISOString().split('T')[0],
+        validTill: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+
+        dealership: {
+            name: "{{ company.company_name|default:'SAIGANGA ENTERPRISES'|escapejs }}",
+            tagline: "{{ company.tagline|default:'Authorized Tractor Sales & Service Dealer'|escapejs }}",
+            address: "{{ company.full_address|default:'Main Road, Showroom Complex'|escapejs }}",
+            mobile: "{{ company.mobile_numbers|default:'9876543210'|escapejs }}",
+            gstin: "{{ company.gstin_number|default:''|escapejs }}",
+            pan: "{{ company.pan_number|default:''|escapejs }}"
+        },
+
+        customer: {
+            name: '',
+            mobile: '',
+            village: '',
+            talukaDistrict: '',
+            idNumber: ''
+        },
+
+        items: [
+            {
+                id: 1,
+                desc: '',
+                chassis: '',
+                engine: '',
+                hsn: '8701',
+                qty: 1,
+                rate: 0,
+                discount: 0
+            }
+        ],
+
+        tax: {
+            isGst: false,
+            isInterstate: false,
+            gstRate: 12
+        },
+
+        extraCharges: 0,
+        overallDiscount: 0,
+
+        bank: {
+            bankName: "{{ primary_bank.bank_name|default:''|escapejs }}",
+            accountNo: "{{ primary_bank.account_number|default:''|escapejs }}",
+            ifsc: "{{ primary_bank.ifsc_code|default:''|escapejs }}",
+            branch: "{{ primary_bank.branch_name|default:''|escapejs }}"
+        },
+
+        init() {
+            // Check if draft exists in browser localStorage
+            try {
+                const saved = localStorage.getItem('showroom_temp_bill_draft');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    Object.assign(this, parsed);
+                }
+            } catch (e) {}
+
+            // Auto-save draft changes locally
+            this.$watch('customer', () => this.saveToLocal());
+            this.$watch('items', () => this.saveToLocal());
+            this.$watch('docNo', () => this.saveToLocal());
+        },
+
+        saveToLocal() {
+            try {
+                localStorage.setItem('showroom_temp_bill_draft', JSON.stringify({
+                    docType: this.docType,
+                    docNo: this.docNo,
+                    docDate: this.docDate,
+                    validTill: this.validTill,
+                    customer: this.customer,
+                    items: this.items,
+                    tax: this.tax,
+                    extraCharges: this.extraCharges,
+                    overallDiscount: this.overallDiscount
+                }));
+            } catch (e) {}
+        },
+
+        addItem() {
+            this.items.push({
+                id: Date.now(),
+                desc: '',
+                chassis: '',
+                engine: '',
+                hsn: '8701',
+                qty: 1,
+                rate: 0,
+                discount: 0
+            });
+        },
+
+        removeItem(index) {
+            if (this.items.length > 1) {
+                this.items.splice(index, 1);
+            }
+        },
+
+        lineTotal(item) {
+            const q = Number(item.qty) || 0;
+            const r = Number(item.rate) || 0;
+            const d = Number(item.discount) || 0;
+            return Math.max(0, (q * r) - d);
+        },
+
+        subtotal() {
+            return this.items.reduce((sum, item) => sum + this.lineTotal(item), 0);
+        },
+
+        taxableAmount() {
+            return Math.max(0, this.subtotal() - (Number(this.overallDiscount) || 0));
+        },
+
+        cgstAmount() {
+            if (!this.tax.isGst || this.tax.isInterstate) return 0;
+            const halfRate = (Number(this.tax.gstRate) || 0) / 2;
+            return Math.round((this.taxableAmount() * halfRate / 100) * 100) / 100;
+        },
+
+        sgstAmount() {
+            return this.cgstAmount();
+        },
+
+        igstAmount() {
+            if (!this.tax.isGst || !this.tax.isInterstate) return 0;
+            const rate = Number(this.tax.gstRate) || 0;
+            return Math.round((this.taxableAmount() * rate / 100) * 100) / 100;
+        },
+
+        totalTax() {
+            if (!this.tax.isGst) return 0;
+            return this.tax.isInterstate ? this.igstAmount() : (this.cgstAmount() + this.sgstAmount());
+        },
+
+        grandTotal() {
+            const raw = this.taxableAmount() + this.totalTax() + (Number(this.extraCharges) || 0);
+            return Math.round(raw);
+        },
+
+        roundOff() {
+            const raw = this.taxableAmount() + this.totalTax() + (Number(this.extraCharges) || 0);
+            return Math.round((this.grandTotal() - raw) * 100) / 100;
+        },
+
+        hasDiscount() {
+            return this.items.some(i => i.discount > 0);
+        },
+
+        getDocTitle() {
+            const titles = {
+                'QUOTATION': 'QUOTATION / ESTIMATE',
+                'TAX_INVOICE': 'TAX INVOICE',
+                'CASH_MEMO': 'CASH MEMO',
+                'DELIVERY_CHALLAN': 'DELIVERY CHALLAN'
+            };
+            return titles[this.docType] || 'QUOTATION';
+        },
+
+        formatNumber(num) {
+            if (num === null || num === undefined || isNaN(num)) return '0.00';
+            return Number(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+
+        formatDisplayDate(dStr) {
+            if (!dStr) return '';
+            try {
+                const parts = dStr.split('-');
+                if (parts.length === 3) {
+                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    return parts[2] + '-' + months[parseInt(parts[1], 10) - 1] + '-' + parts[0];
+                }
+            } catch (e) {}
+            return dStr;
+        },
+
+        loadSample() {
+            this.docType = 'QUOTATION';
+            this.customer = {
+                name: 'Kashinath Dnyaneshwar Shinde',
+                mobile: '9822345678',
+                village: 'Babhulgaon',
+                talukaDistrict: 'Vaijapur, Chhatrapati Sambhajinagar',
+                idNumber: 'AADH-8923-4512-9901'
+            };
+            this.items = [
+                {
+                    id: 1,
+                    desc: 'Captain 280 DI 4WD Mini Tractor (28 HP, 8F+2R Synchromesh)',
+                    chassis: 'ME4CP280DNP004128',
+                    engine: 'E280D412891',
+                    hsn: '8701',
+                    qty: 1,
+                    rate: 545000,
+                    discount: 15000
+                },
+                {
+                    id: 2,
+                    desc: 'Heavy Duty 5-Tyne Cultivator / Tiller Attachment',
+                    chassis: '',
+                    engine: '',
+                    hsn: '8432',
+                    qty: 1,
+                    rate: 28000,
+                    discount: 0
+                }
+            ];
+            this.tax.isGst = true;
+            this.tax.isInterstate = false;
+            this.tax.gstRate = 12;
+            this.extraCharges = 8500;
+            this.overallDiscount = 5000;
+            this.saveToLocal();
+        },
+
+        resetForm() {
+            if (confirm('Clear this temporary bill and reset all fields?')) {
+                localStorage.removeItem('showroom_temp_bill_draft');
+                this.customer = { name: '', mobile: '', village: '', talukaDistrict: '', idNumber: '' };
+                this.items = [{ id: 1, desc: '', chassis: '', engine: '', hsn: '8701', qty: 1, rate: 0, discount: 0 }];
+                this.extraCharges = 0;
+                this.overallDiscount = 0;
+                this.tax.isGst = false;
+            }
+        },
+
+        amountInWords() {
+            const amount = this.grandTotal();
+            if (!amount || amount === 0) return 'Zero Rupees';
+
+            const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+            const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+            function convertLessThanOneThousand(n) {
+                let str = '';
+                if (n >= 100) {
+                    str += a[Math.floor(n / 100)] + 'Hundred ';
+                    n %= 100;
+                }
+                if (n >= 20) {
+                    str += b[Math.floor(n / 10)] + ' ';
+                    n %= 10;
+                }
+                if (n > 0) {
+                    str += a[n];
+                }
+                return str;
+            }
+
+            let num = Math.floor(amount);
+            let crore = Math.floor(num / 10000000);
+            num %= 10000000;
+            let lakh = Math.floor(num / 100000);
+            num %= 100000;
+            let thousand = Math.floor(num / 1000);
+            num %= 1000;
+            let remainder = num;
+
+            let result = 'Rupees ';
+            if (crore > 0) result += convertLessThanOneThousand(crore) + 'Crore ';
+            if (lakh > 0) result += convertLessThanOneThousand(lakh) + 'Lakh ';
+            if (thousand > 0) result += convertLessThanOneThousand(thousand) + 'Thousand ';
+            if (remainder > 0) result += convertLessThanOneThousand(remainder);
+
+            return result.replace(/\s+/g, ' ').trim();
+        }
+    };
+}
+</script>
+{% endblock %}

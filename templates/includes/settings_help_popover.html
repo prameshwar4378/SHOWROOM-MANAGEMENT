@@ -1,0 +1,401 @@
+{% comment %}
+Reusable Settings Help Popover Component with Arrow Signage & Dual Language (English + Marathi)
+Usage: {% include 'includes/settings_help_popover.html' with topic='company_identity' %}
+Supported Topics:
+  - company_identity
+  - company_location
+  - company_tax
+  - bank_directory
+  - bank_primary
+  - gst_slabs
+  - sequence_management
+  - notification_gateway
+  - notification_triggers
+  - notification_audit
+Optional parameters:
+  - align: 'left' (default) or 'right'
+  - custom_title_en, custom_desc_en, custom_title_mr, custom_desc_mr, custom_tip_en, custom_tip_mr
+{% endcomment %}
+
+<div class="relative inline-block text-left" x-data="{ open: false, lang: 'both' }">
+    <!-- Info (i) Trigger Button -->
+    <button type="button" 
+            @click.stop="open = !open" 
+            class="inline-flex items-center justify-center w-5 h-5 rounded-full text-blue-600 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100 border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 transition-all cursor-pointer align-middle ml-1.5 shadow-2xs" 
+            title="Help & Details | माहिती व मदत"
+            aria-label="Feature Details">
+        <i class="fas fa-info text-[11px] font-black"></i>
+    </button>
+
+    <!-- Anchored Dialogue Box / Popover with Signage Arrow -->
+    <div x-show="open" 
+         x-cloak
+         @click.outside="open = false"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+         x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+         class="absolute z-50 mt-2.5 w-80 sm:w-96 rounded-2xl bg-white shadow-2xl border border-slate-200/90 p-4 text-left {% if align == 'right' %}right-0{% else %}left-0{% endif %}"
+         style="max-width: 90vw;">
+
+        <!-- Signage Arrow Notch pointing to (i) button -->
+        <div class="absolute -top-1.5 {% if align == 'right' %}right-3.5{% else %}left-3.5{% endif %} w-3 h-3 bg-white border-t border-l border-slate-200 rotate-45 transform pointer-events-none"></div>
+
+        <!-- Popover Header & Close Button -->
+        <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <span class="text-xs font-bold text-slate-800 tracking-tight">Feature Help | वैशिष्ट्य माहिती</span>
+            </div>
+            <button type="button" 
+                    @click="open = false" 
+                    class="w-6 h-6 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+                    title="Close | बंद करा">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+
+        <!-- Language Switcher Bar -->
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100/80 bg-slate-50/70 p-1.5 rounded-xl">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 pl-1">Language / भाषा:</span>
+            <div class="inline-flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200 text-[10px] font-bold shadow-2xs">
+                <button type="button" @click="lang = 'both'" :class="lang === 'both' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2 py-0.5 rounded-md transition-all cursor-pointer">दोन्ही (Both)</button>
+                <button type="button" @click="lang = 'mr'" :class="lang === 'mr' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2 py-0.5 rounded-md transition-all cursor-pointer">मराठी</button>
+                <button type="button" @click="lang = 'en'" :class="lang === 'en' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="px-2 py-0.5 rounded-md transition-all cursor-pointer">English</button>
+            </div>
+        </div>
+
+        <!-- Content Body -->
+        <div class="space-y-3 max-h-80 overflow-y-auto pr-1 text-xs">
+
+            {% if topic == 'company_identity' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Showroom Identity & Branding</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Sets your official dealership business name, slogan tagline, manufacturer brand logo (left), and company showroom logo (right).
+                </p>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Printed on:</span> Top header of all official Tax Invoices, Quotations, and Delivery Challans.
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 {% if topic == 'company_identity' %}pt-1 border-t border-slate-100{% endif %}">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">शोरूम ओळख आणि ब्रँडिंग</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    आपल्या शोरूमचे अधिकृत नाव, ब्रीदवाक्य (Tagline), ट्रॅक्टर ब्रँड लोगो आणि शोरूमचा स्वतःचा लोगो येथे सेट करा.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">बिलावर स्थान:</span> सर्व टॅक्स इनव्हॉईस, कोटेशन आणि डिलिव्हरी चलनावर सर्वात वर अधिकृत हेडर म्हणून छापले जाते.
+                </div>
+            </div>
+
+            {% elif topic == 'company_location' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Showroom Location & Contacts</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Specifies your showroom's physical premises address (City, Taluka, District, State, PIN) and official mobile/landline numbers.
+                </p>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Key Tip:</span> You can enter multiple mobile numbers separated by commas for sales and service desks.
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">शोरूम पत्ता आणि संपर्क तपशील</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    शोरूमचा अधिकृत पत्ता (शहर, तालुका, जिल्हा, पिन कोड) आणि संपर्क मोबाईल क्रमांक येथे नोंदवा.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">महत्त्वाची टीप:</span> कॉमा (,) देऊन एकापेक्षा जास्त संपर्क क्रमांक टाकू शकता (उदा. विक्री, सर्व्हिस व कार्यालय).
+                </div>
+            </div>
+
+            {% elif topic == 'company_tax' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Tax Registrations & Declarations</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Your 15-character GSTIN, PAN, digital authorized signature, and standard legal invoicing declaration text.
+                </p>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Compliance:</span> Mandatory for statutory GST validity and enabling customer input tax credit (ITC) claims.
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">कर नोंदणी आणि कायदेशीर अटी</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    शोरूमचा १५ अंकी GSTIN नंबर, पॅन नंबर (PAN), अधिकृत डिजिटल सही/शिक्का आणि बिलावरील कायदेशीर नियम व अटी.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">कायदेशीर महत्त्व:</span> या माहितीमुळे ग्राहकाला इनपुट टॅक्स क्रेडिट (ITC) मिळतो आणि बिलाला कायदेशीर मान्यता मिळते.
+                </div>
+            </div>
+
+            {% elif topic == 'bank_directory' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Showroom Bank Accounts Directory</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Add dealership bank accounts for payment collections. Mark one account as <strong>Primary</strong> to print its Bank Name, Account Number, and IFSC code directly on Tax Invoices and Quotations.
+                </p>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Payment Methods:</span> Customers and loan banks transfer subsidy and tractor loan disbursements via RTGS/NEFT using these details.
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">शोरूम बँक खाती सूची</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    शोरूमची अधिकृत बँक खाती येथे जोडा. एका खात्याला <strong>प्राथमिक (Primary)</strong> म्हणून निवडा—त्याचा तपशील ग्राहकांच्या टॅक्स इनव्हॉईस व कोटेशनवर बँक पेमेंटसाठी छापला जातो.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">उपयोग:</span> ट्रॅक्टर कर्ज देणाऱ्या बँका, फायनान्स कंपन्या आणि शेतकरी थेट RTGS/NEFT द्वारे रक्कम जमा करण्यासाठी हे खाते वापरतात.
+                </div>
+            </div>
+
+            {% elif topic == 'bank_primary' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Primary Bank Account Rule</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Only one bank account can be marked as Primary at a time. Designating an account as Primary automatically resets any other account to secondary.
+                </p>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">प्राथमिक बँक खात्याचा नियम</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    एका वेळी फक्त एकच खाते प्राथमिक (Primary) असू शकते. नवीन खाते प्राथमिक केल्यास जुने खाते आपोआप सामान्य खात्यात बदलते.
+                </p>
+            </div>
+
+            {% elif topic == 'gst_slabs' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">GST Slabs & HSN Directory</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Define tax rates (e.g. 12% for Tractors under HSN 8701, 18% for Implements & Spare Parts under HSN 8432/8708).
+                </p>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Auto-Split:</span> Intra-state sales automatically split into CGST + SGST (e.g. 6% + 6%). Inter-state sales apply IGST (12%).
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">जीएसटी दर आणि एचएसएन कोड</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    ट्रॅक्टर (उदा. १२% - HSN 8701), शेती अवजारे व सुटे भाग (उदा. १८% - HSN 8432) यांचे कर दर आणि HSN कोड येथे सेट करा.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">कर विभागणी:</span> महाराष्ट्रातील ग्राहकांसाठी कर आपोआप CGST व SGST मध्ये ५०-५०% विभागला जातो आणि परराज्यासाठी IGST लागतो.
+                </div>
+            </div>
+
+            {% elif topic == 'sequence_management' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Bill Numbering Sequences</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Automates sequential numbering for Tax Invoices (<code class="bg-slate-100 px-1 rounded">TI-</code>), Quotations (<code class="bg-slate-100 px-1 rounded">QT-</code>), Delivery Challans (<code class="bg-slate-100 px-1 rounded">DC-</code>), and Margin Money (<code class="bg-slate-100 px-1 rounded">MM-</code>).
+                </p>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Auto-Increment:</span> Each finalized bill increments the serial counter by 1, eliminating duplicate bill numbers.
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">बिल क्रमांक मालिका आणि प्रीफिक्स</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    टॅक्स इनव्हॉईस (TI-), कोटेशन (QT-), डिलिव्हरी चलन (DC-) आणि मार्जिन मनी (MM-) साठी स्वयं-क्रमांक निर्मिती नियंत्रित करा.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">स्वयं-क्रमांक:</span> नवीन बिल तयार होताच नंबर आपोआप १ ने वाढतो, ज्यामुळे बिलांमध्ये नंबर डुप्लिकेट होत नाही.
+                </div>
+            </div>
+
+            {% elif topic == 'notification_gateway' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Gateway Provider & Engine</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Choose <strong>Local WhatsApp Gateway</strong> for 100% free, unlimited automated WhatsApp messaging directly from this computer using your phone (zero cloud API fees). Use <strong>Simulator Mode</strong> for testing without sending real messages, or select <strong>WaAPI / Meta Cloud API</strong> for paid cloud dispatch.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/70 border border-emerald-200 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">Recommended for Showrooms:</span> Use <strong>Local WhatsApp Gateway</strong>. Just scan the QR code once with your phone and run <code>start_whatsapp_bridge.bat</code> on your PC!
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">गेटवे प्रोव्हायडर आणि इंजिन</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    कोणत्याही पैशांशिवाय (१००% मोफत) थेट तुमच्या संगणकावरून आणि मोबाईल नंबरवरून ग्राहकांना व्हाट्सॲप बिल व पावती पाठवण्यासाठी <strong>Local WhatsApp Gateway</strong> निवडा. चाचणीसाठी <strong>Simulator Mode</strong> किंवा क्लाउडसाठी <strong>WaAPI / Meta</strong> वापरू शकता.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/70 border border-emerald-200 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">शोरूमसाठी उत्तम:</span> <strong>Local WhatsApp Gateway</strong> निवडून स्क्रीनवर दिसणारा QR कोड मोबाईलवरून एकदा स्कॅन करा.
+                </div>
+            </div>
+
+            {% elif topic == 'notification_triggers' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Showroom Event Automation Triggers</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Enables automatic alerts on showroom events: instant payment collection receipts, new tax invoice dispatch, and automated overdue balance reminder alerts.
+                </p>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Includes:</span> Receipt amount, remaining balance, showroom name, and customer mobile format.
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">स्वयंचलित सूचना ट्रिगर्स</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    शोरूममध्ये व्यवहार घडल्यावर आपोआप मेसेज जाण्यासाठी: पावती जमा होताच पोचपावती मेसेज, नवीन बिलाचा मेसेज आणि बाकी रक्कमेचे स्मरणपत्र.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">फायदा:</span> ग्राहकाला त्वरित भरलेली रक्कम आणि शिल्लक बाकी समजते, ज्यामुळे हिशोबात १००% पारदर्शकता राहते.
+                </div>
+            </div>
+
+            {% elif topic == 'notification_audit' %}
+            <!-- English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">Notification Audit Trail</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    Chronological audit log tracking every message sent. Displays recipient phone, message type, delivery status (<code class="bg-slate-100 px-1 rounded">SENT</code>, <code class="bg-slate-100 px-1 rounded">SIMULATED</code>, <code class="bg-slate-100 px-1 rounded">FAILED</code>), and exact dispatch time.
+                </p>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Audit Proof:</span> Provides undeniable proof of payment receipt dispatch and customer billing communication.
+                </div>
+            </div>
+
+            <!-- Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">सूचनांचा इतिहास (Audit Log)</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    ग्राहकांना पाठवलेल्या सर्व संदेशांची संपूर्ण नोंद. ग्राहकाचा मोबाईल नंबर, मेसेजचा प्रकार, डिलिव्हरी स्थिती (SENT / SIMULATED) आणि वेळ येथे सुरक्षित राहते.
+                </p>
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">पुष्टी:</span> ग्राहकाने मेसेज मिळाला नाही असे सांगितल्यास, हा लॉग तपासून मेसेज पाठवल्याची खात्री करता येते.
+                </div>
+            </div>
+
+            {% elif custom_title_en %}
+            <!-- Custom English Section -->
+            <div x-show="lang === 'both' || lang === 'en'" class="space-y-1.5">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-wider">🇬🇧 English</span>
+                    <h4 class="text-xs font-bold text-slate-800">{{ custom_title_en }}</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    {{ custom_desc_en }}
+                </p>
+                {% if custom_tip_en %}
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-100 text-[10px] text-blue-900 leading-normal">
+                    <span class="font-bold">Tip:</span> {{ custom_tip_en }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Custom Marathi Section -->
+            <div x-show="lang === 'both' || lang === 'mr'" class="space-y-1.5 pt-1 border-t border-slate-100">
+                <div class="flex items-center gap-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">🇮🇳 मराठी</span>
+                    <h4 class="text-xs font-bold text-slate-800">{{ custom_title_mr }}</h4>
+                </div>
+                <p class="text-slate-600 leading-relaxed text-[11px]">
+                    {{ custom_desc_mr }}
+                </p>
+                {% if custom_tip_mr %}
+                <div class="p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 text-[10px] text-emerald-950 leading-normal">
+                    <span class="font-bold">टीप:</span> {{ custom_tip_mr }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Popover Footer -->
+        <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+            <span><i class="fas fa-hand-pointer mr-1 text-[9px]"></i> Click outside to close</span>
+            <span>बाहेर क्लिक करून बंद करा</span>
+        </div>
+    </div>
+</div>

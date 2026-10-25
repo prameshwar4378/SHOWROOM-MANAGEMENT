@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Purchase Invoice #{{ purchase.invoice_number }} - Showroom ERP{% endblock %}
+{% block page_title %}Inward Stock Bill Details{% endblock %}
+{% block page_subtitle %}Supplier invoice #{{ purchase.invoice_number }} from {{ purchase.supplier_name }}{% endblock %}
+
+{% block header_actions %}
+<div class="flex items-center gap-2">
+    <a href="{% url 'billing:purchase_list' %}" class="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold shadow-xs transition-colors">
+        <i class="fas fa-arrow-left"></i> All Inward Bills
+    </a>
+    <a href="{% url 'billing:purchase_add' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors">
+        <i class="fas fa-plus"></i> Record Another Bill
+    </a>
+    <button onclick="window.print()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors">
+        <i class="fas fa-print"></i> Print Bill
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Invoice Header Card -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-4 border-b border-gray-100 pb-5">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold
+                        {% if purchase.purchase_type == 'TRACTOR' %}bg-purple-100 text-purple-800
+                        {% elif purchase.purchase_type == 'IMPLEMENT' %}bg-blue-100 text-blue-800
+                        {% elif purchase.purchase_type == 'SPARE' %}bg-amber-100 text-amber-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ purchase.get_purchase_type_display }}
+                    </span>
+                    <span class="text-xs text-gray-400">&bull;</span>
+                    <span class="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                        <i class="fas fa-check-circle"></i> Stock Inwarded to Showroom
+                    </span>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 font-mono">Invoice #{{ purchase.invoice_number }}</h1>
+                <p class="text-xs text-gray-500 mt-1">Recorded by: {{ purchase.created_by.get_full_name|default:purchase.created_by.username|default:"Admin" }} on {{ purchase.created_at|date:"d M Y, h:i A" }}</p>
+            </div>
+
+            <div class="text-right">
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Procurement Amount</p>
+                <p class="text-3xl font-extrabold text-emerald-700 font-mono mt-1">₹{{ purchase.total_amount|intcomma }}</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pt-5">
+            <div>
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Supplier / Vendor</p>
+                <p class="text-sm font-bold text-gray-900 mt-1">{{ purchase.supplier_name }}</p>
+                {% if purchase.supplier_gstin %}
+                <p class="text-xs text-gray-500 font-mono mt-0.5">GSTIN: {{ purchase.supplier_gstin }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Invoice Date</p>
+                <p class="text-sm font-bold text-gray-900 mt-1">{{ purchase.invoice_date|date:"d M Y" }}</p>
+            </div>
+
+            <div>
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Stock Received Date</p>
+                <p class="text-sm font-bold text-gray-900 mt-1">{{ purchase.received_date|date:"d M Y" }}</p>
+            </div>
+
+            <div>
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Transporter / Notes</p>
+                <p class="text-xs text-gray-700 mt-1">{{ purchase.notes|default:"None recorded" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Received Table -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                <i class="fas fa-boxes-stacked text-emerald-600"></i> Stock Items Received ({{ items|length }})
+            </h2>
+            <span class="text-xs text-gray-400">Inventory was automatically credited with these items</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-gray-100/70 text-gray-600 font-semibold uppercase tracking-wider">
+                    <tr>
+                        <th class="px-4 py-3">#</th>
+                        <th class="px-4 py-3">Product / Spare Part</th>
+                        <th class="px-4 py-3">Category</th>
+                        <th class="px-4 py-3">Chassis No / Engine No</th>
+                        <th class="px-4 py-3 text-center">Qty</th>
+                        <th class="px-4 py-3 text-right">Unit Cost (₹)</th>
+                        <th class="px-4 py-3 text-right">Line Total (₹)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-gray-700">
+                    {% for item in items %}
+                    <tr class="hover:bg-gray-50/50">
+                        <td class="px-4 py-3 text-gray-400 font-mono">{{ forloop.counter }}</td>
+                        <td class="px-4 py-3">
+                            <p class="font-bold text-gray-900">{{ item.product.name }}</p>
+                            <p class="text-[10px] text-gray-400">HSN: {{ item.product.hsn_code|default:"-" }} | SKU: {{ item.product.part_number|default:"-" }}</p>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700">
+                                {{ item.product.get_category_display }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 font-mono">
+                            {% if item.chassis_number %}
+                            <div><span class="text-gray-500 font-sans text-[10px]">Chassis:</span> <strong class="text-gray-900">{{ item.chassis_number }}</strong></div>
+                            {% endif %}
+                            {% if item.engine_number %}
+                            <div><span class="text-gray-500 font-sans text-[10px]">Engine:</span> <strong class="text-gray-800">{{ item.engine_number }}</strong></div>
+                            {% endif %}
+                            {% if not item.chassis_number and not item.engine_number %}
+                            <span class="text-gray-400 text-[11px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-center font-bold text-gray-900">
+                            {{ item.quantity }}
+                        </td>
+                        <td class="px-4 py-3 text-right font-mono">
+                            ₹{{ item.unit_cost|intcomma }}
+                        </td>
+                        <td class="px-4 py-3 text-right font-mono font-bold text-emerald-700">
+                            ₹{{ item.amount|intcomma }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-400">No items recorded on this purchase invoice.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-gray-50 border-t border-gray-200">
+                    <tr>
+                        <td colspan="6" class="px-4 py-3 text-right font-bold text-gray-700 uppercase tracking-wider text-xs">
+                            Grand Total Inward Value:
+                        </td>
+                        <td class="px-4 py-3 text-right font-bold font-mono text-emerald-700 text-sm">
+                            ₹{{ purchase.total_amount|intcomma }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Footer -->
+    <div class="flex items-center justify-between text-xs text-gray-500 pt-2">
+        <a href="{% url 'billing:inventory_dashboard' %}" class="inline-flex items-center gap-1.5 text-blue-600 hover:underline font-semibold">
+            <i class="fas fa-boxes-stacked"></i> Go to Showroom Inventory Dashboard
+        </a>
+        <a href="{% url 'billing:purchase_list' %}" class="inline-flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
+            <i class="fas fa-list"></i> View All Inward Stock Bills
+        </a>
+    </div>
+
+</div>
+{% endblock %}

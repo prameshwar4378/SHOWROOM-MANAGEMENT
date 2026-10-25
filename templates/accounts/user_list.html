@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}System Users | Showroom Management{% endblock %}
+{% block page_title %}Users & Access Management{% endblock %}
+{% block page_subtitle %}Manage showroom staff logins, security credentials, and access roles{% endblock %}
+
+{% block header_actions %}
+<div class="flex items-center gap-2">
+    <a href="{% url 'accounts:user_add' %}" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5">
+        <i class="fas fa-user-plus text-xs"></i> Add New User
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- 1. Top Header Banner -->
+<div class="bg-white rounded-xl border border-gray-200 p-4 mb-4 shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
+                <i class="fas fa-users-cog text-base"></i>
+            </div>
+            <div>
+                <h2 class="text-base font-bold text-gray-900 tracking-tight">System Staff & Role Administration</h2>
+                <p class="text-xs text-gray-500">Configure access permissions, roles, and status for dealership users.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'accounts:user_add' %}" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors inline-flex items-center gap-1.5">
+                <i class="fas fa-user-plus text-xs"></i> Add New User
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 2. KPI Overview Cards (Zoho Books Style) -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <!-- Total Users -->
+    <div class="bg-white rounded-xl p-3.5 border-l-4 border-l-slate-700 border border-gray-200 shadow-xs">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Total Accounts</p>
+            <i class="fas fa-users text-slate-400 text-sm"></i>
+        </div>
+        <p class="text-xl font-bold font-mono text-gray-900 mt-1">{{ total_users|default:0 }}</p>
+        <p class="text-[10px] text-gray-400 mt-0.5">Registered system users</p>
+    </div>
+
+    <!-- Administrators -->
+    <div class="bg-white rounded-xl p-3.5 border-l-4 border-l-blue-600 border border-gray-200 shadow-xs">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold text-blue-700 uppercase tracking-wider">Administrators</p>
+            <i class="fas fa-user-shield text-blue-500 text-sm"></i>
+        </div>
+        <p class="text-xl font-bold font-mono text-blue-700 mt-1">{{ admin_count|default:0 }}</p>
+        <p class="text-[10px] text-blue-600/70 mt-0.5">Full configuration access</p>
+    </div>
+
+    <!-- Managers -->
+    <div class="bg-white rounded-xl p-3.5 border-l-4 border-l-purple-600 border border-gray-200 shadow-xs">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Managers</p>
+            <i class="fas fa-user-tie text-purple-500 text-sm"></i>
+        </div>
+        <p class="text-xl font-bold font-mono text-purple-700 mt-1">{{ manager_count|default:0 }}</p>
+        <p class="text-[10px] text-purple-600/70 mt-0.5">Billing & stock managers</p>
+    </div>
+
+    <!-- Showroom Staff -->
+    <div class="bg-white rounded-xl p-3.5 border-l-4 border-l-emerald-600 border border-gray-200 shadow-xs">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Showroom Staff</p>
+            <i class="fas fa-id-badge text-emerald-500 text-sm"></i>
+        </div>
+        <p class="text-xl font-bold font-mono text-emerald-700 mt-1">{{ staff_count|default:0 }}</p>
+        <p class="text-[10px] text-emerald-600/70 mt-0.5">Active field / counter team</p>
+    </div>
+</div>
+
+<!-- 3. Quick Status Filter Tabs -->
+<div class="flex flex-wrap items-center gap-1.5 mb-3">
+    <a href="{% url 'accounts:user_list' %}"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {% if not current_status and not current_role %}bg-slate-900 text-white shadow-xs{% else %}bg-white text-gray-600 hover:bg-gray-100 border border-gray-200{% endif %}">
+        All Users ({{ total_users|default:0 }})
+    </a>
+    <a href="{% url 'accounts:user_list' %}?status=active"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {% if current_status == 'active' %}bg-slate-900 text-white shadow-xs{% else %}bg-white text-gray-600 hover:bg-gray-100 border border-gray-200{% endif %}">
+        Active Only
+    </a>
+    <a href="{% url 'accounts:user_list' %}?status=inactive"
+       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {% if current_status == 'inactive' %}bg-slate-900 text-white shadow-xs{% else %}bg-white text-gray-600 hover:bg-gray-100 border border-gray-200{% endif %}">
+        Inactive Accounts
+    </a>
+</div>
+
+<!-- 4. Multi-Filter Toolbar (Uniform Standard ERP Design) -->
+<div class="bg-white rounded-xl border border-slate-200/90 p-3 mb-4 shadow-xs">
+    <form method="get" class="flex flex-wrap items-center gap-2.5">
+        <!-- Search Query Input -->
+        <div class="flex-1 min-w-[220px] relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+            <input type="text" name="q" value="{{ current_q }}" placeholder="Search username, name, email, mobile..."
+                   class="w-full h-9 pl-8 pr-3 text-xs font-medium bg-white text-slate-800 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-xs">
+        </div>
+
+        <!-- Role Filter -->
+        <div class="w-48 min-w-[160px]">
+            <select name="role" data-icon="fas fa-user-shield" class="w-full">
+                <option value="">All Roles</option>
+                {% for code, label in role_choices %}
+                <option value="{{ code }}" {% if current_role == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="w-40 min-w-[140px]">
+            <select name="status" data-icon="fas fa-circle-check" class="w-full">
+                <option value="">All Statuses</option>
+                <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+
+        <!-- Action Buttons -->
+        <button type="submit" class="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-xs transition-colors cursor-pointer shrink-0">
+            <i class="fas fa-filter text-[11px]"></i>
+            <span>Apply Filters</span>
+        </button>
+
+        <a href="{% url 'accounts:user_list' %}" class="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition-colors shrink-0">
+            <i class="fas fa-rotate-left text-[11px]"></i>
+            <span>Reset All Filters</span>
+        </a>
+    </form>
+</div>
+
+<!-- 5. Advanced Table Card -->
+<div class="advanced-table-card bg-white rounded-xl border border-gray-200 shadow-xs overflow-visible">
+    <!-- Table Header Toolbar -->
+    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50/70 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+            <span class="text-xs font-bold text-gray-800 uppercase tracking-wider">User Accounts Directory</span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700" data-table-count>
+                Showing {{ users|length }} of {{ total_users|default:users|length }}
+            </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Columns Dropdown Menu -->
+            <div class="relative" data-columns-dropdown>
+                <button type="button" class="px-2.5 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-colors" data-columns-toggle>
+                    <i class="fas fa-columns text-gray-400 text-xs"></i>
+                    <span>Columns</span>
+                    <i class="fas fa-chevron-down text-[10px] text-gray-400"></i>
+                </button>
+                <div class="hidden absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1.5 z-30" data-columns-dropdown-menu>
+                    <!-- Populated dynamically by advanced-table.js -->
+                </div>
+            </div>
+
+            <!-- Export to Excel (Client-side) -->
+            <button type="button" data-export-excel class="px-2.5 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-emerald-700 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors">
+                <i class="fas fa-file-excel text-emerald-600 text-xs"></i>
+                <span>Excel</span>
+            </button>
+
+            <!-- Export to PDF -->
+            <button type="button" data-export-pdf class="px-2.5 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-rose-700 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors">
+                <i class="fas fa-file-pdf text-rose-600 text-xs"></i>
+                <span>PDF</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse" id="userListTable" data-advanced-table>
+            <thead>
+                <tr class="bg-slate-900 text-slate-100 font-bold uppercase text-[11px] tracking-wider select-none">
+                    <th class="py-2.5 px-3 w-12 text-center" data-column-id="sr">#</th>
+                    <th class="py-2.5 px-3" data-column-id="username" data-sortable="true">Username</th>
+                    <th class="py-2.5 px-3" data-column-id="full_name" data-sortable="true">Full Name</th>
+                    <th class="py-2.5 px-3" data-column-id="role" data-sortable="true">Role</th>
+                    <th class="py-2.5 px-3" data-column-id="contact" data-sortable="true">Email & Mobile</th>
+                    <th class="py-2.5 px-3 text-center" data-column-id="status" data-sortable="true">Status</th>
+                    <th class="py-2.5 px-3 text-right" data-column-id="actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 bg-white">
+                {% for u in users %}
+                <tr class="hover:bg-blue-50/40 transition-colors">
+                    <td class="py-2.5 px-3 text-center text-gray-400 font-mono text-[11px] row-sr">{{ forloop.counter }}</td>
+                    <td class="py-2.5 px-3 font-bold text-gray-900">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center border border-gray-200">
+                                {{ u.username|first|upper }}
+                            </span>
+                            <div>
+                                <span class="font-bold text-gray-900">{{ u.username }}</span>
+                                {% if u.is_superuser %}
+                                <span class="ml-1 px-1.5 py-0.2 bg-red-100 text-red-700 rounded text-[9px] font-extrabold uppercase">Super</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-2.5 px-3 font-semibold text-gray-800">
+                        {{ u.get_full_name|default:"--" }}
+                    </td>
+                    <td class="py-2.5 px-3">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold
+                            {% if u.profile.role == 'ADMIN' or u.is_superuser %}bg-blue-100 text-blue-800
+                            {% elif u.profile.role == 'MANAGER' %}bg-purple-100 text-purple-800
+                            {% else %}bg-emerald-100 text-emerald-800{% endif %}">
+                            {{ u.profile.get_role_display|default:"Staff" }}
+                        </span>
+                    </td>
+                    <td class="py-2.5 px-3">
+                        <div class="text-gray-900 font-medium">{{ u.email|default:"--" }}</div>
+                        <div class="text-[11px] text-gray-500 font-mono">{{ u.profile.mobile_number|default:"--" }}</div>
+                    </td>
+                    <td class="py-2.5 px-3 text-center">
+                        {% if u.is_active %}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Inactive
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="py-2.5 px-3 text-right">
+                        <a href="{% url 'accounts:user_edit' u.pk %}" class="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded text-xs font-bold transition-colors inline-flex items-center gap-1">
+                            <i class="fas fa-edit text-[10px]"></i> Edit
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="py-12 px-4 text-center text-gray-400">
+                        <div class="max-w-xs mx-auto">
+                            <i class="fas fa-users-slash text-3xl text-gray-300 mb-2"></i>
+                            <p class="font-bold text-gray-600">No users found</p>
+                            <p class="text-xs text-gray-400 mt-1">Try adjusting your search criteria or register a new user.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Table Footer / Pagination -->
+    {% if is_paginated %}
+    <div class="px-4 py-3 border-t border-gray-200 bg-gray-50/70 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <span class="text-gray-500">
+            Page <strong class="text-gray-800">{{ page_obj.number }}</strong> of <strong class="text-gray-800">{{ page_obj.paginator.num_pages }}</strong>
+        </span>
+        <div class="flex items-center gap-1">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_role %}&role={{ current_role }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}"
+               class="px-2.5 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 font-bold text-gray-700">Prev</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_role %}&role={{ current_role }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}"
+               class="px-2.5 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 font-bold text-gray-700">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

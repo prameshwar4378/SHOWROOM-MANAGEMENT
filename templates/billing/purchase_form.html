@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+
+{% block title %}Record Inward Stock (Purchase Invoice) - Showroom ERP{% endblock %}
+{% block page_title %}Record Inward Stock Bill{% endblock %}
+{% block page_subtitle %}Add inventory stock by recording a manufacturer or supplier purchase invoice{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'billing:purchase_list' %}" class="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-semibold shadow-xs transition-colors">
+    <i class="fas fa-arrow-left"></i> Back to Inward Bills
+</a>
+{% endblock %}
+
+{% block content %}
+<form method="post" id="purchase-form" class="space-y-6">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 space-y-1">
+        {% for err in form.non_field_errors %}
+        <p class="flex items-center gap-1.5"><i class="fas fa-exclamation-circle text-red-500"></i> {{ err }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if formset.non_form_errors %}
+    <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 space-y-1">
+        {% for err in formset.non_form_errors %}
+        <p class="flex items-center gap-1.5"><i class="fas fa-exclamation-circle text-red-500"></i> {{ err }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 1. Supplier & Invoice Header Details -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 md:p-7 shadow-sm hover:shadow-md/5 transition-all">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100/80 flex items-center justify-center text-sm font-bold shadow-2xs">
+                    <i class="fas fa-truck-ramp-box"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                        1. Supplier & Inward Invoice Details
+                    </h3>
+                    <p class="text-xs text-slate-400">Record manufacturer procurement particulars and transport notes</p>
+                </div>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                <i class="fas fa-file-invoice text-[10px]"></i> Step 1 of 2
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Supplier Invoice / Bill No. <span class="text-red-500">*</span>
+                </label>
+                {{ form.invoice_number }}
+                {% if form.invoice_number.errors %}
+                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.invoice_number.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Supplier / Manufacturer Name <span class="text-red-500">*</span>
+                </label>
+                {{ form.supplier_name }}
+                {% if form.supplier_name.errors %}
+                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.supplier_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Supplier GSTIN
+                </label>
+                {{ form.supplier_gstin }}
+                {% if form.supplier_gstin.errors %}
+                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.supplier_gstin.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Invoice Date <span class="text-red-500">*</span>
+                </label>
+                {{ form.invoice_date }}
+                {% if form.invoice_date.errors %}
+                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.invoice_date.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Physical Stock Received Date <span class="text-red-500">*</span>
+                </label>
+                {{ form.received_date }}
+                {% if form.received_date.errors %}
+                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.received_date.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Purchase Type <span class="text-red-500">*</span>
+                </label>
+                {{ form.purchase_type }}
+                {% if form.purchase_type.errors %}
+                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.purchase_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="md:col-span-2 lg:col-span-3">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Notes / LR No / Transporter Details
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.notes.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Received Items (Formset) -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 md:p-7 shadow-sm hover:shadow-md/5 transition-all">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 border border-teal-100/80 flex items-center justify-center text-sm font-bold shadow-2xs">
+                    <i class="fas fa-boxes-stacked"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                        2. Received Stock Line Items
+                    </h3>
+                    <p class="text-xs text-slate-400">Quantities added here will automatically increment showroom inventory stock</p>
+                </div>
+            </div>
+            <button type="button" onclick="addPurchaseRow()" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all focus:ring-4 focus:ring-emerald-100 cursor-pointer">
+                <i class="fas fa-plus text-xs"></i>
+                <span>Add Line Item</span>
+            </button>
+        </div>
+
+        {{ formset.management_form }}
+
+        <div class="rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse" id="purchase-items-table">
+                    <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+                        <tr>
+                            <th class="px-3.5 py-3 w-72">Product / Spare Part <span class="text-red-500">*</span></th>
+                            <th class="px-3 py-3 w-24 text-center">Qty <span class="text-red-500">*</span></th>
+                            <th class="px-3 py-3 w-36 text-right">Unit Cost (₹)</th>
+                            <th class="px-3 py-3 w-40">Chassis No. (Tractors)</th>
+                            <th class="px-3 py-3 w-36">Engine No.</th>
+                            <th class="px-3 py-3 w-28">Color</th>
+                            <th class="px-3.5 py-3 w-32 text-right">Total (₹)</th>
+                            <th class="px-2 py-3 w-12 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700 bg-white" id="purchase-items-body">
+                        {% for item_form in formset %}
+                        <tr class="item-row hover:bg-slate-50/70 transition-colors">
+                            {{ item_form.id }}
+                            <td class="px-3.5 py-2.5 align-middle">
+                                {{ item_form.product }}
+                                {% if item_form.product.errors %}
+                                <p class="text-[10px] text-red-500 mt-1 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[9px]"></i> {{ item_form.product.errors.0 }}</p>
+                                {% endif %}
+                            </td>
+                            <td class="px-3 py-2.5 text-center align-middle">
+                                {{ item_form.quantity }}
+                                {% if item_form.quantity.errors %}
+                                <p class="text-[10px] text-red-500 mt-1">{{ item_form.quantity.errors.0 }}</p>
+                                {% endif %}
+                            </td>
+                            <td class="px-3 py-2.5 text-right align-middle">
+                                {{ item_form.unit_cost }}
+                                {% if item_form.unit_cost.errors %}
+                                <p class="text-[10px] text-red-500 mt-1">{{ item_form.unit_cost.errors.0 }}</p>
+                                {% endif %}
+                            </td>
+                            <td class="px-3 py-2.5 align-middle">
+                                {{ item_form.chassis_number }}
+                                {% if item_form.chassis_number.errors %}
+                                <p class="text-[10px] text-red-500 mt-1">{{ item_form.chassis_number.errors.0 }}</p>
+                                {% endif %}
+                            </td>
+                            <td class="px-3 py-2.5 align-middle">
+                                {{ item_form.engine_number }}
+                                {% if item_form.engine_number.errors %}
+                                <p class="text-[10px] text-red-500 mt-1">{{ item_form.engine_number.errors.0 }}</p>
+                                {% endif %}
+                            </td>
+                            <td class="px-3 py-2.5 align-middle">
+                                {{ item_form.color }}
+                            </td>
+                            <td class="px-3.5 py-2.5 text-right align-middle font-bold text-slate-800 font-mono">
+                                <span class="row-total px-3 py-1.5 bg-emerald-50/70 border border-emerald-200/60 rounded-lg text-xs font-bold text-emerald-800 font-mono shadow-2xs inline-block text-right min-w-[85px]">₹0.00</span>
+                            </td>
+                            <td class="px-2 py-2.5 text-center align-middle">
+                                {% if item_form.instance.pk %}
+                                <label class="text-[10px] text-red-500 hover:text-red-700 font-bold cursor-pointer inline-flex items-center gap-1">
+                                    {{ item_form.DELETE }} Del
+                                </label>
+                                {% else %}
+                                <button type="button" onclick="removePurchaseRow(this)" class="w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 inline-flex items-center justify-center transition-all cursor-pointer" title="Remove line">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty Form Template for Dynamic Adding -->
+        <template id="empty-form-row">
+            <tr class="item-row hover:bg-slate-50/70 transition-colors">
+                <td class="px-3.5 py-2.5 align-middle">
+                    <select name="items-__prefix__-product" id="id_items-__prefix__-product" class="w-full min-w-[200px] px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 bg-white shadow-2xs hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none transition cursor-pointer" required onchange="onProductSelect(this)">
+                        <option value="">Select Catalog Item...</option>
+                        {% for prod in formset.empty_form.fields.product.queryset %}
+                        <option value="{{ prod.id }}">{{ prod.name }} ({{ prod.get_category_display }})</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td class="px-3 py-2.5 text-center align-middle">
+                    <input type="number" name="items-__prefix__-quantity" id="id_items-__prefix__-quantity"
+                           value="1" min="1" class="w-20 px-2.5 py-2 border border-slate-300 rounded-lg text-center text-xs font-semibold text-slate-800 bg-white shadow-2xs hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none transition" oninput="calcTotals()">
+                </td>
+                <td class="px-3 py-2.5 text-right align-middle">
+                    <input type="number" name="items-__prefix__-unit_cost" id="id_items-__prefix__-unit_cost"
+                           step="0.01" value="0.00" class="w-32 px-3 py-2 border border-slate-300 rounded-lg text-right text-xs font-semibold font-mono text-slate-800 bg-white shadow-2xs hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none transition" oninput="calcTotals()">
+                </td>
+                <td class="px-3 py-2.5 align-middle">
+                    <input type="text" name="items-__prefix__-chassis_number" id="id_items-__prefix__-chassis_number"
+                           placeholder="Chassis (if Tractor)" class="w-36 px-2.5 py-2 border border-slate-300 rounded-lg text-xs font-mono text-slate-800 bg-white shadow-2xs hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none transition">
+                </td>
+                <td class="px-3 py-2.5 align-middle">
+                    <input type="text" name="items-__prefix__-engine_number" id="id_items-__prefix__-engine_number"
+                           placeholder="Engine No." class="w-32 px-2.5 py-2 border border-slate-300 rounded-lg text-xs font-mono text-slate-800 bg-white shadow-2xs hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none transition">
+                </td>
+                <td class="px-3 py-2.5 align-middle">
+                    <input type="text" name="items-__prefix__-color" id="id_items-__prefix__-color"
+                           placeholder="Color" value="Red" class="w-24 px-2.5 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white shadow-2xs hover:border-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:outline-none transition">
+                </td>
+                <td class="px-3.5 py-2.5 text-right align-middle font-bold text-slate-800 font-mono">
+                    <span class="row-total px-3 py-1.5 bg-emerald-50/70 border border-emerald-200/60 rounded-lg text-xs font-bold text-emerald-800 font-mono shadow-2xs inline-block text-right min-w-[85px]">₹0.00</span>
+                </td>
+                <td class="px-2 py-2.5 text-center align-middle">
+                    <button type="button" onclick="removePurchaseRow(this)" class="w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 inline-flex items-center justify-center transition-all cursor-pointer" title="Remove line">
+                        <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
+                </td>
+            </tr>
+        </template>
+
+        <!-- Summary & Grand Total Bar -->
+        <div class="mt-5 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+            <button type="button" onclick="addPurchaseRow()" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-2 cursor-pointer transition">
+                <i class="fas fa-circle-plus text-sm"></i> Add another line item
+            </button>
+
+            <div class="flex items-center gap-3.5 bg-gradient-to-r from-emerald-50 to-teal-50/60 border border-emerald-200/80 rounded-2xl px-6 py-3.5 shadow-2xs">
+                <div class="flex items-center gap-2 text-slate-600">
+                    <i class="fas fa-calculator text-emerald-600 text-sm"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider">Estimated Procurement Value:</span>
+                </div>
+                <span class="text-xl font-black text-emerald-700 font-mono tracking-tight" id="grand-procurement-total">₹0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-end gap-3.5 pt-2">
+        <a href="{% url 'billing:purchase_list' %}" class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold shadow-2xs transition-all">
+            Cancel
+        </a>
+        <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-2 focus:ring-4 focus:ring-emerald-100 cursor-pointer">
+            <i class="fas fa-check-circle"></i>
+            <span>Save Inward Bill & Update Inventory</span>
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const productsData = {{ products_json|safe|default:"[]" }};
+    const productMap = {};
+    productsData.forEach(p => { productMap[p.id] = p; });
+
+    function onProductSelect(selectEl) {
+        const prodId = selectEl.value;
+        const row = selectEl.closest('tr');
+        if (!row) return;
+
+        if (prodId && productMap[prodId]) {
+            const prod = productMap[prodId];
+            const costInput = row.querySelector('input[name$="-unit_cost"]');
+            if (costInput && (!costInput.value || parseFloat(costInput.value) === 0)) {
+                costInput.value = (prod.cost || 0).toFixed(2);
+            }
+        }
+        calcTotals();
+    }
+
+    function calcTotals() {
+        const rows = document.querySelectorAll('#purchase-items-body tr.item-row');
+        let grandTotal = 0;
+
+        rows.forEach(row => {
+            const delBox = row.querySelector('input[name$="-DELETE"]');
+            if (delBox && delBox.checked) {
+                return;
+            }
+            const qtyInput = row.querySelector('input[name$="-quantity"]');
+            const costInput = row.querySelector('input[name$="-unit_cost"]');
+            const totalDisplay = row.querySelector('.row-total');
+
+            const qty = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
+            const cost = parseFloat(costInput ? costInput.value : 0) || 0;
+            const lineTotal = qty * cost;
+            grandTotal += lineTotal;
+
+            if (totalDisplay) {
+                totalDisplay.innerText = '₹' + lineTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+        });
+
+        const grandDisplay = document.getElementById('grand-procurement-total');
+        if (grandDisplay) {
+            grandDisplay.innerText = '₹' + grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+    }
+
+    function addPurchaseRow() {
+        const totalFormsInput = document.getElementById('id_items-TOTAL_FORMS');
+        const formIdx = parseInt(totalFormsInput.value);
+        const template = document.getElementById('empty-form-row');
+        const newRowHtml = template.innerHTML.replace(/__prefix__/g, formIdx);
+
+        const tbody = document.getElementById('purchase-items-body');
+        const tempDiv = document.createElement('tbody');
+        tempDiv.innerHTML = newRowHtml;
+        const newRow = tempDiv.firstElementChild;
+
+        tbody.appendChild(newRow);
+        totalFormsInput.value = formIdx + 1;
+        if (window.SearchableSelect) {
+            window.SearchableSelect.initAll(newRow);
+        } else if (window.initSearchableSelects) {
+            window.initSearchableSelects(newRow);
+        }
+        calcTotals();
+    }
+
+    function removePurchaseRow(btn) {
+        const tbody = document.getElementById('purchase-items-body');
+        const rows = tbody.querySelectorAll('tr.item-row');
+        if (rows.length > 1) {
+            btn.closest('tr.item-row').remove();
+
+            // Re-index remaining rows and update ManagementForm TOTAL_FORMS
+            const remainingRows = tbody.querySelectorAll('tr.item-row');
+            const totalForms = document.getElementById('id_items-TOTAL_FORMS');
+            if (totalForms) {
+                totalForms.value = remainingRows.length;
+            }
+
+            remainingRows.forEach((row, idx) => {
+                row.querySelectorAll('input, select, textarea').forEach(input => {
+                    if (input.name) input.name = input.name.replace(/items-\d+-/, `items-${idx}-`);
+                    if (input.id) input.id = input.id.replace(/id_items-\d+-/, `id_items-${idx}-`);
+                });
+            });
+
+            calcTotals();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Attach change listeners to existing rows
+        document.querySelectorAll('#purchase-items-body select[name$="-product"]').forEach(sel => {
+            sel.addEventListener('change', () => onProductSelect(sel));
+        });
+        document.querySelectorAll('#purchase-items-body input[name$="-quantity"], #purchase-items-body input[name$="-unit_cost"]').forEach(inp => {
+            inp.addEventListener('input', calcTotals);
+        });
+        calcTotals();
+    });
+</script>
+{% endblock %}

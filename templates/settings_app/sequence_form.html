@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+{% block page_subtitle %}{{ page_subtitle }}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white rounded-2xl border border-slate-200/90 p-6 md:p-8 shadow-sm hover:shadow-md/5 transition-all">
+    <!-- Form Header -->
+    <div class="flex items-center gap-3 pb-4 mb-6 border-b border-slate-100">
+        <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-100/80 flex items-center justify-center text-sm shadow-2xs">
+            <i class="fas fa-list-ol"></i>
+        </div>
+        <div>
+            <div class="flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-slate-800 tracking-tight">{{ page_title }}</h3>
+                {% include 'includes/settings_help_popover.html' with topic='sequence_management' %}
+            </div>
+            <p class="text-xs text-slate-400">Configure auto-incrementing serial counters and document prefixes</p>
+        </div>
+    </div>
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Prefix</label>
+            {{ form.prefix }}
+            <p class="text-[11px] text-slate-400 mt-1">e.g. QT-, TI-, MM-, DC-</p>
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Last Used Number Counter</label>
+            {{ form.last_number }}
+            <p class="text-[11px] text-slate-400 mt-1">The next bill generated will be this number + 1 (e.g. if set to 744, next bill is 745)</p>
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Financial Year</label>
+            {{ form.financial_year }}
+            <p class="text-[11px] text-slate-400 mt-1">e.g. 2026-27</p>
+        </div>
+
+        <div class="pt-5 border-t border-slate-100 flex items-center justify-end gap-3.5">
+            <a href="{% url 'settings_app:sequence_list' %}" class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold shadow-2xs transition-all">Cancel</a>
+            <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all focus:ring-4 focus:ring-blue-100 cursor-pointer">
+                <i class="fas fa-save text-xs"></i>
+                <span>Save Sequence</span>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

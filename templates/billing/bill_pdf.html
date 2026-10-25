@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ bill.get_bill_type_display }} - {{ bill.bill_number }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 5mm 6mm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 8pt;
+            color: #111;
+            margin: 0;
+            padding: 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .w-full { width: 100%; }
+        .font-bold { font-weight: bold; }
+        .font-mono { font-family: Courier, monospace; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+        .uppercase { text-transform: uppercase; }
+        .text-xs { font-size: 7.5pt; }
+        .text-sm { font-size: 8.5pt; }
+        .tracking-wider { letter-spacing: 0.5px; }
+        .tracking-widest { letter-spacing: 1px; }
+        .border-2 { border-width: 1.5pt; border-style: solid; }
+        .border-black { border-color: #000; }
+        .bg-white { background-color: #ffffff; }
+        .no-print { display: none; }
+        #margin-office-copy { margin-bottom: 2mm; }
+        #margin-cut-line { margin: 2.5mm 0; }
+    </style>
+</head>
+<body>
+    {% if bill.bill_type == 'TAX_INVOICE' %}
+        {% include 'billing/formats/tax_invoice.html' %}
+    {% elif bill.bill_type == 'MARGIN_MONEY' %}
+        {% include 'billing/formats/margin_money.html' %}
+    {% elif bill.bill_type == 'DELIVERY_CHALLAN' %}
+        {% include 'billing/formats/delivery_challan.html' %}
+    {% elif bill.bill_type == 'QUOTATION' %}
+        {% include 'billing/formats/quotation.html' %}
+    {% endif %}
+</body>
+</html>

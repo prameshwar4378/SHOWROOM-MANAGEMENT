@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Deactivate Customer | {{ customer.full_name }}{% endblock %}
+{% block page_title %}Deactivate Customer{% endblock %}
+{% block page_subtitle %}Confirm deactivation of customer profile{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+    <div class="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-4 text-xl">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <h3 class="text-lg font-bold text-gray-800">Deactivate Customer Profile?</h3>
+    <p class="text-sm text-gray-500 mt-2">
+        Are you sure you want to deactivate <strong class="text-gray-800">{{ customer.full_name }}</strong> ({{ customer.village }}, {{ customer.mobile_primary }})?
+    </p>
+    <div class="mt-4 bg-gray-50 p-4 rounded-lg border border-gray-200 text-xs text-gray-600 space-y-1">
+        <p><strong>Note:</strong> All historical bills (₹{{ customer.total_billed }}) and payment receipts (₹{{ customer.total_paid }}) will be safely preserved in the database for auditing and record-keeping.</p>
+    </div>
+
+    <form method="post" class="mt-6 flex items-center gap-3">
+        {% csrf_token %}
+        <button type="submit" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors">
+            Yes, Deactivate Customer
+        </button>
+        <a href="{% url 'customers:customer_detail' customer.pk %}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors">
+            Cancel
+        </a>
+    </form>
+</div>
+{% endblock %}

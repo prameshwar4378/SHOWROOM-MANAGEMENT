@@ -1,0 +1,308 @@
+{% load humanize %}
+<!-- ========================================================================= -->
+<!-- MARGIN MONEY - NEXT-LEVEL EXECUTIVE DUAL VOUCHER LAYOUT                  -->
+<!-- Modern Agency Corporate Aesthetic (Deep Navy & Vibrant Coral)            -->
+<!-- Two Balanced Vouchers on One A4 Page (Office Copy & Customer Copy)        -->
+<!-- ========================================================================= -->
+<div class="margin-money-container" style="width: 100%; max-width: 100%; box-sizing: border-box; background-color: #ffffff; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 2px 4px; margin: 0 auto;">
+
+    <!-- ===================================================================== -->
+    <!-- 1. OFFICE COPY (TOP VOUCHER)                                          -->
+    <!-- ===================================================================== -->
+    <div id="margin-office-copy" style="margin-bottom: 6px;">
+        <!-- Header Card: Deep Navy with Dealership Info & Margin Money Title -->
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #0f172a; border-radius: 8px; overflow: hidden; margin-bottom: 5px;">
+            <tr>
+                <!-- Left: Logo & Company Info -->
+                <td style="width: 60%; padding: 7px 10px; vertical-align: middle;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            {% if company.brand_logo or company.company_logo %}
+                            <td style="width: 36px; vertical-align: middle; padding-right: 8px;">
+                                <div style="background-color: #ffffff; padding: 2px 4px; border-radius: 4px; display: inline-block;">
+                                    {% if company.brand_logo %}
+                                    <img src="{{ company.brand_logo.url }}" alt="Logo" height="24" style="height: 24px; max-height: 24px; max-width: 32px; object-fit: contain; display: block;">
+                                    {% else %}
+                                    <img src="{{ company.company_logo.url }}" alt="Logo" height="24" style="height: 24px; max-height: 24px; max-width: 32px; object-fit: contain; display: block;">
+                                    {% endif %}
+                                </div>
+                            </td>
+                            {% endif %}
+                            <td style="vertical-align: middle;">
+                                <div style="font-size: 11pt; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.1;">
+                                    {{ company.company_name|default:"SAIGANGA ENTERPRISES" }}
+                                </div>
+                                <div style="font-size: 6.5pt; font-weight: 700; color: #fb923c; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    {{ company.tagline|default:"Authorized Dealership" }}{% if company.city %} &bull; {{ company.city }}{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="font-size: 6pt; color: #cbd5e1; margin-top: 2px;">
+                        {{ company.full_address|default:"Subhadra Complex, Ladgaon Road, Vaijapur, Dist. Aurangabad" }}
+                        {% if company.mobile_numbers %} &bull; <strong>Mo:</strong> {{ company.mobile_numbers }}{% endif %}
+                    </div>
+                </td>
+
+                <!-- Right: Document Title & Office Badge -->
+                <td style="width: 40%; padding: 7px 10px; text-align: right; vertical-align: middle;">
+                    <div style="font-size: 14pt; font-weight: 900; color: #ea580c; letter-spacing: 1px; text-transform: uppercase; line-height: 1;">
+                        MARGIN MONEY
+                    </div>
+                    <div style="margin-top: 2px;">
+                        <span style="display: inline-block; padding: 1.5px 8px; background-color: #1e293b; border: 1px solid #334155; border-radius: 10px; font-size: 6.5pt; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">
+                            [ OFFICE RECORD COPY ]
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Receipt Meta & Amount Highlight Bar -->
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 5px;">
+            <tr>
+                <td style="width: 30%; padding: 4px 10px; font-size: 7.5pt; vertical-align: middle;">
+                    <span style="color: #64748b; font-weight: 700; text-transform: uppercase;">Receipt # :</span>
+                    <strong style="font-family: Courier, monospace; color: #0f172a; font-size: 8.5pt; margin-left: 3px;">{{ bill.bill_number }}</strong>
+                </td>
+                <td style="width: 30%; padding: 4px 10px; font-size: 7.5pt; vertical-align: middle;">
+                    <span style="color: #64748b; font-weight: 700; text-transform: uppercase;">Date :</span>
+                    <strong style="color: #0f172a; margin-left: 3px;">{{ bill.bill_date|date:"d/m/Y" }}</strong>
+                </td>
+                <td style="width: 40%; padding: 3px 8px; text-align: right; vertical-align: middle;">
+                    <span style="font-size: 7.5pt; font-weight: 800; color: #475569; text-transform: uppercase; margin-right: 4px;">Receipt Amount :</span>
+                    <span style="display: inline-block; background-color: #ea580c; color: #ffffff; font-weight: 900; font-family: Courier, monospace; font-size: 9.5pt; padding: 2px 8px; border-radius: 6px;">
+                        Rs. {{ bill.grand_total|floatformat:2 }}
+                    </span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- 2-Column Details: Customer (Left) & Payment Specifics (Right) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px;">
+            <tr>
+                <!-- Left: Customer Particulars -->
+                <td style="width: 52%; vertical-align: top; padding-right: 6px;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 2.5px solid #ea580c; border-radius: 8px; overflow: hidden;">
+                        <tr>
+                            <td style="padding: 5px 8px; font-size: 7pt; line-height: 1.35;">
+                                <div style="font-size: 6.5pt; font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.5px;">Customer Name :</div>
+                                <div style="font-size: 9pt; font-weight: 900; color: #0f172a; margin-bottom: 2px;">{{ bill.customer.full_name }}</div>
+                                <div><span style="color: #64748b; font-weight: 600;">Village:</span> <strong>{{ bill.customer.village|default:"--" }}</strong> &bull; <span style="color: #64748b; font-weight: 600;">Taluka:</span> <strong>{{ bill.customer.taluka|default:"--" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: 600;">Dist:</span> <strong>{{ bill.customer.district|default:"--" }}</strong> &bull; <span style="color: #64748b; font-weight: 600;">State:</span> <strong>{{ bill.customer.state|default:"Maharashtra" }}</strong></div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+
+                <!-- Right: Payment & Hypothecation Details -->
+                <td style="width: 48%; vertical-align: top; padding-left: 2px;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 2.5px solid #0f172a; border-radius: 8px; overflow: hidden;">
+                        <tr>
+                            <td style="padding: 5px 8px; font-size: 7pt; line-height: 1.35;">
+                                <div><span style="color: #64748b; font-weight: 600;">Reason of Rs :</span> <strong style="color: #0f172a;">{{ bill.margin_detail.reason_for_payment|default:"Part payment" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: 600;">Payment Mode :</span> <strong style="color: #059669;">{{ bill.margin_detail.get_payment_mode_display|default:"Part Pay(Cash)" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: 600;">Receiver Name :</span> <strong style="color: #0f172a;">{{ bill.margin_detail.receiver_name|default:company.company_name|default:"Saiganga Enterprises" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: 600;">HYP / Financer :</span> <strong style="color: #1e293b;">{{ bill.margin_detail.hypothecation|default:"L&T Finance LTD." }}</strong></div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Amount in Words Card -->
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-bottom: 5px;">
+            <tr>
+                <td style="padding: 4px 8px; font-size: 7pt;">
+                    <span style="font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.5px;">Amount in Words :</span>
+                    <span style="font-weight: 800; color: #0f172a; margin-left: 3px; text-transform: capitalize;">{{ bill.amount_in_words|default:"Rupees Zero Only" }}</span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Signatures Row -->
+        <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+            <tr>
+                <td style="width: 50%; padding-right: 6px;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px dashed #cbd5e1; border-radius: 6px; background-color: #fafbfc; overflow: hidden;">
+                        <tr>
+                            <td style="padding: 4px 6px; text-align: center;">
+                                <div style="height: 18px;"></div>
+                                <div style="border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 2px;">
+                                    <span style="font-size: 6.5pt; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Customer Signature</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 50%; padding-left: 2px;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px dashed #cbd5e1; border-radius: 6px; background-color: #fafbfc; overflow: hidden;">
+                        <tr>
+                            <td style="padding: 4px 6px; text-align: center;">
+                                <div style="height: 18px;"></div>
+                                <div style="border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 2px;">
+                                    <span style="font-size: 6.5pt; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Receiver / Authorised Sign</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Perforation Cut Line Between Two Halves -->
+    <div id="margin-cut-line" style="margin: 8px 0; text-align: center; border-top: 1.5px dashed #94a3b8; position: relative;">
+        <span style="background-color: #ffffff; padding: 0 10px; font-size: 6.5pt; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; position: relative; top: -6px;">
+            &#9986; CUT HERE / PERFORATION LINE &#9986;
+        </span>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 2. CUSTOMER COPY (BOTTOM VOUCHER - IDENTICAL TO TOP)                   -->
+    <!-- ===================================================================== -->
+    <div id="margin-customer-copy">
+        <!-- Header Card: Deep Navy with Dealership Info & Margin Money Title -->
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #0f172a; border-radius: 8px; overflow: hidden; margin-bottom: 5px;">
+            <tr>
+                <!-- Left: Logo & Company Info -->
+                <td style="width: 60%; padding: 7px 10px; vertical-align: middle;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            {% if company.brand_logo or company.company_logo %}
+                            <td style="width: 36px; vertical-align: middle; padding-right: 8px;">
+                                <div style="background-color: #ffffff; padding: 2px 4px; border-radius: 4px; display: inline-block;">
+                                    {% if company.brand_logo %}
+                                    <img src="{{ company.brand_logo.url }}" alt="Logo" height="24" style="height: 24px; max-height: 24px; max-width: 32px; object-fit: contain; display: block;">
+                                    {% else %}
+                                    <img src="{{ company.company_logo.url }}" alt="Logo" height="24" style="height: 24px; max-height: 24px; max-width: 32px; object-fit: contain; display: block;">
+                                    {% endif %}
+                                </div>
+                            </td>
+                            {% endif %}
+                            <td style="vertical-align: middle;">
+                                <div style="font-size: 11pt; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.1;">
+                                    {{ company.company_name|default:"SAIGANGA ENTERPRISES" }}
+                                </div>
+                                <div style="font-size: 6.5pt; font-weight: 700; color: #fb923c; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    {{ company.tagline|default:"Authorized Dealership" }}{% if company.city %} &bull; {{ company.city }}{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="font-size: 6pt; color: #cbd5e1; margin-top: 2px;">
+                        {{ company.full_address|default:"Subhadra Complex, Ladgaon Road, Vaijapur, Dist. Aurangabad" }}
+                        {% if company.mobile_numbers %} &bull; <strong>Mo:</strong> {{ company.mobile_numbers }}{% endif %}
+                    </div>
+                </td>
+
+                <!-- Right: Document Title & Customer Badge -->
+                <td style="width: 40%; padding: 7px 10px; text-align: right; vertical-align: middle;">
+                    <div style="font-size: 14pt; font-weight: 900; color: #ea580c; letter-spacing: 1px; text-transform: uppercase; line-height: 1;">
+                        MARGIN MONEY
+                    </div>
+                    <div style="margin-top: 2px;">
+                        <span style="display: inline-block; padding: 1.5px 8px; background-color: #1e293b; border: 1px solid #334155; border-radius: 10px; font-size: 6.5pt; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">
+                            [ CUSTOMER RECEIPT COPY ]
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Receipt Meta & Amount Highlight Bar -->
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 5px;">
+            <tr>
+                <td style="width: 30%; padding: 4px 10px; font-size: 7.5pt; vertical-align: middle;">
+                    <span style="color: #64748b; font-weight: 700; text-transform: uppercase;">Receipt # :</span>
+                    <strong style="font-family: Courier, monospace; color: #0f172a; font-size: 8.5pt; margin-left: 3px;">{{ bill.bill_number }}</strong>
+                </td>
+                <td style="width: 30%; padding: 4px 10px; font-size: 7.5pt; vertical-align: middle;">
+                    <span style="color: #64748b; font-weight: 700; text-transform: uppercase;">Date :</span>
+                    <strong style="color: #0f172a; margin-left: 3px;">{{ bill.bill_date|date:"d/m/Y" }}</strong>
+                </td>
+                <td style="width: 40%; padding: 3px 8px; text-align: right; vertical-align: middle;">
+                    <span style="font-size: 7.5pt; font-weight: 800; color: #475569; text-transform: uppercase; margin-right: 4px;">Receipt Amount :</span>
+                    <span style="display: inline-block; background-color: #ea580c; color: #ffffff; font-weight: 900; font-family: Courier, monospace; font-size: 9.5pt; padding: 2px 8px; border-radius: 6px;">
+                        Rs. {{ bill.grand_total|floatformat:2 }}
+                    </span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- 2-Column Details: Customer (Left) & Payment Specifics (Right) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px;">
+            <tr>
+                <!-- Left: Customer Particulars -->
+                <td style="width: 52%; vertical-align: top; padding-right: 6px;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 2.5px solid #ea580c; border-radius: 8px; overflow: hidden;">
+                        <tr>
+                            <td style="padding: 5px 8px; font-size: 7pt; line-height: 1.35;">
+                                <div style="font-size: 6.5pt; font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.5px;">Customer Name :</div>
+                                <div style="font-size: 9pt; font-weight: 900; color: #0f172a; margin-bottom: 2px;">{{ bill.customer.full_name }}</div>
+                                <div><span style="color: #64748b; font-weight: 600;">Village:</span> <strong>{{ bill.customer.village|default:"--" }}</strong> &bull; <span style="color: #64748b; font-weight: 600;">Taluka:</span> <strong>{{ bill.customer.taluka|default:"--" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: 600;">Dist:</span> <strong>{{ bill.customer.district|default:"--" }}</strong> &bull; <span style="color: #64748b; font-weight: 600;">State:</span> <strong>{{ bill.customer.state|default:"Maharashtra" }}</strong></div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+
+                <!-- Right: Payment & Hypothecation Details -->
+                <td style="width: 48%; vertical-align: top; padding-left: 2px;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 2.5px solid #0f172a; border-radius: 8px; overflow: hidden;">
+                        <tr>
+                            <td style="padding: 5px 8px; font-size: 7pt; line-height: 1.35;">
+                                <div><span style="color: #64748b; font-weight: 600;">Reason of Rs :</span> <strong style="color: #0f172a;">{{ bill.margin_detail.reason_for_payment|default:"Part payment" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: 600;">Payment Mode :</span> <strong style="color: #059669;">{{ bill.margin_detail.get_payment_mode_display|default:"Part Pay(Cash)" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: 600;">Receiver Name :</span> <strong style="color: #0f172a;">{{ bill.margin_detail.receiver_name|default:company.company_name|default:"Saiganga Enterprises" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: 600;">HYP / Financer :</span> <strong style="color: #1e293b;">{{ bill.margin_detail.hypothecation|default:"L&T Finance LTD." }}</strong></div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Amount in Words Card -->
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-bottom: 5px;">
+            <tr>
+                <td style="padding: 4px 8px; font-size: 7pt;">
+                    <span style="font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.5px;">Amount in Words :</span>
+                    <span style="font-weight: 800; color: #0f172a; margin-left: 3px; text-transform: capitalize;">{{ bill.amount_in_words|default:"Rupees Zero Only" }}</span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Signatures Row -->
+        <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+            <tr>
+                <td style="width: 50%; padding-right: 6px;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px dashed #cbd5e1; border-radius: 6px; background-color: #fafbfc; overflow: hidden;">
+                        <tr>
+                            <td style="padding: 4px 6px; text-align: center;">
+                                <div style="height: 18px;"></div>
+                                <div style="border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 2px;">
+                                    <span style="font-size: 6.5pt; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Customer Signature</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 50%; padding-left: 2px;">
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px dashed #cbd5e1; border-radius: 6px; background-color: #fafbfc; overflow: hidden;">
+                        <tr>
+                            <td style="padding: 4px 6px; text-align: center;">
+                                <div style="height: 18px;"></div>
+                                <div style="border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 2px;">
+                                    <span style="font-size: 6.5pt; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Receiver / Authorised Sign</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</div>

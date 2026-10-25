@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+{% block page_subtitle %}Manually record received money into the customer's showroom account{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto" x-data="paymentFormApp()">
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 md:p-8 shadow-sm hover:shadow-md/5 transition-all">
+        <!-- Form Header -->
+        <div class="flex items-center justify-between pb-5 mb-6 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100/80 flex items-center justify-center text-base font-bold shadow-2xs">
+                    <i class="fas fa-hand-holding-dollar"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 tracking-tight">Record Customer Payment</h3>
+                    <p class="text-xs text-slate-400">Post money receipt into customer's ledger balance</p>
+                </div>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-mono">
+                <i class="fas fa-receipt text-[10px]"></i> Receipt
+            </span>
+        </div>
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            <!-- Customer -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Select Customer <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <!-- Two action icons appear when a customer is selected: Eye (View) and Pencil (Edit) -->
+                        <div x-show="selectedCustomer" x-cloak class="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 shadow-2xs">
+                            <button type="button"
+                                    @click="openCustomerViewModal()"
+                                    class="p-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors flex items-center gap-1 text-[11px] font-medium focus:outline-none cursor-pointer"
+                                    title="View Customer Details">
+                                <i class="fas fa-eye text-xs"></i>
+                                <span class="text-[10px] font-semibold hidden sm:inline">View</span>
+                            </button>
+                            <span class="text-slate-300 text-xs select-none">|</span>
+                            <button type="button"
+                                    @click="openCustomerEditModal()"
+                                    class="p-1 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors flex items-center gap-1 text-[11px] font-medium focus:outline-none cursor-pointer"
+                                    title="Edit Customer Details (In-Place)">
+                                <i class="fas fa-pencil-alt text-xs"></i>
+                                <span class="text-[10px] font-semibold hidden sm:inline">Edit</span>
+                            </button>
+                        </div>
+                        <button type="button" @click="openCustomerModal()" class="text-xs text-blue-600 font-semibold hover:text-blue-800 hover:underline flex items-center gap-1 focus:outline-none cursor-pointer">
+                            <i class="fas fa-user-plus text-[10px]"></i> + New Customer
+                        </button>
+                    </div>
+                </div>
+                {{ form.customer }}
+                {% if form.customer.errors %}
+                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.customer.errors.0 }}</p>
+                {% endif %}
+                <!-- Instant Success Feedback Alert -->
+                <p x-show="customerSuccessMsg" x-transition x-cloak class="text-xs text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-xl p-3 mt-2 flex items-center gap-2 font-semibold shadow-xs">
+                    <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                    <span x-text="customerSuccessMsg"></span>
+                </p>
+            </div>
+
+            <!-- Amount (Prominent) -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Amount Received (₹) <span class="text-red-500">*</span>
+                </label>
+                <div class="relative rounded-xl shadow-2xs">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                        <span class="text-slate-400 font-bold text-lg font-mono">₹</span>
+                    </div>
+                    <input type="number" step="0.01" name="amount" id="id_amount" value="{{ form.amount.value|default:'' }}" required
+                           placeholder="0.00"
+                           class="block w-full rounded-xl border border-slate-300 pl-9 pr-4 py-3 text-xl font-bold font-mono text-slate-900 shadow-2xs hover:border-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100/60 focus:outline-none transition">
+                </div>
+                {% if form.amount.errors %}
+                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.amount.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Date -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Payment Date <span class="text-red-500">*</span></label>
+                    {{ form.payment_date }}
+                    {% if form.payment_date.errors %}
+                    <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.payment_date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Purpose -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Payment Purpose <span class="text-red-500">*</span></label>
+                    {{ form.purpose }}
+                    {% if form.purpose.errors %}
+                    <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.purpose.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment Mode -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Payment Mode <span class="text-red-500">*</span></label>
+                <select name="payment_mode" id="id_payment_mode" x-model="mode"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 shadow-2xs hover:border-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100/60 focus:outline-none transition cursor-pointer">
+                    <option value="CASH">Cash</option>
+                    <option value="UPI">UPI (GooglePay / PhonePe / Paytm)</option>
+                    <option value="BANK_TRANSFER">Bank Transfer (NEFT / RTGS / IMPS)</option>
+                    <option value="CHEQUE">Cheque</option>
+                    <option value="LOAN">Bank Loan Disbursement</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+
+            <!-- Conditional Cheque Fields -->
+            <div x-show="mode === 'CHEQUE'" x-cloak class="p-5 bg-blue-50/70 border border-blue-200/80 rounded-2xl space-y-3 shadow-2xs">
+                <div class="flex items-center gap-2 text-blue-900 font-bold text-xs uppercase tracking-wider">
+                    <i class="fas fa-money-check text-blue-600"></i> Cheque Details
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Cheque Number</label>
+                        {{ form.cheque_number }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Cheque Date</label>
+                        {{ form.cheque_date }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Bank Name</label>
+                        {{ form.bank_name }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conditional Digital / Bank Reference Fields -->
+            <div x-show="mode === 'UPI' || mode === 'BANK_TRANSFER' || mode === 'LOAN'" x-cloak class="p-5 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3 shadow-2xs">
+                <div class="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wider">
+                    <i class="fas fa-receipt text-emerald-600"></i> Transaction Details
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">UTR / Reference Number</label>
+                        {{ form.reference_number }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Bank / Finance Institution</label>
+                        {{ form.bank_name }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description / Notes -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Remarks / Internal Notes (Optional)</label>
+                {{ form.description }}
+            </div>
+
+            <!-- Submit -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3.5">
+                <a href="{% url 'payments:payment_list' %}" class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold shadow-2xs transition-all">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-2 focus:ring-4 focus:ring-emerald-100 cursor-pointer">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Save & Record Payment</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Register New Customer Dialog Modal -->
+    {% include 'includes/customer_quick_modal.html' %}
+    <!-- In-Place View and Edit Customer Modals -->
+    {% include 'includes/customer_view_edit_modals.html' %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function paymentFormApp() {
+    return {
+        mode: '{{ form.payment_mode.value|default:"CASH" }}',
+        selectedCustomer: '{{ form.customer.value|default:"" }}',
+        showCustomerModal: false,
+        showCustomerViewModal: false,
+        showCustomerEditModal: false,
+        isLoadingCustomer: false,
+        isSavingCustomerEdit: false,
+        customerViewError: '',
+        customerEditErrors: [],
+        customerDetail: {},
+        editCustomerData: {},
+        isSavingCustomer: false,
+        customerErrors: [],
+        customerSuccessMsg: '',
+        newCustomer: {
+            full_name: '',
+            father_name: '',
+            mobile_primary: '',
+            mobile_secondary: '',
+            email: '',
+            village: '',
+            taluka: '',
+            district: '',
+            state: 'Maharashtra',
+            pin_code: '',
+            aadhar_number: '',
+            pan_number: '',
+            bank_name: ''
+        },
+
+        init() {
+            const custSelect = document.getElementById('id_customer');
+            if (custSelect) {
+                if (custSelect.value) this.selectedCustomer = custSelect.value;
+                custSelect.addEventListener('change', (e) => {
+                    this.selectedCustomer = e.target.value;
+                });
+            }
+        },
+
+        async openCustomerViewModal(customerId = null) {
+            const id = customerId || this.selectedCustomer;
+            if (!id) return;
+            this.customerViewError = '';
+            this.isLoadingCustomer = true;
+            this.showCustomerViewModal = true;
+            try {
+                const resp = await fetch(`/customers/api/${id}/`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await resp.json();
+                if (resp.ok && data.success) {
+                    this.customerDetail = data.customer;
+                } else {
+                    this.customerViewError = data.error || 'Failed to fetch customer profile.';
+                }
+            } catch (err) {
+                this.customerViewError = 'Network error: ' + err.message;
+            } finally {
+                this.isLoadingCustomer = false;
+            }
+        },
+
+        closeCustomerViewModal() {
+            this.showCustomerViewModal = false;
+            this.customerViewError = '';
+        },
+
+        async openCustomerEditModal(customerId = null) {
+            const id = customerId || this.selectedCustomer;
+            if (!id) return;
+            this.closeCustomerViewModal();
+            this.customerEditErrors = [];
+            this.showCustomerEditModal = true;
+
+            if (this.customerDetail && String(this.customerDetail.id) === String(id)) {
+                this.editCustomerData = { ...this.customerDetail };
+            } else {
+                this.isLoadingCustomer = true;
+                try {
+                    const resp = await fetch(`/customers/api/${id}/`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const data = await resp.json();
+                    if (resp.ok && data.success) {
+                        this.customerDetail = data.customer;
+                        this.editCustomerData = { ...data.customer };
+                    } else {
+                        this.customerEditErrors = [data.error || 'Failed to fetch customer for editing.'];
+                    }
+                } catch (err) {
+                    this.customerEditErrors = ['Network error: ' + err.message];
+                } finally {
+                    this.isLoadingCustomer = false;
+                }
+            }
+        },
+
+        closeCustomerEditModal() {
+            this.showCustomerEditModal = false;
+            this.customerEditErrors = [];
+        },
+
+        async saveCustomerEdit() {
+            this.customerEditErrors = [];
+            if (!this.editCustomerData.full_name || !this.editCustomerData.full_name.trim()) {
+                this.customerEditErrors.push("Please enter customer's Full Name.");
+            }
+            if (!this.editCustomerData.mobile_primary || !this.editCustomerData.mobile_primary.trim()) {
+                this.customerEditErrors.push("Please enter Primary Mobile Number.");
+            }
+            if (!this.editCustomerData.village || !this.editCustomerData.village.trim()) {
+                this.customerEditErrors.push("Please enter Village / Town.");
+            }
+            if (!this.editCustomerData.taluka || !this.editCustomerData.taluka.trim()) {
+                this.customerEditErrors.push("Please enter Taluka / Tehsil.");
+            }
+            if (!this.editCustomerData.district || !this.editCustomerData.district.trim()) {
+                this.customerEditErrors.push("Please enter District.");
+            }
+            if (this.customerEditErrors.length > 0) return;
+
+            this.isSavingCustomerEdit = true;
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+                const resp = await fetch(`/customers/api/${this.editCustomerData.id}/update/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify(this.editCustomerData)
+                });
+
+                const data = await resp.json();
+                if (resp.ok && data.success) {
+                    const updated = data.customer;
+                    this.customerDetail = updated;
+
+                    // Update dropdown option label in-place
+                    const custSelect = document.getElementById('id_customer');
+                    if (custSelect) {
+                        let opt = custSelect.querySelector(`option[value="${updated.id}"]`);
+                        if (opt) {
+                            opt.textContent = updated.display_text;
+                        }
+                        if (custSelect.tomselect) {
+                            custSelect.tomselect.updateOption(String(updated.id), { value: String(updated.id), text: updated.display_text });
+                            custSelect.tomselect.sync();
+                        }
+                    }
+
+                    // Close modal & show feedback
+                    this.showCustomerEditModal = false;
+                    this.customerSuccessMsg = `Customer "${updated.full_name}" details updated successfully!`;
+                    setTimeout(() => { this.customerSuccessMsg = ''; }, 7000);
+                } else {
+                    if (data.errors) {
+                        const errList = [];
+                        for (const f in data.errors) {
+                            data.errors[f].forEach(m => errList.push(`${f.replace('_', ' ')}: ${m}`));
+                        }
+                        this.customerEditErrors = errList;
+                    } else if (data.error) {
+                        this.customerEditErrors = [data.error];
+                    } else {
+                        this.customerEditErrors = ["Failed to save customer changes. Please verify all fields."];
+                    }
+                }
+            } catch (e) {
+                this.customerEditErrors = ["Network error: " + e.message];
+            } finally {
+                this.isSavingCustomerEdit = false;
+            }
+        },
+
+        openCustomerModal() {
+            this.customerErrors = [];
+            this.showCustomerModal = true;
+            this.$nextTick(() => {
+                const el = document.getElementById('modal_customer_full_name');
+                if (el) el.focus();
+            });
+        },
+
+        closeCustomerModal() {
+            this.showCustomerModal = false;
+            this.customerErrors = [];
+        },
+
+        async submitQuickCustomer() {
+            this.customerErrors = [];
+            if (!this.newCustomer.full_name || !this.newCustomer.full_name.trim()) {
+                this.customerErrors.push("Please enter customer's Full Name.");
+            }
+            if (!this.newCustomer.mobile_primary || !this.newCustomer.mobile_primary.trim()) {
+                this.customerErrors.push("Please enter Primary Mobile Number.");
+            }
+            if (!this.newCustomer.village || !this.newCustomer.village.trim()) {
+                this.customerErrors.push("Please enter Village / Town.");
+            }
+            if (!this.newCustomer.taluka || !this.newCustomer.taluka.trim()) {
+                this.customerErrors.push("Please enter Taluka / Tehsil.");
+            }
+            if (!this.newCustomer.district || !this.newCustomer.district.trim()) {
+                this.customerErrors.push("Please enter District.");
+            }
+            if (this.customerErrors.length > 0) return;
+
+            this.isSavingCustomer = true;
+            try {
+                const formData = new FormData();
+                for (const [k, v] of Object.entries(this.newCustomer)) {
+                    formData.append(k, v ? v.trim() : '');
+                }
+                formData.append('is_active', 'on');
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+                const response = await fetch("{% url 'customers:customer_quick_create' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    const cust = data.customer;
+                    const custSelect = document.getElementById('id_customer');
+                    if (custSelect) {
+                        let opt = custSelect.querySelector(`option[value="${cust.id}"]`);
+                        if (!opt) {
+                            opt = document.createElement('option');
+                            opt.value = cust.id;
+                            opt.textContent = cust.display_text;
+                            custSelect.appendChild(opt);
+                        }
+                        custSelect.value = cust.id;
+                        custSelect.dispatchEvent(new Event('change'));
+                        if (custSelect.tomselect) {
+                            custSelect.tomselect.addOption({ value: String(cust.id), text: cust.display_text });
+                            custSelect.tomselect.setValue(String(cust.id), true);
+                        }
+                    }
+
+                    this.newCustomer = {
+                        full_name: '',
+                        father_name: '',
+                        mobile_primary: '',
+                        mobile_secondary: '',
+                        email: '',
+                        village: '',
+                        taluka: '',
+                        district: '',
+                        state: 'Maharashtra',
+                        pin_code: '',
+                        aadhar_number: '',
+                        pan_number: '',
+                        bank_name: ''
+                    };
+                    this.showCustomerModal = false;
+                    this.customerSuccessMsg = `Customer "${cust.full_name}" registered & auto-selected!`;
+                    setTimeout(() => { this.customerSuccessMsg = ''; }, 7000);
+                } else {
+                    if (data.errors) {
+                        const errList = [];
+                        for (const f in data.errors) {
+                            data.errors[f].forEach(m => errList.push(`${f.replace('_', ' ')}: ${m}`));
+                        }
+                        this.customerErrors = errList;
+                    } else if (data.error) {
+                        this.customerErrors = [data.error];
+                    } else {
+                        this.customerErrors = ["Failed to save customer. Please check the entered information."];
+                    }
+                }
+            } catch (e) {
+                this.customerErrors = ["Network error: " + e.message];
+            } finally {
+                this.isSavingCustomer = false;
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

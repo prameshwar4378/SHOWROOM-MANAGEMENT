@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Payment Receipt #{{ payment.receipt_number }}{% endblock %}
+{% block page_title %}Payment Receipt{% endblock %}
+{% block page_subtitle %}Receipt #{{ payment.receipt_number }} &bull; Customer: {{ payment.customer.full_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 10mm 12mm;
+        }
+        html, body {
+            background: #ffffff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .no-print, header, aside, nav, .sidebar-link, [x-cloak] {
+            display: none !important;
+        }
+        main {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        main > div {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .receipt-card {
+            border: 2px solid #000 !important;
+            box-shadow: none !important;
+            margin: 0 auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<div class="no-print flex items-center gap-2">
+    <form method="post" action="{% url 'payments:payment_send_notification' payment.pk %}" class="inline">
+        {% csrf_token %}
+        <button type="submit" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer" title="Send WhatsApp/SMS Payment Receipt to Customer">
+            <i class="fab fa-whatsapp"></i> Send WhatsApp
+        </button>
+    </form>
+    <a href="{% url 'payments:payment_pdf' payment.pk %}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 transition-colors">
+        <i class="fas fa-file-pdf"></i> Download PDF
+    </a>
+    <button onclick="window.print()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5 transition-colors">
+        <i class="fas fa-print"></i> Print Receipt
+    </button>
+    <a href="{% url 'payments:customer_ledger' payment.customer.pk %}" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm transition-colors">
+        <i class="fas fa-book mr-1"></i> Customer Ledger
+    </a>
+    <a href="{% url 'customers:customer_detail' payment.customer.pk %}" class="px-3.5 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-xs font-semibold shadow-sm">
+        <i class="fas fa-user mr-1"></i> Customer Profile
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <!-- Quick Print Top Bar (No-Print) -->
+    <div class="no-print bg-white border border-gray-300 rounded-xl p-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div>
+                <span class="text-xs font-bold text-gray-800 uppercase tracking-wide">Money Receipt:</span>
+                <span class="text-xs text-emerald-800 font-black ml-1">#{{ payment.receipt_number }}</span>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="window.print()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors">
+                <i class="fas fa-print"></i> Print Receipt
+            </button>
+            <a href="{% url 'payments:payment_pdf' payment.pk %}" target="_blank" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors" title="Download High-Fidelity PDF">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- OFFICIAL PRINTABLE PAYMENT RECEIPT                                        -->
+    <!-- ========================================================================= -->
+    <div class="receipt-card bg-white border-2 border-black rounded-lg p-6 shadow-md text-black">
+        <!-- Receipt Top Header -->
+        <div class="flex items-center justify-between border-b-2 border-black pb-3">
+            <div>
+                <h2 class="text-xl font-black uppercase tracking-wide">{{ company.company_name|default:"Showroom Name" }}</h2>
+                {% if company.city %}<p class="text-xs font-semibold text-gray-700">{{ company.city }}</p>{% endif %}
+                {% if company.full_address %}<p class="text-[11px] text-gray-600">{{ company.full_address }}</p>{% endif %}
+                <p class="text-[11px] font-bold mt-0.5">
+                    {% if company.mobile_numbers %}Mob: {{ company.mobile_numbers }}{% endif %}
+                    {% if company.gstin_number %} &bull; GSTIN: {{ company.gstin_number }}{% endif %}
+                </p>
+            </div>
+            <div class="text-right">
+                <span class="inline-block px-3 py-1 bg-black text-white text-xs font-black tracking-widest uppercase rounded">
+                    Money Receipt
+                </span>
+                <p class="text-xs font-mono font-bold mt-2">No: {{ payment.receipt_number }}</p>
+                <p class="text-xs text-gray-600">Date: {{ payment.payment_date|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+
+        <!-- Receipt Body Details -->
+        <div class="py-4 space-y-3 text-xs">
+            <div class="flex items-baseline">
+                <span class="w-36 font-semibold text-gray-600">Received with thanks from:</span>
+                <span class="flex-1 font-bold text-sm uppercase border-b border-dotted border-gray-400 pb-0.5">
+                    {{ payment.customer.full_name }}
+                </span>
+            </div>
+
+            <div class="flex items-baseline">
+                <span class="w-36 font-semibold text-gray-600">Address & Contact:</span>
+                <span class="flex-1 border-b border-dotted border-gray-400 pb-0.5">
+                    {{ payment.customer.village }}, {{ payment.customer.taluka }}, {{ payment.customer.district }} &bull; Mob: {{ payment.customer.mobile_primary }}
+                </span>
+            </div>
+
+            <div class="flex items-baseline">
+                <span class="w-36 font-semibold text-gray-600">The Sum of Rupees:</span>
+                <span class="flex-1 font-bold text-sm border-b border-dotted border-gray-400 pb-0.5">
+                    ₹{{ payment.amount|intcomma }} ({{ payment.amount|floatformat:2 }})
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-1">
+                <div class="flex items-baseline">
+                    <span class="w-28 font-semibold text-gray-600">Payment Mode:</span>
+                    <span class="flex-1 font-bold border-b border-dotted border-gray-400 pb-0.5">
+                        {{ payment.get_payment_mode_display }}
+                    </span>
+                </div>
+                <div class="flex items-baseline">
+                    <span class="w-20 font-semibold text-gray-600">For Purpose:</span>
+                    <span class="flex-1 font-bold border-b border-dotted border-gray-400 pb-0.5">
+                        {{ payment.get_purpose_display }}
+                    </span>
+                </div>
+            </div>
+
+            {% if payment.cheque_number or payment.reference_number %}
+            <div class="grid grid-cols-2 gap-4">
+                {% if payment.cheque_number %}
+                <div class="flex items-baseline">
+                    <span class="w-28 font-semibold text-gray-600">Cheque No & Date:</span>
+                    <span class="flex-1 border-b border-dotted border-gray-400 pb-0.5">
+                        {{ payment.cheque_number }} {% if payment.cheque_date %}({{ payment.cheque_date|date:"d/m/Y" }}){% endif %}
+                    </span>
+                </div>
+                {% endif %}
+                {% if payment.reference_number %}
+                <div class="flex items-baseline">
+                    <span class="w-20 font-semibold text-gray-600">Ref / UTR:</span>
+                    <span class="flex-1 border-b border-dotted border-gray-400 pb-0.5 font-mono">
+                        {{ payment.reference_number }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if payment.description %}
+            <div class="flex items-baseline">
+                <span class="w-36 font-semibold text-gray-600">Remarks:</span>
+                <span class="flex-1 italic text-gray-700 border-b border-dotted border-gray-400 pb-0.5">
+                    {{ payment.description }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Receipt Bottom: Amount Box & Signature -->
+        <div class="pt-4 border-t-2 border-black flex items-end justify-between">
+            <div class="border-2 border-black px-4 py-2 rounded bg-gray-50">
+                <p class="text-[10px] font-bold text-gray-500 uppercase">Amount Received</p>
+                <p class="text-xl font-extrabold font-mono">₹{{ payment.amount|intcomma }}</p>
+            </div>
+
+            <div class="text-center">
+                <p class="text-xs font-bold uppercase mb-8">For {{ company.company_name|default:"Authorized Showroom" }}</p>
+                <p class="text-[11px] font-bold border-t border-black pt-1">Authorized Signatory</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- PAYMENT ALLOCATION MANAGEMENT (Interactive UI - Hidden on Print)          -->
+    <!-- ========================================================================= -->
+    <div class="no-print bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+            <div>
+                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                    Bill Allocations for this Receipt
+                </h3>
+                <p class="text-xs text-gray-500">
+                    Total: <strong>₹{{ payment.amount|intcomma }}</strong> &bull;
+                    Allocated: <strong class="text-green-700">₹{{ payment.allocated_amount|intcomma }}</strong> &bull;
+                    Unallocated: <strong class="text-blue-700">₹{{ payment.unallocated_amount|intcomma }}</strong>
+                </p>
+            </div>
+            <div class="w-24 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-green-600 h-2.5 rounded-full" style="width: {{ payment.allocation_percentage }}%"></div>
+            </div>
+        </div>
+
+        <!-- Existing Allocations Table -->
+        <div class="mb-6">
+            <h4 class="text-xs font-bold text-gray-700 mb-2">Existing Allocations:</h4>
+            {% if allocations %}
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-2.5">Bill Number</th>
+                            <th class="px-4 py-2.5">Bill Type</th>
+                            <th class="px-4 py-2.5">Bill Total</th>
+                            <th class="px-4 py-2.5 text-right">Allocated Amount</th>
+                            <th class="px-4 py-2.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for alloc in allocations %}
+                        <tr>
+                            <td class="px-4 py-2.5 font-bold text-blue-600">
+                                <a href="{% url 'billing:bill_detail' alloc.bill.pk %}" class="hover:underline">
+                                    {{ alloc.bill.bill_number }}
+                                </a>
+                            </td>
+                            <td class="px-4 py-2.5">{{ alloc.bill.get_bill_type_display }}</td>
+                            <td class="px-4 py-2.5">₹{{ alloc.bill.grand_total|intcomma }}</td>
+                            <td class="px-4 py-2.5 text-right font-bold text-green-700">₹{{ alloc.allocated_amount|intcomma }}</td>
+                            <td class="px-4 py-2.5 text-center">
+                                <form method="post" action="{% url 'payments:allocation_delete' alloc.pk %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-medium" onclick="return confirm('Remove this allocation?')">
+                                        <i class="fas fa-times-circle"></i> Remove
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-xs text-gray-500 italic bg-gray-50 p-3 rounded-lg border border-gray-200">
+                This payment sits in customer's unallocated balance. You can allocate it to any bill below.
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Allocate Remaining Form (Only if money is left) -->
+        {% if payment.unallocated_amount > 0 and unpaid_bills %}
+        <div class="bg-blue-50/50 border border-blue-200 rounded-xl p-4">
+            <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wider mb-2">
+                Allocate Available ₹{{ payment.unallocated_amount|intcomma }} to a Bill
+            </h4>
+            <form method="post" action="{% url 'payments:payment_allocate' payment.pk %}" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                {% csrf_token %}
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Select Unpaid Bill</label>
+                    <select name="bill" required class="w-full text-xs border border-gray-300 rounded-lg p-2 bg-white">
+                        <option value="">-- Choose a Bill to Pay --</option>
+                        {% for b in unpaid_bills %}
+                        <option value="{{ b.pk }}">
+                            {{ b.bill_number }} ({{ b.get_bill_type_display }}) &bull; Due: ₹{{ b.balance_due|intcomma }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Amount to Allocate (₹)</label>
+                    <input type="number" step="0.01" name="allocated_amount" value="{{ payment.unallocated_amount }}" max="{{ payment.unallocated_amount }}" required
+                           class="w-full text-xs font-bold border border-gray-300 rounded-lg p-2 bg-white">
+                </div>
+
+                <div class="md:col-span-3 flex justify-end">
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm transition-colors">
+                        <i class="fas fa-link mr-1"></i> Confirm Allocation
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% elif payment.unallocated_amount <= 0 %}
+        <div class="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800 font-semibold text-center">
+            <i class="fas fa-check-circle mr-1"></i> This payment is 100% fully allocated to customer bills.
+        </div>
+        {% else %}
+        <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 text-center">
+            No pending bills found for {{ payment.customer.full_name }}. The balance stays in customer credit.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('print') === '1') {
+            window.print();
+        }
+    });
+</script>
+{% endblock %}

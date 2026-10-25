@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+{% block page_subtitle %}{{ page_subtitle }}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white rounded-2xl border border-slate-200/90 p-6 md:p-8 shadow-sm hover:shadow-md/5 transition-all">
+    <!-- Form Header -->
+    <div class="flex items-center gap-3 pb-4 mb-6 border-b border-slate-100">
+        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center text-sm shadow-2xs">
+            <i class="fas fa-user-gear"></i>
+        </div>
+        <div>
+            <h3 class="text-sm font-bold text-slate-800 tracking-tight">{{ page_title }}</h3>
+            <p class="text-xs text-slate-400">Configure operator account and login credentials</p>
+        </div>
+    </div>
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username <span class="text-red-500">*</span></label>
+            {{ form.username }}
+            {% if form.username.errors %}<p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.username.errors.0 }}</p>{% endif %}
+        </div>
+        {% if form.password %}
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password <span class="text-red-500">*</span></label>
+            {{ form.password }}
+            {% if form.password.errors %}<p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fas fa-circle-exclamation text-[10px]"></i> {{ form.password.errors.0 }}</p>{% endif %}
+        </div>
+        {% endif %}
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">First Name</label>
+                {{ form.first_name }}
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Last Name</label>
+                {{ form.last_name }}
+            </div>
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email</label>
+            {{ form.email }}
+        </div>
+        {% if form.mobile_number %}
+        <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Mobile Number</label>
+            {{ form.mobile_number }}
+        </div>
+        {% endif %}
+
+        <div class="pt-5 border-t border-slate-100 flex items-center justify-end gap-3.5">
+            <a href="{% url 'accounts:user_list' %}" class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold shadow-2xs transition-all">Cancel</a>
+            <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all focus:ring-4 focus:ring-blue-100 cursor-pointer">
+                <i class="fas fa-save text-xs"></i>
+                <span>Save User Account</span>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
