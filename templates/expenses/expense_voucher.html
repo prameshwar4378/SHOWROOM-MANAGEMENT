@@ -1,0 +1,371 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Voucher — {{ expense.expense_number }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 24px;
+        }
+        .no-print-toolbar {
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: #e11d48;
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background-color: #be123c;
+        }
+        .btn-secondary {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+        }
+
+        /* Voucher Paper */
+        .voucher-paper {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #0f172a;
+            padding: 28px 32px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .header-section {
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .company-info h1 {
+            font-size: 20px;
+            font-weight: 900;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .company-info p {
+            font-size: 11px;
+            color: #475569;
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+        .voucher-title-badge {
+            text-align: right;
+        }
+        .voucher-title-badge .title {
+            display: inline-block;
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            padding: 5px 14px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .voucher-title-badge .marathi-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #be123c;
+            margin-top: 4px;
+        }
+
+        /* Meta Grid */
+        .meta-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            font-size: 12px;
+        }
+        .meta-strip .item strong {
+            color: #64748b;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            display: block;
+        }
+        .meta-strip .item span {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 13px;
+        }
+
+        /* Content Table */
+        .voucher-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 12.5px;
+        }
+        .voucher-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        .voucher-table td.label-col {
+            width: 25%;
+            font-weight: 700;
+            color: #475569;
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+        }
+        .voucher-table td.val-col {
+            color: #0f172a;
+        }
+
+        /* Amount Box */
+        .amount-box {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff1f2;
+            border: 2px dashed #f43f5e;
+            padding: 14px 20px;
+            border-radius: 8px;
+        }
+        .amount-words-wrap {
+            flex: 1;
+        }
+        .amount-words-wrap .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #9f1239;
+            letter-spacing: 0.5px;
+        }
+        .amount-words-wrap .words {
+            font-size: 13px;
+            font-weight: 700;
+            color: #881337;
+            margin-top: 2px;
+        }
+        .amount-figure {
+            text-align: right;
+            padding-left: 20px;
+        }
+        .amount-figure .digits {
+            font-size: 24px;
+            font-weight: 900;
+            color: #be123c;
+        }
+
+        /* Signatures */
+        .signatures-grid {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+        .sig-box {
+            border-top: 1.5px solid #0f172a;
+            padding-top: 8px;
+        }
+        .sig-box .role {
+            font-size: 11px;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+        }
+        .sig-box .sub {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Print Media Query */
+        @media print {
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .no-print-toolbar {
+                display: none !important;
+            }
+            .voucher-paper {
+                box-shadow: none;
+                border: 2px solid #000000;
+                padding: 20px;
+                max-width: 100%;
+            }
+            .meta-strip {
+                background: #f1f5f9 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .amount-box {
+                background: #fff1f2 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .voucher-title-badge .title {
+                background: #000000 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Print Control Toolbar (Hidden during Print) -->
+    <div class="no-print-toolbar">
+        <div>
+            <span style="font-weight: bold; font-size: 13px; color: #0f172a;">खर्च पावती (Payment Voucher)</span>
+            <span style="font-size: 12px; color: #64748b; margin-left: 8px;">#{{ expense.expense_number }}</span>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.print()" class="btn btn-primary cursor-pointer">
+                <i class="fas fa-print"></i> प्रिंट करा (Print Voucher)
+            </button>
+            <button onclick="window.close()" class="btn btn-secondary cursor-pointer">
+                <i class="fas fa-xmark"></i> विंडो बंद करा
+            </button>
+        </div>
+    </div>
+
+    <!-- Official Voucher Paper Layout -->
+    <div class="voucher-paper">
+
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="company-info">
+                <h1>{{ company.company_name|default:"TRACTOR SHOWROOM & WORKSHOP" }}</h1>
+                <p>
+                    {% if company.address_line1 %}{{ company.address_line1 }}{% if company.city %}, {{ company.city }}{% endif %}<br>{% endif %}
+                    {% if company.mobile_numbers %}फोन: {{ company.mobile_numbers }}{% endif %}
+                    {% if company.gstin_number %} | GSTIN: {{ company.gstin_number }}{% endif %}
+                </p>
+            </div>
+            <div class="voucher-title-badge">
+                <div class="title">DEBIT VOUCHER</div>
+                <div class="marathi-title">खर्च पावती / व्हाउचर</div>
+            </div>
+        </div>
+
+        <!-- Meta Strip -->
+        <div class="meta-strip">
+            <div class="item">
+                <strong>Voucher No.</strong>
+                <span style="font-family: monospace;">{{ expense.expense_number }}</span>
+            </div>
+            <div class="item">
+                <strong>तारीख (Date)</strong>
+                <span>{{ expense.expense_date|date:"d/m/Y" }}</span>
+            </div>
+            <div class="item">
+                <strong>पेमेंट पद्धत (Mode)</strong>
+                <span>{{ expense.get_payment_mode_display }}</span>
+            </div>
+        </div>
+
+        <!-- Content Details Table -->
+        <table class="voucher-table">
+            <tr>
+                <td class="label-col">खर्च खाते (Debit Head):</td>
+                <td class="val-col">
+                    <strong>{{ expense.category.name }}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td class="label-col">कोणाला दिले (Paid To):</td>
+                <td class="val-col">
+                    <strong>{{ expense.payee_name|default:"-" }}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td class="label-col">खर्च तपशील (Particulars):</td>
+                <td class="val-col">
+                    <strong>{{ expense.title }}</strong>
+                    {% if expense.notes %}
+                    <div style="font-size: 11px; color: #475569; margin-top: 4px;">{{ expense.notes }}</div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% if expense.payment_reference %}
+            <tr>
+                <td class="label-col">UTR / Cheque No.:</td>
+                <td class="val-col" style="font-family: monospace;">
+                    {{ expense.payment_reference }}
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+
+        <!-- Amount Box -->
+        <div class="amount-box">
+            <div class="amount-words-wrap">
+                <div class="label">Amount In Words (अक्षरी रक्कम)</div>
+                <div class="words">{{ amount_words }}</div>
+            </div>
+            <div class="amount-figure">
+                <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #9f1239;">Total Amount</div>
+                <div class="digits">₹{{ expense.amount|intcomma }}</div>
+            </div>
+        </div>
+
+        <!-- Signature Boxes -->
+        <div class="signatures-grid">
+            <div class="sig-box">
+                <div class="role">रुपये घेणाऱ्याची सही</div>
+                <div class="sub">(Receiver's Signature)</div>
+            </div>
+            <div class="sig-box">
+                <div class="role">तयार करणारा</div>
+                <div class="sub">({{ expense.recorded_by.get_full_name|default:expense.recorded_by.username|default:"Accountant" }})</div>
+            </div>
+            <div class="sig-box">
+                <div class="role">अधिकृत सही / मॅनेजर</div>
+                <div class="sub">(Authorized Signatory)</div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

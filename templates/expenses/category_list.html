@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Expense Categories — Showroom Expenses{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-lg font-bold shadow-2xs">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">खर्च प्रकार व्यवस्थापन (Expense Categories)</h1>
+                <p class="text-xs text-slate-500 mt-0.5">शो-रूमच्या खर्चाचे वर्गीकरण, बजेट आणि हेड मास्टर व्यवस्थापन</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+            <a href="{% url 'expenses:expense_list' %}"
+               class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition shadow-2xs">
+                <i class="fas fa-arrow-left text-xs"></i>
+                <span>खर्च रजिस्टर (All Expenses)</span>
+            </a>
+            <a href="{% url 'expenses:category_create' %}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                <i class="fas fa-plus text-xs"></i>
+                <span>नवीन प्रकार जोडा (Add Category)</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Category Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for cat in categories %}
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:shadow-md/5 transition flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-base border border-slate-200 shadow-2xs">
+                        <i class="{{ cat.icon|default:'fas fa-receipt' }}"></i>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        {% if cat.is_active %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            सक्रिय
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                            बंद
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-slate-900 text-sm tracking-tight">{{ cat.name }}</h3>
+                <p class="text-[11px] font-mono text-slate-400 mt-0.5">{{ cat.code }}</p>
+                
+                {% if cat.description %}
+                <p class="text-xs text-slate-500 mt-2 line-clamp-2">{{ cat.description }}</p>
+                {% endif %}
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">एकूण खर्च</span>
+                    <p class="text-sm font-black text-rose-700">₹{{ cat.total_spent|default:0|intcomma }}</p>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <a href="{% url 'expenses:expense_list' %}?category={{ cat.id }}"
+                       class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 transition shadow-2xs"
+                       title="या प्रकारातील खर्च पहा">
+                        <i class="fas fa-list text-xs"></i>
+                    </a>
+                    <a href="{% url 'expenses:category_edit' cat.id %}"
+                       class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition shadow-2xs"
+                       title="संपादित करा">
+                        <i class="fas fa-pen text-xs"></i>
+                    </a>
+                    <a href="{% url 'expenses:category_delete' cat.id %}"
+                       class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition shadow-2xs"
+                       title="डिलीट करा">
+                        <i class="fas fa-trash text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-12 text-center bg-white rounded-2xl border border-slate-200 p-8">
+            <i class="fas fa-tags text-4xl text-slate-300 mb-3"></i>
+            <h4 class="text-sm font-bold text-slate-800">कोणताही खर्च प्रकार आढळला नाही</h4>
+            <p class="text-xs text-slate-500 mt-1">नवीन प्रकार जोडण्यासाठी वरील बटणावर क्लिक करा.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

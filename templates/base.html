@@ -317,6 +317,43 @@
                     </div>
                 </div>
 
+                <!-- Expenses Section -->
+                <div x-data="{ expOpen: {% if request.resolver_match.app_name == 'expenses' %}true{% else %}false{% endif %} }">
+                    <button @click="if (!sidebarOpen) { sidebarOpen = true; localStorage.setItem('sidebar_open', 'true'); expOpen = true; } else { expOpen = !expOpen; }"
+                            @mouseenter="showHint($event, 'Expenses & Outward')"
+                            @mouseleave="hideHint()"
+                            title="Expenses & Outward"
+                            class="sidebar-link flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.app_name == 'expenses' %}active-parent{% endif %}">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-receipt w-5 text-center parent-icon text-slate-400"></i>
+                            <span x-show="sidebarOpen" x-cloak>Expenses</span>
+                        </div>
+                        <div class="flex items-center gap-2" x-show="sidebarOpen" x-cloak>
+                            {% if request.resolver_match.app_name == 'expenses' %}
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_6px_#f43f5e]"></span>
+                            {% endif %}
+                            <i class="fas fa-chevron-down text-xs chevron-icon text-slate-500 transition-transform" :class="expOpen && 'rotate-180'"></i>
+                        </div>
+                    </button>
+                    <div x-show="expOpen && sidebarOpen" x-cloak x-collapse class="ml-4 pl-3 border-l border-slate-700/60 mt-1 space-y-1">
+                        <a href="{% url 'expenses:expense_list' %}"
+                           class="sidebar-sublink {% if request.resolver_match.app_name == 'expenses' and request.resolver_match.url_name == 'expense_list' %}active{% endif %}">
+                            <span class="sidebar-sublink-dot"></span>
+                            <span>All Expenses</span>
+                        </a>
+                        <a href="{% url 'expenses:expense_create' %}"
+                           class="sidebar-sublink {% if request.resolver_match.app_name == 'expenses' and request.resolver_match.url_name == 'expense_create' %}active{% endif %}">
+                            <span class="sidebar-sublink-dot"></span>
+                            <span>Record Expense</span>
+                        </a>
+                        <a href="{% url 'expenses:category_list' %}"
+                           class="sidebar-sublink {% if request.resolver_match.app_name == 'expenses' and 'category' in request.resolver_match.url_name %}active{% endif %}">
+                            <span class="sidebar-sublink-dot"></span>
+                            <span>Expense Categories</span>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Reports Section -->
                 <div x-data="{ rptOpen: {% if 'export' in request.path or request.resolver_match.app_name == 'reports' and request.resolver_match.url_name not in 'dashboard,home' %}true{% else %}false{% endif %} }">
                     <button @click="if (!sidebarOpen) { sidebarOpen = true; localStorage.setItem('sidebar_open', 'true'); rptOpen = true; } else { rptOpen = !rptOpen; }"
@@ -345,6 +382,11 @@
                            class="sidebar-sublink {% if request.resolver_match.url_name == 'export_dues_excel' %}active{% endif %}">
                             <i class="fas fa-file-excel text-red-400 text-xs"></i>
                             <span>Customer Dues (Excel)</span>
+                        </a>
+                        <a href="{% url 'expenses:export_excel' %}"
+                           class="sidebar-sublink {% if request.resolver_match.app_name == 'expenses' and request.resolver_match.url_name == 'export_excel' %}active{% endif %}">
+                            <i class="fas fa-file-excel text-rose-400 text-xs"></i>
+                            <span>Expense Register (Excel)</span>
                         </a>
                         <a href="{% url 'payments:pending_payments' %}"
                            class="sidebar-sublink {% if request.resolver_match.url_name == 'pending_payments' and 'export' in request.path %}active{% endif %}">
