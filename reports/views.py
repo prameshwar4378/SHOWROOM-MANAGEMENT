@@ -89,8 +89,120 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['total_outstanding'] = total_out
             context['pending_customers'] = list(pending_qs.order_by('-db_due')[:5])
 
-        except Exception:
-            # Apps might not be migrated yet
+            # Inventory & machinery stock stats
+            from billing.models import Product, TractorStockUnit
+            total_tractors = TractorStockUnit.objects.count()
+            available_tractors = TractorStockUnit.objects.filter(status='AVAILABLE').count()
+            allocated_tractors = TractorStockUnit.objects.filter(status='ALLOCATED').count()
+            total_products = Product.objects.count()
+            low_stock_products = Product.objects.filter(stock_quantity__lte=2, stock_quantity__gt=0).count()
+            out_of_stock_products = Product.objects.filter(stock_quantity=0).count()
+
+            context['inventory_stats'] = {
+                'total_tractors': total_tractors,
+                'available_tractors': available_tractors,
+                'allocated_tractors': allocated_tractors,
+                'total_products': total_products,
+                'low_stock_products': low_stock_products,
+                'out_of_stock_products': out_of_stock_products,
+            }
+
+            # Showroom operating expenses stats
+            from expenses.models import Expense
+            exp_aggs = Expense.objects.aggregate(
+                total_expenses=Sum('amount'),
+                expenses_this_month=Sum('amount', filter=Q(expense_date__gte=month_start)),
+                expenses_today=Sum('amount', filter=Q(expense_date=today)),
+                expenses_count=Count('id'),
+            )
+            total_expenses = exp_aggs['total_expenses'] or Decimal('0.00')
+            expenses_this_month = exp_aggs['expenses_this_month'] or Decimal('0.00')
+            expenses_today = exp_aggs['expenses_today'] or Decimal('0.00')
+
+            context['total_expenses'] = total_expenses
+            context['expenses_this_month'] = expenses_this_month
+            context['expenses_today'] = expenses_today
+            context['net_cash_flow'] = context['total_collected'] - total_expenses
+
+            # Collection efficiency
+            billed_tot = context['total_billed_amount']
+            col_tot = context['total_collected']
+            context['collection_rate'] = round(float((col_tot / billed_tot) * 100), 1) if billed_tot > 0 else 0.0
+
+            # 14-Day Daily Trends (for smooth Spline Chart)
+            from datetime import date
+            daily_labels = []
+            daily_billed = []
+            daily_collected = []
+            for i in range(13, -1, -1):
+                d = today - timedelta(days=i)
+                daily_labels.append(d.strftime('%d %b'))
+                daily_billed.append(float(Bill.objects.filter(bill_type='TAX_INVOICE', bill_date=d).exclude(status='CANCELLED').aggregate(s=Sum('grand_total'))['s'] or 0))
+                daily_collected.append(float(Payment.objects.filter(payment_date=d).aggregate(s=Sum('amount'))['s'] or 0))
+
+            # 6-Month Historical Trends
+            monthly_labels = []
+            monthly_billed = []
+            monthly_collected = []
+            monthly_expenses = []
+            for i in range(5, -1, -1):
+                m = today.month - i
+                y = today.year
+                while m <= 0:
+                    m += 12
+                    y -= 1
+                sd = date(y, m, 1)
+                ed = date(y + 1, 1, 1) if m == 12 else date(y, m + 1, 1)
+                monthly_labels.append(sd.strftime('%b %Y'))
+                monthly_billed.append(float(Bill.objects.filter(bill_type='TAX_INVOICE', bill_date__gte=sd, bill_date__lt=ed).exclude(status='CANCELLED').aggregate(s=Sum('grand_total'))['s'] or 0))
+                monthly_collected.append(float(Payment.objects.filter(payment_date__gte=sd, payment_date__lt=ed).aggregate(s=Sum('amount'))['s'] or 0))
+                monthly_expenses.append(float(Expense.objects.filter(expense_date__gte=sd, expense_date__lt=ed).aggregate(s=Sum('amount'))['s'] or 0))
+
+            # Payment modes distribution
+            pm_map = dict(Payment.PAYMENT_MODE_CHOICES)
+            pm_qs = Payment.objects.values('payment_mode').annotate(total=Sum('amount'), count=Count('id')).order_by('-total')
+            pm_list = []
+            total_pm_amount = float(sum(x['total'] or 0 for x in pm_qs)) or 1.0
+            palette = ['#06b6d4', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#8b5cf6']
+            for idx, pm in enumerate(pm_qs):
+                t = float(pm['total'] or 0)
+                pm_list.append({
+                    'code': pm['payment_mode'],
+                    'label': str(pm_map.get(pm['payment_mode'], pm['payment_mode'])),
+                    'total': t,
+                    'count': pm['count'],
+                    'percent': round((t / total_pm_amount) * 100, 1),
+                    'color': palette[idx % len(palette)],
+                })
+            context['payment_modes_breakdown'] = pm_list
+
+            import json
+            chart_payload = {
+                'daily_labels': daily_labels,
+                'daily_billed': daily_billed,
+                'daily_collected': daily_collected,
+                'monthly_labels': monthly_labels,
+                'monthly_billed': monthly_billed,
+                'monthly_collected': monthly_collected,
+                'monthly_expenses': monthly_expenses,
+                'doc_labels': ['Tax Invoices', 'Quotations', 'Margin Money', 'Delivery Challans'],
+                'doc_counts': [
+                    context['tax_invoice_count'],
+                    context['quotation_count'],
+                    context['margin_money_count'],
+                    context['delivery_challan_count'],
+                ],
+                'doc_colors': ['#10b981', '#3b82f6', '#8b5cf6', '#f97316'],
+                'pm_labels': [x['label'] for x in pm_list],
+                'pm_totals': [x['total'] for x in pm_list],
+                'pm_colors': [x['color'] for x in pm_list],
+            }
+            context['chart_data_json'] = json.dumps(chart_payload)
+
+        except Exception as e:
+            # Apps might not be migrated yet or initial setup
+            import logging
+            logging.getLogger(__name__).warning(f"Dashboard context aggregation notice: {e}")
             context.update({
                 'total_customers': 0, 'new_customers_month': 0,
                 'total_bills': 0, 'bills_this_month': 0,
@@ -100,7 +212,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 'total_collected': 0, 'collected_this_month': 0,
                 'collected_today': 0, 'total_outstanding': 0,
                 'recent_bills': [], 'recent_payments': [],
-                'pending_customers': [],
+                'pending_customers': [], 'chart_data_json': '{}',
+                'collection_rate': 0.0, 'total_expenses': 0,
+                'expenses_this_month': 0, 'expenses_today': 0,
+                'net_cash_flow': 0,
+                'inventory_stats': {'total_tractors': 0, 'available_tractors': 0, 'allocated_tractors': 0, 'total_products': 0, 'low_stock_products': 0, 'out_of_stock_products': 0},
+                'payment_modes_breakdown': [],
             })
 
         return context

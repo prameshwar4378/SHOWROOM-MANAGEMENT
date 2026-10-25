@@ -1,238 +1,793 @@
 {% extends 'base.html' %}
 {% load humanize %}
 
-{% block title %}Dashboard{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
-{% block page_subtitle %}Welcome back! Here's your business overview.{% endblock %}
+{% block title %}Executive Dashboard{% endblock %}
+{% block page_title %}Showroom Dashboard{% endblock %}
+{% block page_subtitle %}Real-time dealership operations, sales velocity, and financial health{% endblock %}
 
 {% block header_actions %}
-<div class="flex items-center gap-2">
+<div class="flex flex-wrap items-center gap-2">
+    <!-- Live Status Indicator -->
+    <div class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold shadow-xs">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Showroom Live</span>
+    </div>
+
+    <!-- Export Buttons -->
     <a href="{% url 'reports:export_sales_excel' %}"
-       class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors">
-        <i class="fas fa-file-excel"></i> Sales Excel
+       class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-lg text-xs font-bold shadow-xs hover:shadow-sm inline-flex items-center gap-1.5 transition-all">
+        <i class="fas fa-file-excel"></i>
+        <span>Sales Register</span>
     </a>
     <a href="{% url 'reports:export_dues_excel' %}"
-       class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors">
-        <i class="fas fa-file-excel"></i> Dues Excel
+       class="px-3.5 py-1.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white rounded-lg text-xs font-bold shadow-xs hover:shadow-sm inline-flex items-center gap-1.5 transition-all">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>Pending Dues</span>
     </a>
 </div>
 {% endblock %}
 
 {% block content %}
-<!-- Top Stat Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-    <!-- Total Customers -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-500 font-medium">Total Customers</p>
-                <p class="text-3xl font-bold text-gray-800 mt-1">{{ total_customers|default:"0" }}</p>
-                <p class="text-xs text-green-600 mt-1">
-                    <i class="fas fa-arrow-up"></i> {{ new_customers_month|default:"0" }} this month
-                </p>
-            </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <i class="fas fa-users text-blue-600 text-xl"></i>
-            </div>
-        </div>
-    </div>
+<div class="space-y-6">
 
-    <!-- Total Billed -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-500 font-medium">Total Billed</p>
-                <p class="text-3xl font-bold text-gray-800 mt-1">₹{{ total_billed_amount|default:"0"|intcomma }}</p>
-                <p class="text-xs text-blue-600 mt-1">
-                    <i class="fas fa-file-invoice"></i> {{ bills_this_month|default:"0" }} bills this month
-                </p>
-            </div>
-            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <i class="fas fa-file-invoice-dollar text-purple-600 text-xl"></i>
-            </div>
-        </div>
-    </div>
+    <!-- ========================================================================= -->
+    <!-- 1. TOP EXECUTIVE KPI CARDS (Vivid Gradients with Glassmorphism)           -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
 
-    <!-- Total Collected -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-500 font-medium">Total Collected</p>
-                <p class="text-3xl font-bold text-green-700 mt-1">₹{{ total_collected|default:"0"|intcomma }}</p>
-                <p class="text-xs text-green-600 mt-1">
-                    <i class="fas fa-indian-rupee-sign"></i> ₹{{ collected_today|default:"0"|intcomma }} today
-                </p>
+        <!-- Card 1: Gross Sales / Total Billed -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-800 p-5 text-white shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 group">
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/10 blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-100">Total Billed (Gross Sales)</span>
+                <div class="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-xs">
+                    <i class="fas fa-file-invoice-dollar text-lg"></i>
+                </div>
             </div>
-            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <i class="fas fa-indian-rupee-sign text-green-600 text-xl"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- Outstanding -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm text-gray-500 font-medium">Total Outstanding</p>
-                <p class="text-3xl font-bold text-red-700 mt-1">₹{{ total_outstanding|default:"0"|intcomma }}</p>
-                <p class="text-xs text-gray-500 mt-1">
-                    <i class="fas fa-clock"></i> Pending from customers
-                </p>
-            </div>
-            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm mb-8">
-    <h3 class="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h3>
-    <div class="flex flex-wrap gap-3">
-        <a href="{% url 'customers:customer_add' %}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-            <i class="fas fa-user-plus"></i> New Customer
-        </a>
-        <a href="{% url 'billing:bill_create' %}?type=QUOTATION" class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
-            <i class="fas fa-file-alt"></i> New Quotation
-        </a>
-        <a href="{% url 'billing:bill_create' %}?type=TAX_INVOICE" class="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
-            <i class="fas fa-file-invoice"></i> New Tax Invoice
-        </a>
-        <a href="{% url 'payments:payment_add' %}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
-            <i class="fas fa-indian-rupee-sign"></i> Receive Payment
-        </a>
-        <a href="{% url 'billing:bill_create' %}?type=MARGIN_MONEY" class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
-            <i class="fas fa-hand-holding-dollar"></i> Margin Money
-        </a>
-        <a href="{% url 'billing:bill_create' %}?type=DELIVERY_CHALLAN" class="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors">
-            <i class="fas fa-truck"></i> Delivery Challan
-        </a>
-    </div>
-</div>
-
-<!-- Bill Type Breakdown -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
-        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-            <span class="text-blue-600 font-bold text-sm">Q</span>
-        </div>
-        <p class="text-2xl font-bold text-gray-800">{{ quotation_count|default:"0" }}</p>
-        <p class="text-xs text-gray-500">Quotations</p>
-    </div>
-    <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
-        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-            <span class="text-green-600 font-bold text-sm">TI</span>
-        </div>
-        <p class="text-2xl font-bold text-gray-800">{{ tax_invoice_count|default:"0" }}</p>
-        <p class="text-xs text-gray-500">Tax Invoices</p>
-    </div>
-    <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
-        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-            <span class="text-purple-600 font-bold text-sm">MM</span>
-        </div>
-        <p class="text-2xl font-bold text-gray-800">{{ margin_money_count|default:"0" }}</p>
-        <p class="text-xs text-gray-500">Margin Money</p>
-    </div>
-    <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
-        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-            <span class="text-orange-600 font-bold text-sm">DC</span>
-        </div>
-        <p class="text-2xl font-bold text-gray-800">{{ delivery_challan_count|default:"0" }}</p>
-        <p class="text-xs text-gray-500">Delivery Challans</p>
-    </div>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Recent Bills -->
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h3 class="font-semibold text-gray-800">Recent Bills</h3>
-            <a href="{% url 'billing:bill_list' %}" class="text-sm text-blue-600 hover:text-blue-800">View All →</a>
-        </div>
-        <div class="divide-y divide-gray-50">
-            {% for bill in recent_bills %}
-            <a href="{% url 'billing:bill_detail' bill.pk %}" class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors">
-                <div class="flex items-center gap-3">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold
-                        {% if bill.bill_type == 'QUOTATION' %}bg-blue-100 text-blue-700
-                        {% elif bill.bill_type == 'TAX_INVOICE' %}bg-green-100 text-green-700
-                        {% elif bill.bill_type == 'MARGIN_MONEY' %}bg-purple-100 text-purple-700
-                        {% else %}bg-orange-100 text-orange-700{% endif %}">
-                        {% if bill.bill_type == 'QUOTATION' %}Q{% elif bill.bill_type == 'TAX_INVOICE' %}TI{% elif bill.bill_type == 'MARGIN_MONEY' %}MM{% else %}DC{% endif %}
+            <div class="mt-3">
+                <div class="text-2xl sm:text-3xl font-black tracking-tight font-mono">
+                    ₹{{ total_billed_amount|default:"0"|floatformat:0|intcomma }}
+                </div>
+                <div class="mt-2.5 flex items-center justify-between text-xs text-blue-100">
+                    <span class="inline-flex items-center gap-1 bg-white/15 px-2 py-0.5 rounded-full font-semibold">
+                        <i class="fas fa-file-invoice text-[10px]"></i> {{ bills_this_month|default:"0" }} this month
                     </span>
+                    <span class="text-[11px] text-blue-200">Tax Invoices</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Total Collected / Realized Cash -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-600 to-teal-800 p-5 text-white shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 group">
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/10 blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-100">Total Collections</span>
+                <div class="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-xs">
+                    <i class="fas fa-hand-holding-dollar text-lg"></i>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="text-2xl sm:text-3xl font-black tracking-tight font-mono text-emerald-50">
+                    ₹{{ total_collected|default:"0"|floatformat:0|intcomma }}
+                </div>
+                <div class="mt-2.5 flex items-center justify-between text-xs text-emerald-100">
+                    <span class="inline-flex items-center gap-1 bg-white/15 px-2 py-0.5 rounded-full font-semibold">
+                        <i class="fas fa-arrow-trend-up text-[10px]"></i> ₹{{ collected_today|default:"0"|floatformat:0|intcomma }} today
+                    </span>
+                    <span class="text-[11px] text-emerald-200 font-semibold">{{ collection_rate }}% rate</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Total Outstanding / Pending Dues -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 p-5 text-white shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 group">
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/10 blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-orange-100">Total Outstanding</span>
+                <div class="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-xs">
+                    <i class="fas fa-clock-rotate-left text-lg"></i>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="text-2xl sm:text-3xl font-black tracking-tight font-mono text-orange-50">
+                    ₹{{ total_outstanding|default:"0"|floatformat:0|intcomma }}
+                </div>
+                <div class="mt-2.5 flex items-center justify-between text-xs text-orange-100">
+                    <span class="inline-flex items-center gap-1 bg-white/15 px-2 py-0.5 rounded-full font-semibold">
+                        <i class="fas fa-user-clock text-[10px]"></i> {{ pending_customers|length }} buyers pending
+                    </span>
+                    <a href="{% url 'payments:pending_payments' %}" class="underline text-[11px] text-orange-100 hover:text-white">Recover &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Total Customers & Dealership Network -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-700 p-5 text-white shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 group">
+            <div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-white/10 blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-purple-100">Active Customers</span>
+                <div class="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-xs">
+                    <i class="fas fa-users text-lg"></i>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="text-2xl sm:text-3xl font-black tracking-tight font-mono">
+                    {{ total_customers|default:"0" }}
+                </div>
+                <div class="mt-2.5 flex items-center justify-between text-xs text-purple-100">
+                    <span class="inline-flex items-center gap-1 bg-white/15 px-2 py-0.5 rounded-full font-semibold">
+                        <i class="fas fa-user-plus text-[10px]"></i> +{{ new_customers_month|default:"0" }} this month
+                    </span>
+                    <a href="{% url 'customers:customer_list' %}" class="underline text-[11px] text-purple-100 hover:text-white">Directory &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 2. QUICK ACTION COMMAND CENTER                                           -->
+    <!-- ========================================================================= -->
+    <div class="rounded-2xl bg-white border border-slate-200/90 p-4 sm:p-5 shadow-xs">
+        <div class="flex items-center justify-between mb-3.5">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Quick Actions & Generator Hub</h3>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">1-Click Dispatch & Billing</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+            <a href="{% url 'customers:customer_add' %}"
+               class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-700 transition-all group">
+                <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-user-plus text-sm"></i>
+                </div>
+                <span class="text-xs font-bold text-center leading-tight">New Customer</span>
+            </a>
+
+            <a href="{% url 'billing:bill_create' %}?type=QUOTATION"
+               class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-700 transition-all group">
+                <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-file-lines text-sm"></i>
+                </div>
+                <span class="text-xs font-bold text-center leading-tight">New Quotation</span>
+            </a>
+
+            <a href="{% url 'billing:bill_create' %}?type=TAX_INVOICE"
+               class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 transition-all group">
+                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-file-invoice text-sm"></i>
+                </div>
+                <span class="text-xs font-bold text-center leading-tight">Tax Invoice</span>
+            </a>
+
+            <a href="{% url 'payments:payment_add' %}"
+               class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-300 text-slate-700 hover:text-teal-700 transition-all group">
+                <div class="w-9 h-9 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-indian-rupee-sign text-sm"></i>
+                </div>
+                <span class="text-xs font-bold text-center leading-tight">Receive Pay</span>
+            </a>
+
+            <a href="{% url 'billing:bill_create' %}?type=MARGIN_MONEY"
+               class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-purple-50 border border-slate-200 hover:border-purple-300 text-slate-700 hover:text-purple-700 transition-all group">
+                <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-receipt text-sm"></i>
+                </div>
+                <span class="text-xs font-bold text-center leading-tight">Margin Money</span>
+            </a>
+
+            <a href="{% url 'billing:bill_create' %}?type=DELIVERY_CHALLAN"
+               class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-300 text-slate-700 hover:text-orange-700 transition-all group">
+                <div class="w-9 h-9 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-truck text-sm"></i>
+                </div>
+                <span class="text-xs font-bold text-center leading-tight">Delivery Slip</span>
+            </a>
+
+            <a href="{% url 'expenses:expense_create' %}"
+               class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-700 hover:text-rose-700 transition-all group">
+                <div class="w-9 h-9 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-wallet text-sm"></i>
+                </div>
+                <span class="text-xs font-bold text-center leading-tight">Add Expense</span>
+            </a>
+
+            <a href="{% url 'billing:inventory_dashboard' %}"
+               class="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-400 text-slate-700 hover:text-slate-900 transition-all group">
+                <div class="w-9 h-9 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-warehouse text-sm"></i>
+                </div>
+                <span class="text-xs font-bold text-center leading-tight">Tractor Stock</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 3. INTERACTIVE CHARTS ROW (Revenue Velocity Area Chart + Document Donut)   -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Chart: Revenue, Billed & Collections Velocity (7 cols) -->
+        <div class="lg:col-span-7 rounded-2xl bg-white border border-slate-200/90 p-5 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                     <div>
-                        <p class="text-sm font-medium text-gray-800">{{ bill.bill_number }}</p>
-                        <p class="text-xs text-gray-500">{{ bill.customer.full_name }}</p>
+                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <i class="fas fa-chart-area text-blue-600"></i>
+                            Revenue & Cash Flow Velocity
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Tracking gross billing output vs realized customer collections</p>
+                    </div>
+
+                    <!-- Toggle Timeframe Tabs -->
+                    <div class="inline-flex items-center rounded-lg bg-slate-100 p-1 border border-slate-200 text-xs font-bold">
+                        <button type="button" id="btn-chart-daily"
+                                onclick="switchChartTimeframe('daily')"
+                                class="px-3 py-1 rounded-md transition-all bg-white text-blue-700 shadow-xs">
+                            Last 14 Days
+                        </button>
+                        <button type="button" id="btn-chart-monthly"
+                                onclick="switchChartTimeframe('monthly')"
+                                class="px-3 py-1 rounded-md transition-all text-slate-600 hover:text-slate-900">
+                            Last 6 Months
+                        </button>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-sm font-semibold text-gray-800">₹{{ bill.grand_total|intcomma }}</p>
-                    <p class="text-xs text-gray-400">{{ bill.bill_date|date:"d M Y" }}</p>
-                </div>
-            </a>
-            {% empty %}
-            <div class="px-5 py-8 text-center text-gray-400">
-                <i class="fas fa-file-invoice text-3xl mb-2"></i>
-                <p class="text-sm">No bills yet. Create your first bill!</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- Recent Payments -->
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h3 class="font-semibold text-gray-800">Recent Payments</h3>
-            <a href="{% url 'payments:payment_list' %}" class="text-sm text-green-600 hover:text-green-800">View All →</a>
+                <!-- Main Canvas Chart -->
+                <div class="relative w-full h-72 sm:h-80 mt-4">
+                    <canvas id="revenueSplineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Sub Metrics Row Under Chart -->
+            <div class="grid grid-cols-3 gap-2 sm:gap-4 pt-4 mt-2 border-t border-slate-100 text-center">
+                <div class="bg-blue-50/60 rounded-xl p-2.5">
+                    <p class="text-[11px] font-semibold text-blue-700 uppercase tracking-wider">This Month Billed</p>
+                    <p class="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 font-mono">₹{{ billed_this_month|default:"0"|floatformat:0|intcomma }}</p>
+                </div>
+                <div class="bg-emerald-50/60 rounded-xl p-2.5">
+                    <p class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">This Month Paid</p>
+                    <p class="text-sm sm:text-base font-extrabold text-emerald-900 mt-0.5 font-mono">₹{{ collected_this_month|default:"0"|floatformat:0|intcomma }}</p>
+                </div>
+                <div class="bg-purple-50/60 rounded-xl p-2.5">
+                    <p class="text-[11px] font-semibold text-purple-700 uppercase tracking-wider">Realization Rate</p>
+                    <p class="text-sm sm:text-base font-extrabold text-purple-900 mt-0.5 font-mono">{{ collection_rate }}%</p>
+                </div>
+            </div>
         </div>
-        <div class="divide-y divide-gray-50">
-            {% for payment in recent_payments %}
-            <a href="{% url 'payments:payment_detail' payment.pk %}" class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors">
-                <div class="flex items-center gap-3">
-                    <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-green-100 text-green-700">
-                        <i class="fas fa-indian-rupee-sign"></i>
-                    </span>
+
+        <!-- Right Chart: Document Distribution Donut Ring Chart (5 cols) -->
+        <div class="lg:col-span-5 rounded-2xl bg-white border border-slate-200/90 p-5 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div>
-                        <p class="text-sm font-medium text-gray-800">{{ payment.receipt_number }}</p>
-                        <p class="text-xs text-gray-500">{{ payment.customer.full_name }}</p>
+                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <i class="fas fa-chart-pie text-indigo-600"></i>
+                            Operations & Document Pipeline
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Distribution across bill & dispatch types</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold font-mono">
+                        {{ total_bills|default:"0" }} Total
+                    </span>
+                </div>
+
+                <!-- Donut Chart Container -->
+                <div class="relative w-full h-56 sm:h-60 mt-3 flex items-center justify-center">
+                    <canvas id="documentDonutChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Custom Document Breakdown List -->
+            <div class="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100">
+                <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></span>
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold text-slate-700 truncate">Tax Invoices</p>
+                        <p class="text-xs font-black text-slate-900 font-mono">{{ tax_invoice_count|default:"0" }}</p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-sm font-semibold text-green-700">+₹{{ payment.amount|intcomma }}</p>
-                    <p class="text-xs text-gray-400">{{ payment.payment_date|date:"d M Y" }}</p>
+                <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                    <span class="w-3 h-3 rounded-full bg-blue-500 shrink-0"></span>
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold text-slate-700 truncate">Quotations</p>
+                        <p class="text-xs font-black text-slate-900 font-mono">{{ quotation_count|default:"0" }}</p>
+                    </div>
                 </div>
-            </a>
-            {% empty %}
-            <div class="px-5 py-8 text-center text-gray-400">
-                <i class="fas fa-indian-rupee-sign text-3xl mb-2"></i>
-                <p class="text-sm">No payments received yet.</p>
+                <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                    <span class="w-3 h-3 rounded-full bg-purple-500 shrink-0"></span>
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold text-slate-700 truncate">Margin Money</p>
+                        <p class="text-xs font-black text-slate-900 font-mono">{{ margin_money_count|default:"0" }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                    <span class="w-3 h-3 rounded-full bg-orange-500 shrink-0"></span>
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold text-slate-700 truncate">Delivery Slips</p>
+                        <p class="text-xs font-black text-slate-900 font-mono">{{ delivery_challan_count|default:"0" }}</p>
+                    </div>
+                </div>
             </div>
-            {% endfor %}
         </div>
-    </div>
-</div>
 
-<!-- Monthly Summary -->
-<div class="bg-white rounded-xl border border-gray-200 shadow-sm mt-6 p-5">
-    <h3 class="font-semibold text-gray-800 mb-4">This Month's Summary</h3>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-blue-50 rounded-lg p-4 text-center">
-            <p class="text-xs text-blue-600 font-medium">Bills Created</p>
-            <p class="text-xl font-bold text-blue-800 mt-1">{{ bills_this_month|default:"0" }}</p>
-        </div>
-        <div class="bg-purple-50 rounded-lg p-4 text-center">
-            <p class="text-xs text-purple-600 font-medium">Amount Billed</p>
-            <p class="text-xl font-bold text-purple-800 mt-1">₹{{ billed_this_month|default:"0"|intcomma }}</p>
-        </div>
-        <div class="bg-green-50 rounded-lg p-4 text-center">
-            <p class="text-xs text-green-600 font-medium">Amount Collected</p>
-            <p class="text-xl font-bold text-green-800 mt-1">₹{{ collected_this_month|default:"0"|intcomma }}</p>
-        </div>
-        <div class="bg-orange-50 rounded-lg p-4 text-center">
-            <p class="text-xs text-orange-600 font-medium">New Customers</p>
-            <p class="text-xl font-bold text-orange-800 mt-1">{{ new_customers_month|default:"0" }}</p>
-        </div>
     </div>
+
+    <!-- ========================================================================= -->
+    <!-- 4. SECOND ANALYTICS ROW (Payment Channels + Inventory + Operating Cash)   -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        <!-- Card A: Payment Mode Channels -->
+        <div class="rounded-2xl bg-white border border-slate-200/90 p-5 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fas fa-credit-card text-teal-600"></i>
+                        Payment Channels
+                    </h4>
+                    <span class="text-xs text-slate-400 font-medium">Customer Collections</span>
+                </div>
+
+                <div class="mt-4 space-y-3">
+                    {% for pm in payment_modes_breakdown %}
+                    <div>
+                        <div class="flex items-center justify-between text-xs mb-1">
+                            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ pm.color }};"></span>
+                                {{ pm.label }}
+                            </span>
+                            <span class="font-mono font-bold text-slate-900">₹{{ pm.total|floatformat:0|intcomma }} ({{ pm.percent }}%)</span>
+                        </div>
+                        <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                            <div class="h-full rounded-full" style="width: {{ pm.percent }}%; background-color: {{ pm.color }};"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-slate-400 text-center py-6">No payments recorded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 text-right">
+                <a href="{% url 'payments:payment_list' %}" class="text-xs font-bold text-teal-600 hover:text-teal-800">
+                    View All Collections &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- Card B: Machinery & Tractor Stock Health -->
+        <div class="rounded-2xl bg-white border border-slate-200/90 p-5 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fas fa-tractor text-orange-600"></i>
+                        Machinery & Tractor Stock
+                    </h4>
+                    <span class="text-xs text-slate-400 font-medium">Inventory Health</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="p-3 rounded-xl bg-orange-50/70 border border-orange-100 text-center">
+                        <p class="text-xs text-orange-800 font-bold uppercase tracking-wider">Available Tractors</p>
+                        <p class="text-2xl font-black text-orange-950 font-mono mt-0.5">{{ inventory_stats.available_tractors|default:"0" }}</p>
+                        <p class="text-[11px] text-orange-700 mt-1">Ready for delivery</p>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                        <p class="text-xs text-slate-600 font-bold uppercase tracking-wider">Catalog Products</p>
+                        <p class="text-2xl font-black text-slate-800 font-mono mt-0.5">{{ inventory_stats.total_products|default:"0" }}</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Equipment & spares</p>
+                    </div>
+                </div>
+
+                {% if inventory_stats.low_stock_products > 0 %}
+                <div class="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2 text-xs text-amber-800">
+                    <i class="fas fa-triangle-exclamation text-amber-600"></i>
+                    <span><strong>{{ inventory_stats.low_stock_products }} item(s)</strong> running low on inventory stock!</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 text-right">
+                <a href="{% url 'billing:inventory_dashboard' %}" class="text-xs font-bold text-orange-600 hover:text-orange-800">
+                    Open Stock Dashboard &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- Card C: Showroom Operating Expenses -->
+        <div class="rounded-2xl bg-white border border-slate-200/90 p-5 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fas fa-wallet text-rose-600"></i>
+                        Operating Expenses
+                    </h4>
+                    <span class="text-xs text-slate-400 font-medium">Showroom Overheads</span>
+                </div>
+
+                <div class="mt-4 space-y-3">
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-rose-50/60 border border-rose-100">
+                        <div>
+                            <p class="text-xs text-rose-700 font-bold uppercase">This Month Expenses</p>
+                            <p class="text-xl font-black text-rose-950 font-mono mt-0.5">₹{{ expenses_this_month|default:"0"|floatformat:0|intcomma }}</p>
+                        </div>
+                        <div class="w-9 h-9 rounded-lg bg-rose-200 text-rose-800 flex items-center justify-center font-bold">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50/60 border border-emerald-100">
+                        <div>
+                            <p class="text-xs text-emerald-700 font-bold uppercase">Net Cash Balance</p>
+                            <p class="text-xl font-black text-emerald-950 font-mono mt-0.5">₹{{ net_cash_flow|default:"0"|floatformat:0|intcomma }}</p>
+                        </div>
+                        <div class="w-9 h-9 rounded-lg bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                <a href="{% url 'expenses:expense_create' %}" class="text-xs font-bold text-rose-600 hover:text-rose-800">
+                    + Add Expense
+                </a>
+                <a href="{% url 'expenses:expense_list' %}" class="text-xs font-bold text-slate-600 hover:text-slate-900">
+                    View Register &rarr;
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 5. RECENT ACTIVITY & PRIORITY CUSTOMER RECEIVABLES (2 Columns)             -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Column 1: Recent Invoices & Estimates -->
+        <div class="rounded-2xl bg-white border border-slate-200/90 shadow-xs overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                    <h3 class="font-bold text-slate-800 text-sm">Recent Invoices & Quotations</h3>
+                </div>
+                <a href="{% url 'billing:bill_list' %}" class="text-xs font-bold text-blue-600 hover:text-blue-800">
+                    View All Bills &rarr;
+                </a>
+            </div>
+            <div class="divide-y divide-slate-100">
+                {% for bill in recent_bills %}
+                <div class="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50/80 transition-colors">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0
+                            {% if bill.bill_type == 'QUOTATION' %}bg-blue-100 text-blue-700
+                            {% elif bill.bill_type == 'TAX_INVOICE' %}bg-emerald-100 text-emerald-700
+                            {% elif bill.bill_type == 'MARGIN_MONEY' %}bg-purple-100 text-purple-700
+                            {% else %}bg-orange-100 text-orange-700{% endif %}">
+                            {% if bill.bill_type == 'QUOTATION' %}Q{% elif bill.bill_type == 'TAX_INVOICE' %}TI{% elif bill.bill_type == 'MARGIN_MONEY' %}MM{% else %}DC{% endif %}
+                        </span>
+                        <div class="min-w-0">
+                            <a href="{% url 'billing:bill_detail' bill.pk %}" class="text-sm font-bold text-slate-800 hover:text-blue-600 truncate block">
+                                {{ bill.bill_number }}
+                            </a>
+                            <p class="text-xs text-slate-500 truncate">
+                                {{ bill.customer.full_name }} {% if bill.customer.village %}&bull; {{ bill.customer.village }}{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0 ml-3 flex items-center gap-3">
+                        <div>
+                            <p class="text-sm font-black text-slate-900 font-mono">₹{{ bill.grand_total|floatformat:0|intcomma }}</p>
+                            <p class="text-[11px] text-slate-400">{{ bill.bill_date|date:"d M Y" }}</p>
+                        </div>
+                        <a href="{% url 'billing:bill_pdf' bill.pk %}" target="_blank"
+                           class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-600 flex items-center justify-center transition-colors"
+                           title="Export PDF">
+                            <i class="fas fa-file-pdf text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center text-slate-400">
+                    <i class="fas fa-file-invoice text-3xl mb-2 text-slate-300"></i>
+                    <p class="text-xs">No bills created yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Column 2: Recent Collections & High-Priority Customer Dues -->
+        <div class="rounded-2xl bg-white border border-slate-200/90 shadow-xs overflow-hidden flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        <h3 class="font-bold text-slate-800 text-sm">Recent Collections Received</h3>
+                    </div>
+                    <a href="{% url 'payments:payment_list' %}" class="text-xs font-bold text-emerald-600 hover:text-emerald-800">
+                        Payment Register &rarr;
+                    </a>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    {% for payment in recent_payments %}
+                    <div class="flex items-center justify-between px-5 py-3 hover:bg-slate-50/80 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                <i class="fas fa-indian-rupee-sign text-[11px]"></i>
+                            </span>
+                            <div class="min-w-0">
+                                <a href="{% url 'payments:payment_detail' payment.pk %}" class="text-xs font-bold text-slate-800 hover:text-emerald-700 truncate block">
+                                    {{ payment.receipt_number }}
+                                </a>
+                                <p class="text-[11px] text-slate-500 truncate">{{ payment.customer.full_name }} &bull; <span class="uppercase text-[10px] font-semibold text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded">{{ payment.get_payment_mode_display }}</span></p>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-xs font-black text-emerald-600 font-mono">+₹{{ payment.amount|floatformat:0|intcomma }}</p>
+                            <p class="text-[10px] text-slate-400">{{ payment.payment_date|date:"d M Y" }}</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-6 text-center text-slate-400">
+                        <p class="text-xs">No payments received yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Pending Debtor Action Alert Card -->
+            {% if pending_customers %}
+            <div class="p-4 bg-gradient-to-r from-amber-50/70 to-rose-50/70 border-t border-amber-100">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold uppercase text-amber-800 tracking-wider flex items-center gap-1.5">
+                        <i class="fas fa-bell text-amber-600"></i> Priority Unpaid Receivables
+                    </span>
+                    <a href="{% url 'payments:pending_payments' %}" class="text-[11px] font-bold text-amber-900 underline">
+                        All {{ pending_customers|length }} Debtor(s) &rarr;
+                    </a>
+                </div>
+                <div class="space-y-1.5">
+                    {% for pc in pending_customers|slice:":3" %}
+                    <div class="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-white/80 border border-amber-200/60">
+                        <div class="truncate mr-2">
+                            <span class="font-bold text-slate-800">{{ pc.full_name }}</span>
+                            {% if pc.mobile_primary %}
+                            <span class="text-slate-400 text-[10px]">&bull; {{ pc.mobile_primary }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="font-bold text-rose-700 font-mono">₹{{ pc.db_due|floatformat:0|intcomma }}</span>
+                            {% if pc.mobile_primary %}
+                            <a href="https://wa.me/91{{ pc.mobile_primary }}?text=Dear%20{{ pc.full_name|urlencode }},%20friendly%20reminder%20regarding%20your%20pending%20balance%20of%20Rs.{{ pc.db_due|floatformat:0 }}%20at%20our%20showroom.%20Thank%20you!"
+                               target="_blank"
+                               class="w-6 h-6 rounded bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center text-[10px]"
+                               title="Send WhatsApp Reminder">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Chart.js 4.4.1 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const chartData = {{ chart_data_json|safe }};
+    let currentSplineChart = null;
+    let currentDonutChart = null;
+
+    // Helper: Indian currency formatter
+    const formatINR = (val) => {
+        return '₹' + Number(val).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    };
+
+    // -------------------------------------------------------------------------
+    // 1. REVENUE & COLLECTIONS SPLINE AREA CHART
+    // -------------------------------------------------------------------------
+    const splineCtx = document.getElementById('revenueSplineChart');
+    if (splineCtx && chartData.daily_labels) {
+        const ctx2d = splineCtx.getContext('2d');
+
+        // Linear Gradients for Area Fills
+        const blueGradient = ctx2d.createLinearGradient(0, 0, 0, 300);
+        blueGradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
+        blueGradient.addColorStop(1, 'rgba(59, 130, 246, 0.00)');
+
+        const emeraldGradient = ctx2d.createLinearGradient(0, 0, 0, 300);
+        emeraldGradient.addColorStop(0, 'rgba(16, 185, 129, 0.40)');
+        emeraldGradient.addColorStop(1, 'rgba(16, 185, 129, 0.00)');
+
+        const renderSpline = (labels, billedData, collectedData) => {
+            if (currentSplineChart) {
+                currentSplineChart.destroy();
+            }
+
+            currentSplineChart = new Chart(ctx2d, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Customer Collections',
+                            data: collectedData,
+                            borderColor: '#10b981',
+                            backgroundColor: emeraldGradient,
+                            borderWidth: 2.5,
+                            tension: 0.38,
+                            fill: true,
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        },
+                        {
+                            label: 'Tax Invoices Billed',
+                            data: billedData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: blueGradient,
+                            borderWidth: 2.5,
+                            tension: 0.38,
+                            fill: true,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                boxWidth: 12,
+                                boxHeight: 12,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                font: {
+                                    family: "'Inter', sans-serif",
+                                    size: 11,
+                                    weight: 600,
+                                },
+                                color: '#475569'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { size: 12, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' + formatINR(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 10, weight: 500 }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#f1f5f9',
+                                drawBorder: false,
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 10, weight: 500 },
+                                callback: function (value) {
+                                    if (value >= 100000) {
+                                        return '₹' + (value / 100000).toFixed(1) + 'L';
+                                    } else if (value >= 1000) {
+                                        return '₹' + (value / 1000).toFixed(0) + 'k';
+                                    }
+                                    return '₹' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+        // Initial render: 14-Day Daily
+        renderSpline(chartData.daily_labels, chartData.daily_billed, chartData.daily_collected);
+
+        // Global switch function for timeframe buttons
+        window.switchChartTimeframe = function(type) {
+            const btnDaily = document.getElementById('btn-chart-daily');
+            const btnMonthly = document.getElementById('btn-chart-monthly');
+
+            if (type === 'daily') {
+                btnDaily.className = 'px-3 py-1 rounded-md transition-all bg-white text-blue-700 shadow-xs';
+                btnMonthly.className = 'px-3 py-1 rounded-md transition-all text-slate-600 hover:text-slate-900';
+                renderSpline(chartData.daily_labels, chartData.daily_billed, chartData.daily_collected);
+            } else {
+                btnMonthly.className = 'px-3 py-1 rounded-md transition-all bg-white text-blue-700 shadow-xs';
+                btnDaily.className = 'px-3 py-1 rounded-md transition-all text-slate-600 hover:text-slate-900';
+                renderSpline(chartData.monthly_labels, chartData.monthly_billed, chartData.monthly_collected);
+            }
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. DOCUMENT DISTRIBUTION DONUT RING CHART
+    // -------------------------------------------------------------------------
+    const donutCtx = document.getElementById('documentDonutChart');
+    if (donutCtx && chartData.doc_labels) {
+        currentDonutChart = new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.doc_labels,
+                datasets: [{
+                    data: chartData.doc_counts,
+                    backgroundColor: chartData.doc_colors,
+                    hoverOffset: 6,
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 10,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function (context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${context.raw} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
