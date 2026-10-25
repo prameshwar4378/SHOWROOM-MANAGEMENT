@@ -15,8 +15,10 @@ whatsapp_bridge/.wwebjs_cache/
 npm-debug.log*
 yarn-debug.log*
 
-# User Uploaded Media
+# User Uploaded Media & Build Artifacts
 media/
+staticfiles/
+logs/
 
 # Scratch & Temporary Testing Files
 scratch/

@@ -1,0 +1,26 @@
+# ====================================================================
+# Systemd Service Unit for WhatsApp Web Bridge Gateway (Node.js)
+# Place in: /etc/systemd/system/showroom-whatsapp.service
+# Enable: sudo systemctl enable showroom-whatsapp
+# Start: sudo systemctl start showroom-whatsapp
+# Status: sudo systemctl status showroom-whatsapp
+# Logs: sudo journalctl -u showroom-whatsapp -f
+# ====================================================================
+
+[Unit]
+Description=WhatsApp Web Self-Hosted Bridge Gateway
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/showroom/SHOWROOM_MANAGEMENT/whatsapp_bridge
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=10
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,34 @@
+# ====================================================================
+# Systemd Service Unit for Tractor Showroom Management System (Gunicorn)
+# Place in: /etc/systemd/system/showroom.service
+# Enable: sudo systemctl enable showroom
+# Start: sudo systemctl start showroom
+# Status: sudo systemctl status showroom
+# Logs: sudo journalctl -u showroom -f
+# ====================================================================
+
+[Unit]
+Description=Gunicorn daemon for Tractor Showroom Management System
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/showroom/SHOWROOM_MANAGEMENT
+EnvironmentFile=/var/www/showroom/SHOWROOM_MANAGEMENT/.env
+ExecStart=/var/www/showroom/venv/bin/gunicorn \
+    --workers 3 \
+    --threads 2 \
+    --worker-class gthread \
+    --bind 127.0.0.1:8000 \
+    --timeout 120 \
+    --access-logfile /var/www/showroom/SHOWROOM_MANAGEMENT/logs/gunicorn-access.log \
+    --error-logfile /var/www/showroom/SHOWROOM_MANAGEMENT/logs/gunicorn-error.log \
+    SHOWROOM_MANAGEMENT.wsgi:application
+
+Restart=always
+RestartSec=5
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

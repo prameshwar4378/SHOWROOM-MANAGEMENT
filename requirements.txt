@@ -1,0 +1,40 @@
+# ====================================================================
+# Tractor Showroom Management System — Production Dependencies
+# ====================================================================
+
+# Core Web Framework
+Django>=5.0,<6.1
+asgiref>=3.8.0
+sqlparse>=0.5.0
+
+# Production WSGI / ASGI Application Servers
+gunicorn>=21.2.0; sys_platform != "win32"
+waitress>=3.0.0; sys_platform == "win32"
+
+# Static Files Serving in Production (WhiteNoise)
+whitenoise>=6.6.0
+
+# Environment Variables Management
+python-dotenv>=1.0.0
+
+# Database Connectors (Optional for PostgreSQL / MySQL)
+# psycopg2-binary>=2.9.9; sys_platform != "win32"
+
+# UI & Forms
+django-crispy-forms>=2.1
+crispy-tailwind>=1.0.3
+django-filter>=24.0
+django-htmx>=1.18.0
+
+# Image & PDF Processing
+pillow>=10.2.0
+xhtml2pdf>=0.2.16
+reportlab>=4.1.0
+
+# Excel & Data Export
+openpyxl>=3.1.2
+pandas>=2.2.0
+
+# HTTP & API Client (WhatsApp Gateway Integration)
+requests>=2.31.0
+urllib3>=2.2.0
