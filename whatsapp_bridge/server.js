@@ -289,7 +289,7 @@ app.post('/send', async (req, res) => {
         return res.json({
             success: true,
             status: 'SENT',
-            messageId: sendResult.id._serialized,
+            messageId: sendResult?.id?._serialized || (sendResult?.id ? String(sendResult.id) : ('msg_' + Date.now())),
             recipient: cleanNumber,
             timestamp: new Date().toISOString()
         });
