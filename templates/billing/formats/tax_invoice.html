@@ -59,7 +59,7 @@
                 <table style="width: 100%; border: 1px solid #cbd5e1; border-collapse: collapse; margin-top: 5px; font-size: 7.5pt;">
                     <tr style="background-color: #f8fafc;">
                         <td style="padding: 2.5px 6px; color: #64748b; font-weight: bold; text-align: left; width: 45%; border-bottom: 1px solid #e2e8f0;">Invoice No:</td>
-                        <td style="padding: 2.5px 6px; font-weight: 900; color: #0f172a; font-family: Courier, monospace; text-align: right; width: 55%; border-bottom: 1px solid #e2e8f0;">{{ bill.bill_number }}</td>
+                        <td style="padding: 2.5px 6px; font-weight: 900; color: #0f172a; text-align: right; width: 55%; border-bottom: 1px solid #e2e8f0;">{{ bill.bill_number }}</td>
                     </tr>
                     <tr style="background-color: #ffffff;">
                         <td style="padding: 2.5px 6px; color: #64748b; font-weight: bold; text-align: left; border-bottom: 1px solid #e2e8f0;">Dated:</td>
@@ -110,7 +110,7 @@
                         {% if bill.customer.gstin %}
                         <tr>
                             <td style="color: #64748b; font-weight: bold; padding: 1px 0;">GSTIN:</td>
-                            <td style="padding: 1px 0;"><strong style="font-family: Courier, monospace;">{{ bill.customer.gstin }}</strong></td>
+                            <td style="padding: 1px 0;"><strong>{{ bill.customer.gstin }}</strong></td>
                         </tr>
                         {% endif %}
                     </table>
@@ -183,11 +183,11 @@
                     {{ item.item_description }}
                     {% if item.hsn_code %}
                     <div style="font-size: 7pt; font-weight: normal; color: #64748b; margin-top: 1px;">
-                        HSN/SAC: <span style="font-family: Courier, monospace; color: #334155; font-weight: bold;">{{ item.hsn_code }}</span>
+                        HSN/SAC: <span style="color: #334155; font-weight: bold;">{{ item.hsn_code }}</span>
                     </div>
                     {% endif %}
                 </td>
-                <td style="padding: 6px 4px; text-align: center; font-size: 7.5pt; font-family: Courier, monospace; color: #1e293b; vertical-align: top; border-bottom: 1px solid #e2e8f0; line-height: 1.25;">
+                <td style="padding: 6px 4px; text-align: center; font-size: 7.5pt; color: #1e293b; vertical-align: top; border-bottom: 1px solid #e2e8f0; line-height: 1.25;">
                     {% if item.chassis_number %}<div><strong>C:</strong> {{ item.chassis_number }}</div>{% endif %}
                     {% if item.engine_number %}<div><strong>E:</strong> {{ item.engine_number }}</div>{% endif %}
                     {% if not item.chassis_number and not item.engine_number %}<span style="color: #94a3b8;">--</span>{% endif %}
@@ -195,10 +195,10 @@
                 <td style="padding: 6px 4px; text-align: center; font-weight: bold; color: #1e293b; vertical-align: top; border-bottom: 1px solid #e2e8f0; font-size: 8pt;">
                     {{ item.quantity }}
                 </td>
-                <td style="padding: 6px 8px; text-align: right; color: #334155; vertical-align: top; border-bottom: 1px solid #e2e8f0; font-size: 8pt; font-family: Courier, monospace;">
+                <td style="padding: 6px 8px; text-align: right; color: #334155; vertical-align: top; border-bottom: 1px solid #e2e8f0; font-size: 8pt;">
                     {{ item.unit_price|floatformat:2|intcomma }}
                 </td>
-                <td style="padding: 6px 8px; text-align: right; font-weight: 900; color: #0f172a; vertical-align: top; border-bottom: 1px solid #e2e8f0; font-size: 8pt; font-family: Courier, monospace;">
+                <td style="padding: 6px 8px; text-align: right; font-weight: 900; color: #0f172a; vertical-align: top; border-bottom: 1px solid #e2e8f0; font-size: 8pt;">
                     {{ item.amount|floatformat:2|intcomma }}
                 </td>
             </tr>
@@ -240,11 +240,17 @@
                     <tr>
                         <td style="padding: 6px 8px; text-align: center;">
                             <div style="height: 22px;"></div>
-                            <div style="border-top: 1px solid #94a3b8; width: 85%; margin: 0 auto; padding-top: 2px;">
-                                <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    Receiver's Signature & Stamp
-                                </span>
-                            </div>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="width: 7.5%; border: none;"></td>
+                                    <td style="width: 85%; border-top: 1px solid #94a3b8; text-align: center; padding-top: 2px; border-left: none; border-right: none; border-bottom: none;">
+                                        <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            Receiver's Signature & Stamp
+                                        </span>
+                                    </td>
+                                    <td style="width: 7.5%; border: none;"></td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
@@ -256,34 +262,34 @@
                 <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; margin-bottom: 5px;">
                     <tr>
                         <td style="padding: 2px 0; color: #64748b; font-weight: bold;">Subtotal:</td>
-                        <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace;">Rs. {{ bill.subtotal|default:bill.grand_total|floatformat:2|intcomma }}</td>
+                        <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a;">Rs. {{ bill.subtotal|default:bill.grand_total|floatformat:2|intcomma }}</td>
                     </tr>
                     {% if bill.is_gst_bill and bill.total_tax > 0 and bill.gst_config %}
                         {% if bill.cgst_amount > 0 or bill.sgst_amount > 0 %}
                         <tr>
                             <td style="padding: 2px 0; color: #64748b; font-weight: bold;">SGST ({{ bill.gst_config.sgst_rate }}%):</td>
-                            <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace;">Rs. {{ bill.sgst_amount|floatformat:2|intcomma }}</td>
+                            <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a;">Rs. {{ bill.sgst_amount|floatformat:2|intcomma }}</td>
                         </tr>
                         <tr>
                             <td style="padding: 2px 0; color: #64748b; font-weight: bold;">CGST ({{ bill.gst_config.cgst_rate }}%):</td>
-                            <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace;">Rs. {{ bill.cgst_amount|floatformat:2|intcomma }}</td>
+                            <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a;">Rs. {{ bill.cgst_amount|floatformat:2|intcomma }}</td>
                         </tr>
                         {% elif bill.igst_amount > 0 %}
                         <tr>
                             <td style="padding: 2px 0; color: #64748b; font-weight: bold;">IGST ({{ bill.gst_config.igst_rate }}%):</td>
-                            <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace;">Rs. {{ bill.igst_amount|floatformat:2|intcomma }}</td>
+                            <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a;">Rs. {{ bill.igst_amount|floatformat:2|intcomma }}</td>
                         </tr>
                         {% endif %}
                     {% else %}
                         <tr>
                             <td style="padding: 2px 0; color: #64748b; font-weight: bold;">Tax (GST):</td>
-                            <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #059669; font-family: Courier, monospace;">0.00% (Agricultural Exemption)</td>
+                            <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #059669;">0.00% (Agricultural Exemption)</td>
                         </tr>
                     {% endif %}
                     {% if bill.accessories_insurance and bill.accessories_insurance > 0 %}
                     <tr>
                         <td style="padding: 2px 0; color: #64748b; font-weight: bold;">Accessories & Ins.:</td>
-                        <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace;">Rs. {{ bill.accessories_insurance|floatformat:2|intcomma }}</td>
+                        <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a;">Rs. {{ bill.accessories_insurance|floatformat:2|intcomma }}</td>
                     </tr>
                     {% endif %}
                 </table>
@@ -294,7 +300,7 @@
                         <td style="padding: 8px 10px; font-size: 8pt; font-weight: bold; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; width: 42%; border-left: 4px solid #ea580c;">
                             Grand Total:
                         </td>
-                        <td style="padding: 8px 10px; font-size: 11pt; font-weight: 900; color: #ffffff; text-align: right; width: 58%; font-family: Courier, monospace;">
+                        <td style="padding: 8px 10px; font-size: 11pt; font-weight: 900; color: #ffffff; text-align: right; width: 58%;">
                             Rs. {{ bill.grand_total|floatformat:2|intcomma }}
                         </td>
                     </tr>
@@ -314,11 +320,17 @@
                             {% else %}
                             <div style="height: 28px;"></div>
                             {% endif %}
-                            <div style="border-top: 1px solid #94a3b8; width: 85%; margin: 0 auto; padding-top: 2px;">
-                                <span style="font-size: 7pt; font-weight: bold; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    Authorized Signatory
-                                </span>
-                            </div>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="width: 7.5%; border: none;"></td>
+                                    <td style="width: 85%; border-top: 1px solid #94a3b8; text-align: center; padding-top: 2px; border-left: none; border-right: none; border-bottom: none;">
+                                        <span style="font-size: 7pt; font-weight: bold; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            Authorized Signatory
+                                        </span>
+                                    </td>
+                                    <td style="width: 7.5%; border: none;"></td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>

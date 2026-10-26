@@ -92,7 +92,7 @@
                         </tr>
                         <tr>
                             <td style="width: 92px; color: #64748b; font-weight: bold; padding: 2px 0; border: none; vertical-align: top;">Mobile:</td>
-                            <td style="padding: 2px 0; color: #0f172a; font-family: Courier, monospace; font-weight: bold; border: none; vertical-align: top;">
+                            <td style="padding: 2px 0; color: #0f172a; font-weight: bold; border: none; vertical-align: top;">
                                 {{ bill.customer.mobile_primary|default:"--" }}{% if bill.customer.mobile_secondary %} / {{ bill.customer.mobile_secondary }}{% endif %}
                             </td>
                         </tr>
@@ -124,7 +124,7 @@
                     <table style="width: 100%; border-collapse: collapse; border: none; font-size: 7.5pt;">
                         <tr>
                             <td style="width: 95px; color: #64748b; font-weight: bold; padding: 2px 0; border: none; vertical-align: top;">Quotation No.:</td>
-                            <td style="padding: 2px 0; color: #0f172a; font-family: Courier, monospace; font-weight: 900; font-size: 8.5pt; border: none; vertical-align: top;">
+                            <td style="padding: 2px 0; color: #0f172a; font-weight: 900; font-size: 8.5pt; border: none; vertical-align: top;">
                                 {{ bill.bill_number }}
                             </td>
                         </tr>
@@ -187,16 +187,16 @@
             <td style="padding: 7px 10px; font-size: 8pt; color: #0f172a; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #cbd5e1; line-height: 1.35;">
                 <div style="font-weight: bold; color: #0f172a;">{{ item.quotation_description|default:item.item_description }}</div>
             </td>
-            <td style="padding: 7px 4px; text-align: center; font-size: 7.5pt; color: #475569; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #cbd5e1; font-family: Courier, monospace;">
+            <td style="padding: 7px 4px; text-align: center; font-size: 7.5pt; color: #475569; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #cbd5e1;">
                 {{ item.hsn_code|default:"8701" }}
             </td>
             <td style="padding: 7px 4px; text-align: center; font-size: 8pt; color: #0f172a; font-weight: bold; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #cbd5e1;">
                 {{ item.quantity }} NOS
             </td>
-            <td style="padding: 7px 10px; text-align: right; font-size: 8pt; color: #334155; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #cbd5e1; font-family: Courier, monospace;">
+            <td style="padding: 7px 10px; text-align: right; font-size: 8pt; color: #334155; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #cbd5e1;">
                 {{ item.unit_price|floatformat:2|intcomma }}
             </td>
-            <td style="padding: 7px 10px; text-align: right; font-size: 8pt; color: #0f172a; font-weight: bold; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: none; font-family: Courier, monospace;">
+            <td style="padding: 7px 10px; text-align: right; font-size: 8pt; color: #0f172a; font-weight: bold; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: none;">
                 {{ item.amount|floatformat:2|intcomma }}
             </td>
         </tr>
@@ -225,7 +225,7 @@
                 {{ total_quantity|default:1 }} NOS
             </td>
             <td style="padding: 6px 10px; border-right: 1px solid #cbd5e1; border-top: 1px solid #334155;">&nbsp;</td>
-            <td style="padding: 6px 10px; text-align: right; font-size: 8.5pt; font-weight: 900; color: #0f172a; font-family: Courier, monospace; border-top: 1px solid #334155; border-right: none;">
+            <td style="padding: 6px 10px; text-align: right; font-size: 8.5pt; font-weight: 900; color: #0f172a; border-top: 1px solid #334155; border-right: none;">
                 {{ bill.grand_total|floatformat:2|intcomma }}
             </td>
         </tr>
@@ -240,41 +240,41 @@
             <td style="width: 56%; vertical-align: top; padding: 0; border-right: 1px solid #334155;">
 
                 <!-- Amount in Words Card -->
-                <div style="background-color: #f1f5f9; padding: 4px 10px; font-size: 7pt; font-weight: bold; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1;">
-                    Total Amount in Words
+                <div style="background-color: #f1f5f9; padding: 4px 10px; font-size: 7pt; font-weight: bold; color: #334155; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1;">
+                    TOTAL AMOUNT IN WORDS
                 </div>
                 <div style="padding: 6px 10px; font-size: 7.5pt; font-weight: bold; color: #0f172a; line-height: 1.35; border-bottom: 1px solid #cbd5e1;">
                     {{ bill.amount_in_words|default:"Rupees Zero Only" }}
                 </div>
 
                 <!-- Showroom Direct Bank Account (For Loan Wire / RTGS) -->
-                <div style="background-color: #f1f5f9; padding: 4px 10px; font-size: 7pt; font-weight: bold; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1;">
-                    Bank Details (For Loan Disbursement / RTGS / NEFT)
+                <div style="background-color: #f1f5f9; padding: 4px 10px; font-size: 7pt; font-weight: bold; color: #334155; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1;">
+                    BANK DETAILS (FOR LOAN DISBURSEMENT / RTGS / NEFT)
                 </div>
-                <div style="padding: 6px 10px; font-size: 7.5pt; line-height: 1.45; border-bottom: 1px solid #cbd5e1;">
+                <div style="padding: 4px 0; font-size: 7.5pt; line-height: 1.45; border-bottom: 1px solid #cbd5e1;">
                     <table style="width: 100%; border-collapse: collapse; border: none; font-size: 7.5pt;">
                         <tr>
-                            <td style="width: 105px; color: #64748b; font-weight: bold; padding: 2px 0; border: none; vertical-align: top;">Bank &amp; Branch:</td>
-                            <td style="padding: 2px 0; color: #0f172a; font-weight: bold; border: none; vertical-align: top;">{{ company.primary_bank.bank_name|default:"State Bank of India" }}, {{ company.primary_bank.branch_name|default:company.city|default:"Main Branch" }}</td>
+                            <td style="width: 130px; color: #64748b; font-weight: bold; padding: 2px 6px 2px 10px; border: none; vertical-align: top;">Bank &amp; Branch:</td>
+                            <td style="padding: 2px 10px 2px 0; color: #0f172a; font-weight: bold; border: none; vertical-align: top;">{{ company.primary_bank.bank_name|default:"State Bank of India" }}, {{ company.primary_bank.branch_name|default:company.city|default:"Main Branch" }}</td>
                         </tr>
                         <tr>
-                            <td style="width: 105px; color: #64748b; font-weight: bold; padding: 2px 0; border: none; vertical-align: top;">Account Name:</td>
-                            <td style="padding: 2px 0; color: #0f172a; font-weight: bold; border: none; vertical-align: top;">{{ company.primary_bank.account_holder_name|default:company.company_name }}</td>
+                            <td style="width: 130px; color: #64748b; font-weight: bold; padding: 2px 6px 2px 10px; border: none; vertical-align: top;">Account Name:</td>
+                            <td style="padding: 2px 10px 2px 0; color: #0f172a; font-weight: bold; border: none; vertical-align: top;">{{ company.primary_bank.account_holder_name|default:company.company_name }}</td>
                         </tr>
                         <tr>
-                            <td style="width: 105px; color: #64748b; font-weight: bold; padding: 2px 0; border: none; vertical-align: top;">Account Number:</td>
-                            <td style="padding: 2px 0; color: #0f172a; font-family: Courier, monospace; font-weight: 900; font-size: 8pt; border: none; vertical-align: top;">{{ company.primary_bank.account_number|default:"--" }}</td>
+                            <td style="width: 130px; color: #64748b; font-weight: bold; padding: 2px 6px 2px 10px; border: none; vertical-align: top;">Account Number:</td>
+                            <td style="padding: 2px 10px 2px 0; color: #0f172a; font-weight: 900; font-size: 8pt; border: none; vertical-align: top;">{{ company.primary_bank.account_number|default:"--" }}</td>
                         </tr>
                         <tr>
-                            <td style="width: 105px; color: #64748b; font-weight: bold; padding: 2px 0; border: none; vertical-align: top;">IFSC Code:</td>
-                            <td style="padding: 2px 0; color: #0f172a; font-family: Courier, monospace; font-weight: 900; font-size: 8pt; border: none; vertical-align: top;">{{ company.primary_bank.ifsc_code|default:"--" }}</td>
+                            <td style="width: 130px; color: #64748b; font-weight: bold; padding: 2px 6px 2px 10px; border: none; vertical-align: top;">IFSC Code:</td>
+                            <td style="padding: 2px 10px 2px 0; color: #0f172a; font-weight: 900; font-size: 8pt; border: none; vertical-align: top;">{{ company.primary_bank.ifsc_code|default:"--" }}</td>
                         </tr>
                     </table>
                 </div>
 
                 <!-- Terms & Conditions of Estimate -->
-                <div style="background-color: #f1f5f9; padding: 4px 10px; font-size: 7pt; font-weight: bold; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1;">
-                    Terms and Conditions
+                <div style="background-color: #f1f5f9; padding: 4px 10px; font-size: 7pt; font-weight: bold; color: #334155; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1;">
+                    TERMS AND CONDITIONS
                 </div>
                 <div style="padding: 5px 10px; font-size: 6.5pt; color: #475569; line-height: 1.35; border-bottom: 1px solid #cbd5e1;">
                     <div>1. Rates quoted are current ex-showroom and subject to revision without prior notice.</div>
@@ -284,11 +284,16 @@
                 </div>
 
                 <!-- Customer Acceptance Signature -->
-                <div style="padding: 8px 10px; min-height: 40px; vertical-align: bottom;">
+                <div style="padding: 8px 10px;">
                     <div style="height: 22px;"></div>
-                    <div style="border-top: 1px solid #94a3b8; width: 75%; padding-top: 2px;">
-                        <span style="font-size: 7pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Customer Acceptance Signature</span>
-                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 75%; border-top: 1px solid #94a3b8; padding-top: 3px; border-left: none; border-right: none; border-bottom: none;">
+                                <span style="font-size: 7pt; font-weight: bold; color: #475569; letter-spacing: 0.5px;">CUSTOMER ACCEPTANCE SIGNATURE</span>
+                            </td>
+                            <td style="width: 25%; border: none;"></td>
+                        </tr>
+                    </table>
                 </div>
             </td>
 
@@ -299,14 +304,14 @@
                 <table style="width: 100%; border-collapse: collapse; border: none; font-size: 7.5pt;">
                     <tr>
                         <td style="padding: 4px 10px; color: #475569; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">Taxable Value</td>
-                        <td style="padding: 4px 10px; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">
+                        <td style="padding: 4px 10px; text-align: right; font-weight: bold; color: #0f172a; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">
                             Rs. {{ bill.taxable_amount|default:bill.subtotal|default:bill.grand_total|floatformat:2|intcomma }}
                         </td>
                     </tr>
                     {% if bill.discount_amount and bill.discount_amount > 0 %}
                     <tr>
                         <td style="padding: 3.5px 10px; color: #dc2626; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">Less : Special Discount</td>
-                        <td style="padding: 3.5px 10px; text-align: right; color: #dc2626; font-weight: bold; font-family: Courier, monospace; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">
+                        <td style="padding: 3.5px 10px; text-align: right; color: #dc2626; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">
                             -Rs. {{ bill.discount_amount|floatformat:2|intcomma }}
                         </td>
                     </tr>
@@ -314,7 +319,7 @@
                     {% if bill.accessories_insurance and bill.accessories_insurance > 0 %}
                     <tr>
                         <td style="padding: 3.5px 10px; color: #475569; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">Add : Insurance &amp; Accessories</td>
-                        <td style="padding: 3.5px 10px; text-align: right; color: #0f172a; font-family: Courier, monospace; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">
+                        <td style="padding: 3.5px 10px; text-align: right; color: #0f172a; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">
                             +Rs. {{ bill.accessories_insurance|floatformat:2|intcomma }}
                         </td>
                     </tr>
@@ -332,7 +337,7 @@
                     {% if bill.round_off_amount and bill.round_off_amount != 0 %}
                     <tr>
                         <td style="padding: 3.5px 10px; color: #475569; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">Round Off</td>
-                        <td style="padding: 3.5px 10px; text-align: right; color: #0f172a; font-family: Courier, monospace; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">
+                        <td style="padding: 3.5px 10px; text-align: right; color: #0f172a; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-top: none; border-left: none; border-right: none;">
                             Rs. {{ bill.round_off_amount|floatformat:2 }}
                         </td>
                     </tr>
@@ -341,9 +346,9 @@
                     <!-- Total Estimate Amount Banner -->
                     <tr style="background-color: #f8fafc; border-top: 1.5px solid #334155;">
                         <td style="padding: 6px 10px; font-size: 8pt; font-weight: 900; color: #0f172a; text-transform: uppercase; border-top: 1.5px solid #334155; border-bottom: 1px solid #cbd5e1; border-left: none; border-right: none;">
-                            Total Estimate (Rs.)
+                            TOTAL ESTIMATE (RS.)
                         </td>
-                        <td style="padding: 6px 10px; text-align: right; font-size: 11pt; font-weight: 900; color: #0f172a; font-family: Courier, monospace; border-top: 1.5px solid #334155; border-bottom: 1px solid #cbd5e1; border-left: none; border-right: none;">
+                        <td style="padding: 6px 10px; text-align: right; font-size: 11pt; font-weight: 900; color: #0f172a; border-top: 1.5px solid #334155; border-bottom: 1px solid #cbd5e1; border-left: none; border-right: none;">
                             Rs. {{ bill.grand_total|floatformat:2|intcomma }}
                         </td>
                     </tr>
@@ -358,11 +363,11 @@
                 <table style="width: 100%; border-collapse: collapse; border: none; font-size: 7pt; border-bottom: 1px solid #cbd5e1; background-color: #ffffff;">
                     <tr>
                         <td style="padding: 3px 10px; color: #64748b; font-weight: bold; border: none;">Est. Bank Loan (85%):</td>
-                        <td style="padding: 3px 10px; text-align: right; color: #0f172a; font-family: Courier, monospace; font-weight: bold; border: none;">Rs. {{ loan_balance|floatformat:2|intcomma }}</td>
+                        <td style="padding: 3px 10px; text-align: right; color: #0f172a; font-weight: bold; border: none;">Rs. {{ loan_balance|floatformat:2|intcomma }}</td>
                     </tr>
                     <tr>
                         <td style="padding: 3px 10px; color: #64748b; font-weight: bold; border: none;">Est. Margin Money (15%):</td>
-                        <td style="padding: 3px 10px; text-align: right; color: #0f172a; font-family: Courier, monospace; font-weight: bold; border: none;">Rs. {{ margin_suggested|floatformat:2|intcomma }}</td>
+                        <td style="padding: 3px 10px; text-align: right; color: #0f172a; font-weight: bold; border: none;">Rs. {{ margin_suggested|floatformat:2|intcomma }}</td>
                     </tr>
                 </table>
                 {% endif %}
@@ -384,9 +389,15 @@
                     {% else %}
                     <div style="height: 28px;"></div>
                     {% endif %}
-                    <div style="border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 2px;">
-                        <span style="font-size: 7pt; font-weight: bold; font-style: italic; color: #475569;">Authorised Signatory</span>
-                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 15%; border: none;"></td>
+                            <td style="width: 70%; border-top: 1px solid #94a3b8; text-align: center; padding-top: 2px; border-left: none; border-right: none; border-bottom: none;">
+                                <span style="font-size: 7pt; font-weight: bold; font-style: italic; color: #475569;">Authorised Signatory</span>
+                            </td>
+                            <td style="width: 15%; border: none;"></td>
+                        </tr>
+                    </table>
                 </div>
             </td>
         </tr>

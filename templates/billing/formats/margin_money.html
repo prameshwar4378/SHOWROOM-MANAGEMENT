@@ -59,7 +59,7 @@
             <tr style="background-color: #f8fafc;">
                 <td style="width: 28%; padding: 3px 6px; border-right: 1px solid #e2e8f0;">
                     <span style="color: #64748b; font-weight: bold; text-transform: uppercase;">Receipt No:</span>
-                    <strong style="font-family: Courier, monospace; color: #0f172a; margin-left: 2px;">{{ bill.bill_number }}</strong>
+                    <strong style="color: #0f172a; margin-left: 2px;">{{ bill.bill_number }}</strong>
                 </td>
                 <td style="width: 28%; padding: 3px 6px; border-right: 1px solid #e2e8f0;">
                     <span style="color: #64748b; font-weight: bold; text-transform: uppercase;">Date:</span>
@@ -67,7 +67,7 @@
                 </td>
                 <td style="width: 44%; padding: 3px 6px; text-align: right; background-color: #0f172a; color: #ffffff; border-left: 3px solid #ea580c;">
                     <span style="font-size: 6.5pt; font-weight: bold; text-transform: uppercase; margin-right: 4px;">Receipt Amount:</span>
-                    <strong style="font-size: 9pt; font-weight: 900; font-family: Courier, monospace;">Rs. {{ bill.grand_total|floatformat:2|intcomma }}</strong>
+                    <strong style="font-size: 9pt; font-weight: 900;">Rs. {{ bill.grand_total|floatformat:2|intcomma }}</strong>
                 </td>
             </tr>
         </table>
@@ -87,7 +87,7 @@
                             <td style="padding: 4px 6px; font-size: 7pt; line-height: 1.3;">
                                 <div style="font-size: 8.5pt; font-weight: 900; color: #0f172a;">{{ bill.customer.full_name }}</div>
                                 <div><span style="color: #64748b; font-weight: bold;">Village:</span> <strong>{{ bill.customer.village|default:"--" }}</strong> &bull; Tal: <strong>{{ bill.customer.taluka|default:"--" }}</strong></div>
-                                <div><span style="color: #64748b; font-weight: bold;">Dist:</span> <strong>{{ bill.customer.district|default:"--" }}</strong> &bull; Mob: <strong style="font-family: Courier, monospace;">{{ bill.customer.mobile_primary|default:"--" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: bold;">Dist:</span> <strong>{{ bill.customer.district|default:"--" }}</strong> &bull; Mob: <strong>{{ bill.customer.mobile_primary|default:"--" }}</strong></div>
                             </td>
                         </tr>
                     </table>
@@ -131,9 +131,15 @@
                         <tr>
                             <td style="padding: 4px 6px; text-align: center;">
                                 <div style="height: 18px;"></div>
-                                <div style="border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 2px;">
-                                    <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Customer Signature</span>
-                                </div>
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="width: 12.5%; border: none;"></td>
+                                        <td style="width: 75%; border-top: 1px solid #94a3b8; text-align: center; padding-top: 2px; border-left: none; border-right: none; border-bottom: none;">
+                                            <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Customer Signature</span>
+                                        </td>
+                                        <td style="width: 12.5%; border: none;"></td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
                     </table>
@@ -143,9 +149,15 @@
                         <tr>
                             <td style="padding: 4px 6px; text-align: center;">
                                 <div style="height: 18px;"></div>
-                                <div style="border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 2px;">
-                                    <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Authorised Signatory</span>
-                                </div>
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="width: 12.5%; border: none;"></td>
+                                        <td style="width: 75%; border-top: 1px solid #94a3b8; text-align: center; padding-top: 2px; border-left: none; border-right: none; border-bottom: none;">
+                                            <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Authorised Signatory</span>
+                                        </td>
+                                        <td style="width: 12.5%; border: none;"></td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
                     </table>
@@ -213,7 +225,7 @@
             <tr style="background-color: #f8fafc;">
                 <td style="width: 28%; padding: 3px 6px; border-right: 1px solid #e2e8f0;">
                     <span style="color: #64748b; font-weight: bold; text-transform: uppercase;">Receipt No:</span>
-                    <strong style="font-family: Courier, monospace; color: #0f172a; margin-left: 2px;">{{ bill.bill_number }}</strong>
+                    <strong style="color: #0f172a; margin-left: 2px;">{{ bill.bill_number }}</strong>
                 </td>
                 <td style="width: 28%; padding: 3px 6px; border-right: 1px solid #e2e8f0;">
                     <span style="color: #64748b; font-weight: bold; text-transform: uppercase;">Date:</span>
@@ -221,7 +233,7 @@
                 </td>
                 <td style="width: 44%; padding: 3px 6px; text-align: right; background-color: #0f172a; color: #ffffff; border-left: 3px solid #ea580c;">
                     <span style="font-size: 6.5pt; font-weight: bold; text-transform: uppercase; margin-right: 4px;">Receipt Amount:</span>
-                    <strong style="font-size: 9pt; font-weight: 900; font-family: Courier, monospace;">Rs. {{ bill.grand_total|floatformat:2|intcomma }}</strong>
+                    <strong style="font-size: 9pt; font-weight: 900;">Rs. {{ bill.grand_total|floatformat:2|intcomma }}</strong>
                 </td>
             </tr>
         </table>
@@ -241,7 +253,7 @@
                             <td style="padding: 4px 6px; font-size: 7pt; line-height: 1.3;">
                                 <div style="font-size: 8.5pt; font-weight: 900; color: #0f172a;">{{ bill.customer.full_name }}</div>
                                 <div><span style="color: #64748b; font-weight: bold;">Village:</span> <strong>{{ bill.customer.village|default:"--" }}</strong> &bull; Tal: <strong>{{ bill.customer.taluka|default:"--" }}</strong></div>
-                                <div><span style="color: #64748b; font-weight: bold;">Dist:</span> <strong>{{ bill.customer.district|default:"--" }}</strong> &bull; Mob: <strong style="font-family: Courier, monospace;">{{ bill.customer.mobile_primary|default:"--" }}</strong></div>
+                                <div><span style="color: #64748b; font-weight: bold;">Dist:</span> <strong>{{ bill.customer.district|default:"--" }}</strong> &bull; Mob: <strong>{{ bill.customer.mobile_primary|default:"--" }}</strong></div>
                             </td>
                         </tr>
                     </table>
@@ -285,9 +297,15 @@
                         <tr>
                             <td style="padding: 4px 6px; text-align: center;">
                                 <div style="height: 18px;"></div>
-                                <div style="border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 2px;">
-                                    <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Customer Signature</span>
-                                </div>
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="width: 12.5%; border: none;"></td>
+                                        <td style="width: 75%; border-top: 1px solid #94a3b8; text-align: center; padding-top: 2px; border-left: none; border-right: none; border-bottom: none;">
+                                            <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Customer Signature</span>
+                                        </td>
+                                        <td style="width: 12.5%; border: none;"></td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
                     </table>
@@ -297,9 +315,15 @@
                         <tr>
                             <td style="padding: 4px 6px; text-align: center;">
                                 <div style="height: 18px;"></div>
-                                <div style="border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 2px;">
-                                    <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Authorised Signatory</span>
-                                </div>
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="width: 12.5%; border: none;"></td>
+                                        <td style="width: 75%; border-top: 1px solid #94a3b8; text-align: center; padding-top: 2px; border-left: none; border-right: none; border-bottom: none;">
+                                            <span style="font-size: 6.5pt; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Authorised Signatory</span>
+                                        </td>
+                                        <td style="width: 12.5%; border: none;"></td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
                     </table>
