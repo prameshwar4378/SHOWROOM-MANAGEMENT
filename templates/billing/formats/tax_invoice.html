@@ -258,22 +258,27 @@
                         <td style="padding: 2px 0; color: #64748b; font-weight: bold;">Subtotal:</td>
                         <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace;">Rs. {{ bill.subtotal|default:bill.grand_total|floatformat:2|intcomma }}</td>
                     </tr>
-                    {% if bill.is_gst_bill %}
+                    {% if bill.is_gst_bill and bill.total_tax > 0 and bill.gst_config %}
                         {% if bill.cgst_amount > 0 or bill.sgst_amount > 0 %}
                         <tr>
-                            <td style="padding: 2px 0; color: #64748b; font-weight: bold;">SGST ({{ bill.gst_config.sgst_rate|default:"6" }}%):</td>
+                            <td style="padding: 2px 0; color: #64748b; font-weight: bold;">SGST ({{ bill.gst_config.sgst_rate }}%):</td>
                             <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace;">Rs. {{ bill.sgst_amount|floatformat:2|intcomma }}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 2px 0; color: #64748b; font-weight: bold;">CGST ({{ bill.gst_config.cgst_rate|default:"6" }}%):</td>
+                            <td style="padding: 2px 0; color: #64748b; font-weight: bold;">CGST ({{ bill.gst_config.cgst_rate }}%):</td>
                             <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace;">Rs. {{ bill.cgst_amount|floatformat:2|intcomma }}</td>
                         </tr>
                         {% elif bill.igst_amount > 0 %}
                         <tr>
-                            <td style="padding: 2px 0; color: #64748b; font-weight: bold;">IGST ({{ bill.gst_config.igst_rate|default:"12" }}%):</td>
+                            <td style="padding: 2px 0; color: #64748b; font-weight: bold;">IGST ({{ bill.gst_config.igst_rate }}%):</td>
                             <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #0f172a; font-family: Courier, monospace;">Rs. {{ bill.igst_amount|floatformat:2|intcomma }}</td>
                         </tr>
                         {% endif %}
+                    {% else %}
+                        <tr>
+                            <td style="padding: 2px 0; color: #64748b; font-weight: bold;">Tax (GST):</td>
+                            <td style="padding: 2px 0; text-align: right; font-weight: bold; color: #059669; font-family: Courier, monospace;">0.00% (Agricultural Exemption)</td>
+                        </tr>
                     {% endif %}
                     {% if bill.accessories_insurance and bill.accessories_insurance > 0 %}
                     <tr>

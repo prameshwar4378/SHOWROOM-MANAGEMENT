@@ -6,7 +6,7 @@
 
 {% block content %}
 <div x-data="billCalculator()" class="space-y-6">
-<form method="post" id="bill-form" novalidate @submit="isSubmitting = true" @keydown.enter="if ($event.target.tagName !== 'TEXTAREA' && !$event.target.classList.contains('allow-enter-submit')) { $event.preventDefault(); }" class="space-y-6">
+<form method="post" id="bill-form" novalidate @submit="if (!isGst) { const sel = document.getElementById('id_gst_config'); if (sel) { sel.value = ''; sel.disabled = true; } } isSubmitting = true;" @keydown.enter="if ($event.target.tagName !== 'TEXTAREA' && !$event.target.classList.contains('allow-enter-submit')) { $event.preventDefault(); }" class="space-y-6">
     {% csrf_token %}
 
     <!-- Top Global Validation Alert Banner -->
@@ -171,12 +171,12 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         <label for="id_is_gst_bill" class="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-2.5">
-                            <input type="checkbox" name="is_gst_bill" id="id_is_gst_bill" x-model="isGst" @change="recalculate()"
+                            <input type="checkbox" name="is_gst_bill" id="id_is_gst_bill" x-model="isGst" @change="onGstToggle()"
                                    class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
                             <span>Enable GST Calculation</span>
                         </label>
                         <span x-show="isGst" class="text-[11px] px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold border border-blue-200">GST Mode Active</span>
-                        <span x-show="!isGst" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-medium">Non-GST (Commercial)</span>
+                        <span x-show="!isGst" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-medium">Non-GST (Commercial / Agricultural Exemption)</span>
                     </div>
                     <div x-show="isGst" x-cloak class="flex items-center gap-2">
                         <label class="text-xs font-semibold text-slate-700 whitespace-nowrap">GST Tax Slab:</label>
@@ -1114,9 +1114,9 @@
             subtotal: 0.00,
             totalDiscount: 0.00,
             taxableAmount: 0.00,
-            cgstRate: 6.00,
-            sgstRate: 6.00,
-            igstRate: 12.00,
+            cgstRate: 0.00,
+            sgstRate: 0.00,
+            igstRate: 0.00,
             cgstAmount: 0.00,
             sgstAmount: 0.00,
             igstAmount: 0.00,
@@ -1151,7 +1151,14 @@
 
                 const gstSelect = document.getElementById('id_gst_config');
                 if (gstSelect) {
-                    this.selectedGstConfig = gstSelect.value;
+                    if (!this.isGst) {
+                        gstSelect.disabled = true;
+                        gstSelect.value = '';
+                        this.selectedGstConfig = '';
+                    } else {
+                        gstSelect.disabled = false;
+                        this.selectedGstConfig = gstSelect.value;
+                    }
                     gstSelect.addEventListener('change', (e) => {
                         this.selectedGstConfig = e.target.value;
                         this.updateGstRates();
@@ -1220,16 +1227,49 @@
                 this.isInterstate = Boolean(custState && compState && custState !== compState);
             },
 
-            updateGstRates() {
-                if (this.selectedGstConfig && this.gstConfigs[this.selectedGstConfig]) {
-                    const cfg = this.gstConfigs[this.selectedGstConfig];
-                    this.cgstRate = cfg.cgst;
-                    this.sgstRate = cfg.sgst;
-                    this.igstRate = cfg.igst;
+            onGstToggle() {
+                const gstSelect = document.getElementById('id_gst_config');
+                if (!this.isGst) {
+                    this.selectedGstConfig = '';
+                    if (gstSelect) {
+                        gstSelect.value = '';
+                        gstSelect.disabled = true;
+                    }
+                    this.cgstRate = 0.00;
+                    this.sgstRate = 0.00;
+                    this.igstRate = 0.00;
+                    this.cgstAmount = 0.00;
+                    this.sgstAmount = 0.00;
+                    this.igstAmount = 0.00;
+                    this.totalTax = 0.00;
                 } else {
-                    this.cgstRate = 6.00;
-                    this.sgstRate = 6.00;
-                    this.igstRate = 12.00;
+                    if (gstSelect) {
+                        gstSelect.disabled = false;
+                        if (!this.selectedGstConfig) {
+                            for (let i = 0; i < gstSelect.options.length; i++) {
+                                if (gstSelect.options[i].value) {
+                                    gstSelect.value = gstSelect.options[i].value;
+                                    this.selectedGstConfig = gstSelect.value;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    this.updateGstRates();
+                }
+                this.recalculate();
+            },
+
+            updateGstRates() {
+                if (this.isGst && this.selectedGstConfig && this.gstConfigs[this.selectedGstConfig]) {
+                    const cfg = this.gstConfigs[this.selectedGstConfig];
+                    this.cgstRate = parseFloat(cfg.cgst) || 0.00;
+                    this.sgstRate = parseFloat(cfg.sgst) || 0.00;
+                    this.igstRate = parseFloat(cfg.igst) || 0.00;
+                } else {
+                    this.cgstRate = 0.00;
+                    this.sgstRate = 0.00;
+                    this.igstRate = 0.00;
                 }
             },
 
@@ -1353,7 +1393,7 @@
                 this.taxableAmount = Math.max(0, subtotal - discount);
 
                 // GST Calculation
-                if (this.isGst && this.taxableAmount > 0) {
+                if (this.isGst && this.selectedGstConfig && this.taxableAmount > 0) {
                     this.updateGstRates();
                     if (this.isInterstate) {
                         this.cgstAmount = 0;

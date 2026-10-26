@@ -220,7 +220,7 @@ class Bill(models.Model):
         self.taxable_amount = max(Decimal('0.00'), self.subtotal - self.discount_amount).quantize(Decimal('0.01'))
 
         # GST Calculation
-        if self.is_gst_bill and self.taxable_amount > Decimal('0.00'):
+        if self.is_gst_bill and self.taxable_amount > Decimal('0.00') and self.gst_config:
             company = CompanyProfile.get_instance()
             company_state = (company.state or '').strip().lower()
             customer_state = ''
@@ -229,14 +229,9 @@ class Bill(models.Model):
 
             is_interstate = bool(customer_state and company_state and customer_state != company_state)
 
-            if self.gst_config:
-                cgst_rate = Decimal(str(self.gst_config.cgst_rate or 0))
-                sgst_rate = Decimal(str(self.gst_config.sgst_rate or 0))
-                igst_rate = Decimal(str(self.gst_config.igst_rate or (cgst_rate + sgst_rate)))
-            else:
-                cgst_rate = Decimal('6.00')
-                sgst_rate = Decimal('6.00')
-                igst_rate = Decimal('12.00')
+            cgst_rate = Decimal(str(self.gst_config.cgst_rate or 0))
+            sgst_rate = Decimal(str(self.gst_config.sgst_rate or 0))
+            igst_rate = Decimal(str(self.gst_config.igst_rate or (cgst_rate + sgst_rate)))
 
             if is_interstate:
                 self.cgst_amount = Decimal('0.00')
@@ -249,6 +244,8 @@ class Bill(models.Model):
 
             self.total_tax = (self.cgst_amount + self.sgst_amount + self.igst_amount).quantize(Decimal('0.01'))
         else:
+            if not self.is_gst_bill:
+                self.gst_config = None
             self.cgst_amount = Decimal('0.00')
             self.sgst_amount = Decimal('0.00')
             self.igst_amount = Decimal('0.00')
@@ -266,7 +263,8 @@ class Bill(models.Model):
             self.save(update_fields=[
                 'subtotal', 'discount_percentage', 'discount_amount',
                 'taxable_amount', 'cgst_amount', 'sgst_amount', 'igst_amount',
-                'total_tax', 'accessories_insurance', 'round_off_amount', 'grand_total', 'amount_in_words'
+                'total_tax', 'accessories_insurance', 'round_off_amount', 'grand_total', 'amount_in_words',
+                'is_gst_bill', 'gst_config'
             ])
 
     def get_hsn_summary(self):
@@ -275,7 +273,7 @@ class Bill(models.Model):
         with taxable value, tax rates, tax amounts, and total tax.
         Compliant with Indian Tax Invoice HSN summary.
         """
-        if not self.is_gst_bill or not self.pk:
+        if not self.is_gst_bill or not self.gst_config or not self.pk:
             return []
 
         from settings_app.models import CompanyProfile
@@ -287,14 +285,9 @@ class Bill(models.Model):
 
         is_interstate = bool(customer_state and company_state and customer_state != company_state)
 
-        if self.gst_config:
-            cgst_pct = Decimal(str(self.gst_config.cgst_rate or 0))
-            sgst_pct = Decimal(str(self.gst_config.sgst_rate or 0))
-            igst_pct = Decimal(str(self.gst_config.igst_rate or (cgst_pct + sgst_pct)))
-        else:
-            cgst_pct = Decimal('6.00')
-            sgst_pct = Decimal('6.00')
-            igst_pct = Decimal('12.00')
+        cgst_pct = Decimal(str(self.gst_config.cgst_rate or 0))
+        sgst_pct = Decimal(str(self.gst_config.sgst_rate or 0))
+        igst_pct = Decimal(str(self.gst_config.igst_rate or (cgst_pct + sgst_pct)))
 
         summary = {}
         items = list(self.items.all())

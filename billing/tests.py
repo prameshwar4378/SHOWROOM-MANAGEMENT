@@ -221,27 +221,57 @@ class BillingSystemTests(TestCase):
         self.assertEqual(new_bill.grand_total, Decimal('45000.00'))
 
     def test_bill_convert_quotation_to_tax_invoice(self):
-        """Test converting a Quotation into a Tax Invoice."""
-        quotation = Bill.objects.create(
+        """Test converting Quotations (both GST and Non-GST) into Invoices."""
+        # Test GST quotation conversion
+        quotation_gst = Bill.objects.create(
             bill_type='QUOTATION',
             customer=self.customer,
             created_by=self.user,
+            is_gst_bill=True,
+            gst_config=self.gst_config,
         )
         BillItem.objects.create(
-            bill=quotation,
+            bill=quotation_gst,
             sr_no=1,
-            item_description="Tractor Unit",
+            item_description="Tractor Unit GST",
             quantity=1,
             unit_price=Decimal("500000.00"),
         )
-        quotation.calculate_totals(save=True)
+        quotation_gst.calculate_totals(save=True)
 
-        resp = self.client.get(reverse('billing:bill_convert', kwargs={'pk': quotation.pk}))
+        resp = self.client.get(reverse('billing:bill_convert', kwargs={'pk': quotation_gst.pk}))
         self.assertEqual(resp.status_code, 302)
-        invoice = Bill.objects.order_by('-id').first()
-        self.assertEqual(invoice.bill_type, 'TAX_INVOICE')
-        self.assertTrue(invoice.is_gst_bill)
-        self.assertEqual(invoice.items.count(), 1)
+        invoice_gst = Bill.objects.order_by('-id').first()
+        self.assertEqual(invoice_gst.bill_type, 'TAX_INVOICE')
+        self.assertTrue(invoice_gst.is_gst_bill)
+        self.assertEqual(invoice_gst.gst_config, self.gst_config)
+        self.assertEqual(invoice_gst.items.count(), 1)
+
+        # Test Non-GST quotation conversion (must NOT add GST)
+        quotation_nongst = Bill.objects.create(
+            bill_type='QUOTATION',
+            customer=self.customer,
+            created_by=self.user,
+            is_gst_bill=False,
+            gst_config=None,
+        )
+        BillItem.objects.create(
+            bill=quotation_nongst,
+            sr_no=1,
+            item_description="Implement Unit Non-GST",
+            quantity=1,
+            unit_price=Decimal("25000.00"),
+        )
+        quotation_nongst.calculate_totals(save=True)
+
+        resp2 = self.client.get(reverse('billing:bill_convert', kwargs={'pk': quotation_nongst.pk}))
+        self.assertEqual(resp2.status_code, 302)
+        invoice_nongst = Bill.objects.order_by('-id').first()
+        self.assertEqual(invoice_nongst.bill_type, 'TAX_INVOICE')
+        self.assertFalse(invoice_nongst.is_gst_bill)
+        self.assertIsNone(invoice_nongst.gst_config)
+        self.assertEqual(invoice_nongst.total_tax, Decimal('0.00'))
+        self.assertEqual(invoice_nongst.grand_total, Decimal('25000.00'))
 
     def test_quick_customer_ajax(self):
         """Test the AJAX customer quick-create modal endpoint."""

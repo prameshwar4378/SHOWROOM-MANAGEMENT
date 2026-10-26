@@ -254,8 +254,6 @@ class BillCreateView(LoginRequiredMixin, View):
         unit_id = request.GET.get('unit_id')
 
         initial = {'bill_type': initial_type}
-        if initial_type == 'TAX_INVOICE':
-            initial['is_gst_bill'] = True
         if customer_id:
             try:
                 initial['customer'] = Customer.objects.get(pk=customer_id)
@@ -639,8 +637,8 @@ def bill_convert(request, pk):
             other_ref=quotation.other_ref,
             bank_name=quotation.bank_name,
             accessories_insurance=quotation.accessories_insurance,
-            is_gst_bill=True,
-            gst_config=quotation.gst_config,
+            is_gst_bill=quotation.is_gst_bill,
+            gst_config=quotation.gst_config if quotation.is_gst_bill else None,
             discount_percentage=quotation.discount_percentage,
             discount_amount=quotation.discount_amount,
             notes=f"Converted from Quotation {quotation.bill_number}. {quotation.notes or ''}".strip(),

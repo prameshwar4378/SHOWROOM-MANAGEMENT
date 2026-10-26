@@ -141,11 +141,14 @@ def run_tests():
     assert len(resp.content) > 2000
     print(f"[PASS] 11. Customer Pending Dues Excel export generated via openpyxl (Size: {len(resp.content)} bytes)")
 
-    # 12. Dual-mode GST Calculation Engine & Indian Round-off
+    gst_12 = GSTConfig.objects.filter(igst_rate=Decimal('12.00')).first()
+    if not gst_12:
+        gst_12 = GSTConfig.objects.create(name="Tractor GST 12%", cgst_rate=Decimal('6.00'), sgst_rate=Decimal('6.00'), igst_rate=Decimal('12.00'), is_active=True)
     test_bill = Bill.objects.create(
         bill_type='TAX_INVOICE',
         customer=customer,
         is_gst_bill=True,
+        gst_config=gst_12,
         subtotal=Decimal('100.33'),
     )
     BillItem.objects.create(

@@ -225,6 +225,21 @@ class BillForm(forms.ModelForm, TailwindFormMixin):
             return Decimal('0.00')
         return val
 
+    def clean(self):
+        cleaned_data = super().clean()
+        is_gst = bool(cleaned_data.get('is_gst_bill'))
+        gst_config = cleaned_data.get('gst_config')
+
+        if not is_gst:
+            # Forcefully clear GST configuration when GST calculation is disabled
+            cleaned_data['is_gst_bill'] = False
+            cleaned_data['gst_config'] = None
+        elif is_gst and not gst_config:
+            # When user explicitly enabled GST, require a valid tax slab
+            self.add_error('gst_config', 'Please select a GST Tax Slab when GST calculation is enabled.')
+
+        return cleaned_data
+
 
 class BillItemForm(forms.ModelForm, TailwindFormMixin):
     """Form for line items on a bill."""
