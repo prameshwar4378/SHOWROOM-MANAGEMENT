@@ -522,8 +522,10 @@ class BillDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         bill = self.object
+        items = list(bill.items.all().order_by('sr_no'))
         context['company'] = CompanyProfile.get_instance()
-        context['items'] = bill.items.all().order_by('sr_no')
+        context['items'] = items
+        context['total_quantity'] = sum((item.quantity for item in items), 0)
         context['hsn_summary'] = bill.get_hsn_summary()
         margin_suggested = (bill.grand_total * Decimal('0.15')).quantize(Decimal('0.01'))
         context['margin_suggested'] = margin_suggested
@@ -687,9 +689,13 @@ class BillPDFView(LoginRequiredMixin, View):
         margin_suggested = (bill.grand_total * Decimal('0.15')).quantize(Decimal('0.01'))
         loan_balance = (bill.grand_total - margin_suggested).quantize(Decimal('0.01'))
 
+        items = list(bill.items.all().order_by('sr_no'))
+        total_quantity = sum((item.quantity for item in items), 0)
+
         context = {
             'bill': bill,
-            'items': bill.items.all().order_by('sr_no'),
+            'items': items,
+            'total_quantity': total_quantity,
             'company': company,
             'copy_type': copy_type,
             'hsn_summary': bill.get_hsn_summary(),
