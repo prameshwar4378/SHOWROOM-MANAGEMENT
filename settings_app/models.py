@@ -242,21 +242,61 @@ class CompanyProfile(models.Model):
         return None
 
     @property
-    def display_logo_path(self):
-        """Return primary logo filesystem path (brand logo preferred, then company logo)."""
-        return self.brand_logo_path or self.company_logo_path
+    def brand_logo_url(self):
+        """Return web URL to brand logo if it exists on disk, else None."""
+        try:
+            if self.brand_logo and self.brand_logo.name:
+                import os
+                if os.path.isfile(self.brand_logo.path):
+                    return self.brand_logo.url
+        except Exception:
+            pass
+        return None
 
     @property
-    def signature_image_path(self):
-        """Return absolute filesystem path to signature image if it exists on disk, else None."""
+    def company_logo_url(self):
+        """Return web URL to company logo if it exists on disk, else None."""
+        try:
+            if self.company_logo and self.company_logo.name:
+                import os
+                if os.path.isfile(self.company_logo.path):
+                    return self.company_logo.url
+        except Exception:
+            pass
+        return None
+
+    @property
+    def display_logo_url(self):
+        """Return primary logo web URL (brand logo preferred, then company logo) for browser and PDF."""
+        return self.brand_logo_url or self.company_logo_url
+
+    @property
+    def display_logo_path(self):
+        """
+        Return browser-accessible web URL for primary logo.
+        xhtml2pdf link_callback resolves this to absolute system path automatically.
+        """
+        return self.display_logo_url
+
+    @property
+    def signature_image_url(self):
+        """Return web URL to signature image if it exists on disk, else None."""
         try:
             if self.signature_image and self.signature_image.name:
                 import os
                 if os.path.isfile(self.signature_image.path):
-                    return self.signature_image.path
+                    return self.signature_image.url
         except Exception:
             pass
         return None
+
+    @property
+    def signature_image_path(self):
+        """
+        Return browser-accessible web URL for signature image.
+        xhtml2pdf link_callback resolves this to absolute system path automatically.
+        """
+        return self.signature_image_url
 
     @property
     def primary_bank(self):
