@@ -1017,14 +1017,15 @@
                 }
 
                 this.isSelecting = true;
-                this.query = item.name;
+                const cleanItemName = (bType === 'QUOTATION' && item.model) ? item.model : item.name;
+                this.query = cleanItemName;
                 this.dropdownOpen = false;
                 this.highlightedIndex = -1;
 
                 const cell = this.$el;
                 const input = cell.querySelector('input[name$="-item_description"]');
                 if (input) {
-                    input.value = item.name;
+                    input.value = cleanItemName;
                 }
 
                 const row = cell.closest('tr');
@@ -1046,8 +1047,8 @@
                         qtyInput.dispatchEvent(new Event('input', { bubbles: true }));
                     }
 
-                    // Auto-fill item row and delivery challan chassis/engine if present and blank
-                    if (item.chassis) {
+                    // Auto-fill item row and delivery challan chassis/engine if present and blank (Only for Tax Invoice & Delivery Challan, never Quotation)
+                    if (item.chassis && bType !== 'QUOTATION') {
                         const rowChassis = row.querySelector('input[name$="-chassis_number"]');
                         const rowEngine = row.querySelector('input[name$="-engine_number"]');
                         if (rowChassis && !rowChassis.value) rowChassis.value = item.chassis;

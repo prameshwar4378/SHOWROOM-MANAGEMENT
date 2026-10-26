@@ -735,6 +735,19 @@ class BillItem(models.Model):
     def __str__(self):
         return f"{self.sr_no}. {self.item_description}"
 
+    @property
+    def quotation_description(self):
+        """
+        Return clean item description for Quotations.
+        Quotations are pre-sale estimates and should not display
+        specific vehicle chassis or engine numbers.
+        """
+        import re
+        desc = self.item_description or ""
+        desc = re.sub(r'\s*\([Cc]hassis:[^\)]*\)', '', desc)
+        desc = re.sub(r'\s*\([Ee]ngine:[^\)]*\)', '', desc)
+        return desc.strip()
+
     def save(self, *args, **kwargs):
         """Auto-calculate amount = (quantity * unit_price) - discount."""
         qty = Decimal(str(self.quantity or 1))

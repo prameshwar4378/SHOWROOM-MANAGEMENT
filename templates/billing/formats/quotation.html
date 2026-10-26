@@ -185,13 +185,7 @@
                 {{ forloop.counter }}
             </td>
             <td style="padding: 7px 10px; font-size: 8pt; color: #0f172a; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #cbd5e1; line-height: 1.35;">
-                <div style="font-weight: bold; color: #0f172a;">{{ item.item_description }}</div>
-                {% if item.chassis_number or item.engine_number %}
-                <div style="font-size: 7pt; color: #475569; margin-top: 2px;">
-                    {% if item.chassis_number %}Chassis: <span style="font-family: Courier, monospace; color: #0f172a; font-weight: bold;">{{ item.chassis_number }}</span>{% endif %}
-                    {% if item.engine_number %}&nbsp;&bull;&nbsp;Engine: <span style="font-family: Courier, monospace; color: #0f172a; font-weight: bold;">{{ item.engine_number }}</span>{% endif %}
-                </div>
-                {% endif %}
+                <div style="font-weight: bold; color: #0f172a;">{{ item.quotation_description|default:item.item_description }}</div>
             </td>
             <td style="padding: 7px 4px; text-align: center; font-size: 7.5pt; color: #475569; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #cbd5e1; font-family: Courier, monospace;">
                 {{ item.hsn_code|default:"8701" }}
