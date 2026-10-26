@@ -689,7 +689,7 @@ class BillPDFView(LoginRequiredMixin, View):
 
         context = {
             'bill': bill,
-            'items': bill.items.all(),
+            'items': bill.items.all().order_by('sr_no'),
             'company': company,
             'copy_type': copy_type,
             'hsn_summary': bill.get_hsn_summary(),
