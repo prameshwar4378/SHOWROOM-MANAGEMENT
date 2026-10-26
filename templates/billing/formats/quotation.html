@@ -50,9 +50,9 @@
     <!-- ================================================================== -->
     <table style="width: 100%; border-collapse: collapse; border: 1px solid #334155; margin-bottom: 6px; background-color: #f8fafc;">
         <tr>
-            <td style="width: 32%; padding: 4px 10px; font-size: 7.5pt; color: #334155; border: none; vertical-align: middle;">
-                {% if company.pan_number %}<strong>PAN :</strong> {{ company.pan_number }}{% endif %}
-                {% if company.gstin_number %}&nbsp;&bull;&nbsp;<strong>GSTIN :</strong> {{ company.gstin_number }}{% endif %}
+            <td style="width: 32%; padding: 4px 10px; font-size: 7.5pt; color: #334155; border: none; vertical-align: middle; line-height: 1.35;">
+                {% if company.pan_number %}<div><strong>PAN :</strong> {{ company.pan_number }}</div>{% endif %}
+                {% if company.gstin_number %}<div style="margin-top: 1px;"><strong>GSTIN :</strong> {{ company.gstin_number }}</div>{% endif %}
             </td>
             <td style="width: 36%; padding: 4px 10px; text-align: center; border: none; vertical-align: middle;">
                 <span style="font-size: 15.5pt; font-weight: 900; color: #0f172a; letter-spacing: 2px;">QUOTATION</span>
